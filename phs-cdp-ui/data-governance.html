@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Data Governance — PHS CDP</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&display=swap"
+    rel="stylesheet"
+  />
+
+  <link rel="stylesheet" href="css/main.css" />
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="app-shell__sidebar" data-sidebar-mount></aside>
+    <div class="app-shell__topbar" data-topbar-mount></div>
+
+    <main class="app-shell__main">
+      <div class="page">
+        <div class="page-header">
+          <div>
+            <div class="page-header__eyebrow">
+              <i data-lucide="fingerprint" style="width: 13px; height: 13px;"></i>
+              Governance · Data Governance
+            </div>
+            <h1 class="page-header__title">Data Governance</h1>
+            <p class="page-header__description">Manage customer identity, data classification, ownership, and privacy controls across the CDP. A governance map over existing modules — not a second platform.</p>
+          </div>
+        </div>
+
+        <div class="tabs" role="tablist" aria-label="Data Governance sections" data-dg-tabs style="margin-bottom: var(--space-8);">
+          <button class="tabs__tab" role="tab" aria-selected="true" aria-controls="dg-panel-overview" id="dg-tab-overview" data-hash="overview">Overview</button>
+          <button class="tabs__tab" role="tab" aria-selected="false" aria-controls="dg-panel-identity" id="dg-tab-identity" data-hash="identity">Identity</button>
+          <button class="tabs__tab" role="tab" aria-selected="false" aria-controls="dg-panel-data-policies" id="dg-tab-data-policies" data-hash="data-policies">Data Policies</button>
+          <button class="tabs__tab" role="tab" aria-selected="false" aria-controls="dg-panel-pii-controls" id="dg-tab-pii-controls" data-hash="pii-controls">PII Controls</button>
+          <button class="tabs__tab" role="tab" aria-selected="false" aria-controls="dg-panel-activity" id="dg-tab-activity" data-hash="activity">Activity</button>
+        </div>
+
+        <!-- ============================= OVERVIEW ============================= -->
+        <div class="tabs__panel" id="dg-panel-overview" role="tabpanel" aria-labelledby="dg-tab-overview">
+          <section class="section">
+            <div class="section__header"><div><h2 class="section__title">Architecture</h2><p class="section__subtitle">Conceptual flow only — not a live data pipeline.</p></div></div>
+            <div class="section__body">
+              <div class="stream-pipeline" data-dg-architecture></div>
+            </div>
+          </section>
+
+          <section class="section" style="margin-bottom: 0;">
+            <div class="section__header"><div><h2 class="section__title">Governance Coverage</h2><p class="section__subtitle">Where each governance concept actually lives — this page is a map, not a duplicate.</p></div></div>
+            <div class="section__body">
+              <div class="event-stream-grid" data-dg-coverage></div>
+            </div>
+          </section>
+        </div>
+
+        <!-- ============================= IDENTITY ============================= -->
+        <div class="tabs__panel" id="dg-panel-identity" role="tabpanel" aria-labelledby="dg-tab-identity" hidden>
+          <section class="section">
+            <div class="section__header"><div><h2 class="section__title">Identity Health</h2></div></div>
+            <div class="section__body event-summary-grid" data-dg-identity-health></div>
+          </section>
+
+          <section class="section">
+            <div class="section__header"><div><h2 class="section__title">Identity Graph</h2><p class="section__subtitle">Identifiers are connected to a resolved entity — a graph, not a ranked hierarchy. Click a node to see detail.</p></div></div>
+            <div class="section__body">
+              <p class="event-empty-note" style="margin-bottom: var(--space-4);" data-dg-rudderstack-note></p>
+              <div class="grid-main-side">
+                <div data-dg-graph></div>
+                <div class="stack gap-3" data-dg-resolved-entity></div>
+              </div>
+            </div>
+          </section>
+
+          <section class="section">
+            <div class="section__header"><div><h2 class="section__title">Identity Stitching</h2><p class="section__subtitle" data-dg-stitching-desc></p></div></div>
+            <div class="section__body">
+              <div class="stream-pipeline" data-dg-stitching-flow></div>
+            </div>
+          </section>
+
+          <section class="section">
+            <div class="section__header"><div><h2 class="section__title">Customer 360 Integration</h2><p class="section__subtitle" data-dg-c360-desc></p></div></div>
+            <div class="section__body">
+              <div class="stream-pipeline" style="flex-direction: row;" data-dg-c360-flow></div>
+            </div>
+          </section>
+
+          <section class="section">
+            <div class="section__header"><div><h2 class="section__title">Identifiers</h2><p class="section__subtitle">No identifier is ranked above another — role describes how each one participates in resolution.</p></div></div>
+            <div class="section__body">
+              <div class="table-wrap">
+                <table class="table" data-dg-identifiers-table>
+                  <thead><tr><th>Identifier</th><th>Identifier Type</th><th>Source</th><th>Role</th><th>PII</th><th>Status</th></tr></thead>
+                  <tbody></tbody>
+                </table>
+              </div>
+            </div>
+          </section>
+
+          <section class="section">
+            <div class="section__header"><div><h2 class="section__title">Identity Edge Sources</h2><p class="section__subtitle">Which data sources can contribute identity relationships to the graph. Not every source is currently connected.</p></div></div>
+            <div class="section__body">
+              <div class="table-wrap">
+                <table class="table" data-dg-edge-sources-table>
+                  <thead><tr><th>Source</th><th>Type</th><th>Identity Signals</th><th>Status</th><th>Last Updated</th></tr></thead>
+                  <tbody></tbody>
+                </table>
+              </div>
+            </div>
+          </section>
+
+          <section class="section">
+            <div class="section__header">
+              <div><h2 class="section__title">Identity Configuration</h2><p class="section__subtitle">Which identifiers and edge sources participate in resolving this entity.</p></div>
+              <button class="btn btn--outline btn--sm" data-dg-edit-config><i data-lucide="settings-2"></i> Edit Configuration</button>
+            </div>
+            <div class="section__body" data-dg-config></div>
+          </section>
+
+          <section class="section" style="margin-bottom: 0;">
+            <div class="section__header"><div><h2 class="section__title">Canonical Identity</h2><p class="section__subtitle">RudderStack Profiles resolves connected identifiers into a canonical identity for the entity. PHS uses Account ID as the business-facing customer identifier — this is not the same as the canonical identity.</p></div></div>
+            <div class="section__body">
+              <div class="cluster gap-6" data-dg-canonical style="flex-wrap: wrap;"></div>
+            </div>
+          </section>
+        </div>
+
+        <!-- ============================= DATA POLICIES ============================= -->
+        <div class="tabs__panel" id="dg-panel-data-policies" role="tabpanel" aria-labelledby="dg-tab-data-policies" hidden>
+          <section class="section">
+            <div class="section__header"><div><h2 class="section__title">Data Classification</h2><p class="section__subtitle">Conceptual classification — no actual customer values are shown.</p></div></div>
+            <div class="section__body">
+              <div class="table-wrap">
+                <table class="table" data-dg-classification-table>
+                  <thead><tr><th>Data Field</th><th>Classification</th><th>Owner</th><th>Allowed Usage</th><th>External Transfer</th><th>Status</th><th></th></tr></thead>
+                  <tbody></tbody>
+                </table>
+              </div>
+            </div>
+          </section>
+
+          <section class="section">
+            <div class="section__header"><div><h2 class="section__title">Governed Data</h2><p class="section__subtitle">Representative inventory with owner, source, and allowed usage — mock data only.</p></div></div>
+            <div class="section__body">
+              <div class="table-wrap">
+                <table class="table" data-dg-governed-table>
+                  <thead><tr><th>Data Field</th><th>Category</th><th>Classification</th><th>Source</th><th>Owner</th><th>Update Frequency</th><th>Allowed Usage</th><th></th></tr></thead>
+                  <tbody></tbody>
+                </table>
+              </div>
+            </div>
+          </section>
+
+          <section class="section" style="margin-bottom: 0;">
+            <div class="section__header">
+              <div><h2 class="section__title">Governance Rules</h2><p class="section__subtitle">Policy defines what is allowed. Enforcement controls where and how it is applied. Click a policy for detail.</p></div>
+            </div>
+            <div class="section__body">
+              <div class="table-wrap">
+                <table class="table" data-dg-policy-table>
+                  <thead><tr><th>Policy</th><th>Type</th><th>Enforcement</th><th>Scope</th><th>Status</th><th>Last Updated</th></tr></thead>
+                  <tbody></tbody>
+                </table>
+              </div>
+            </div>
+          </section>
+        </div>
+
+        <!-- ============================= PII CONTROLS ============================= -->
+        <div class="tabs__panel" id="dg-panel-pii-controls" role="tabpanel" aria-labelledby="dg-tab-pii-controls" hidden>
+          <section class="section">
+            <div class="section__header"><div><h2 class="section__title">PII Handling</h2><p class="section__subtitle" data-dg-pii-disclaimer></p></div></div>
+            <div class="section__body">
+              <div class="stream-pipeline" data-dg-pii-flow style="flex-direction: row; flex-wrap: wrap;"></div>
+            </div>
+          </section>
+
+          <section class="section">
+            <div class="section__header"><div><h2 class="section__title">PII Controls</h2><p class="section__subtitle">Field-level external transfer policy and approved handling.</p></div></div>
+            <div class="section__body">
+              <div class="table-wrap">
+                <table class="table" data-dg-pii-controls-table>
+                  <thead><tr><th>Field</th><th>Classification</th><th>External Transfer</th><th>Handling</th><th>Status</th><th></th></tr></thead>
+                  <tbody></tbody>
+                </table>
+              </div>
+            </div>
+          </section>
+
+          <section class="section" style="margin-bottom: 0;">
+            <div class="section__header"><div><h2 class="section__title">Data Access Level</h2><p class="section__subtitle">Governance metadata only — not an implementation of role-based access control.</p></div></div>
+            <div class="section__body">
+              <div class="table-wrap">
+                <table class="table table--dense" data-dg-access-table>
+                  <thead><tr><th>Data Class</th><th>Access Level</th><th>Example Use</th></tr></thead>
+                  <tbody></tbody>
+                </table>
+              </div>
+            </div>
+          </section>
+        </div>
+
+        <!-- ============================= ACTIVITY ============================= -->
+        <div class="tabs__panel" id="dg-panel-activity" role="tabpanel" aria-labelledby="dg-tab-activity" hidden>
+          <section class="section" style="margin-bottom: 0;">
+            <div class="section__header"><div><h2 class="section__title">Governance Activity</h2><p class="section__subtitle">Mock audit log — updates within this session appear here.</p></div></div>
+            <div class="section__body">
+              <div class="table-wrap">
+                <table class="table" data-dg-activity-table>
+                  <thead><tr><th>Timestamp</th><th>Actor</th><th>Object</th><th>Action</th><th>Previous Value</th><th>New Value</th></tr></thead>
+                  <tbody></tbody>
+                </table>
+              </div>
+            </div>
+          </section>
+        </div>
+
+      </div>
+    </main>
+  </div>
+
+  <!-- Identity Graph Detail — view-only, opened from a graph node.    -->
+  <div class="drawer-overlay" id="identity-graph-detail-drawer">
+    <aside class="drawer" role="dialog" aria-modal="true" aria-label="Identity graph detail">
+      <div class="drawer__header">
+        <div>
+          <div class="drawer__eyebrow">Identity Graph Detail</div>
+          <div class="drawer__title">Resolved Entity</div>
+        </div>
+        <button class="btn btn--ghost btn--sm" data-drawer-close aria-label="Close"><i data-lucide="x"></i></button>
+      </div>
+      <div class="drawer__body" data-dg-graph-detail-body></div>
+    </aside>
+  </div>
+
+  <!-- Generic governance edit drawer — reused for classification rows,-->
+  <!-- governed data rows, PII controls, rules, and identity config.   -->
+  <div class="drawer-overlay" id="governance-edit-drawer">
+    <aside class="drawer" role="dialog" aria-modal="true" aria-label="Edit governance record">
+      <div class="drawer__header">
+        <div>
+          <div class="drawer__eyebrow" data-dg-edit-eyebrow>Governance</div>
+          <div class="drawer__title" data-dg-edit-title>—</div>
+        </div>
+        <button class="btn btn--ghost btn--sm" data-drawer-close aria-label="Close"><i data-lucide="x"></i></button>
+      </div>
+      <div class="drawer__body" data-dg-edit-body></div>
+    </aside>
+  </div>
+
+  <script src="https://unpkg.com/lucide@1.47.0/dist/umd/lucide.js"></script>
+  <script type="module">
+    import { bootstrapPage } from "./js/main.js";
+    import { initDataGovernance } from "./js/pages/data-governance.js";
+
+    bootstrapPage({
+      currentNavId: "data-governance",
+      breadcrumb: [{"label": "PHS CDP", "href": "index.html"}, {"label": "Governance"}, {"label": "Data Governance"}],
+    });
+    initDataGovernance();
+  </script>
+</body>
+</html>

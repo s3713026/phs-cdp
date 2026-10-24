@@ -1,0 +1,390 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mxfile host="app.diagrams.net" version="21.0.0">
+
+  <!-- ═══════════════════════════════════════════
+       PAGE 1 — LAYER ARCHITECTURE
+  ═══════════════════════════════════════════ -->
+  <diagram name="Layer Architecture" id="page1">
+    <mxGraphModel dx="1200" dy="800" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1169" pageHeight="827" math="0" shadow="0">
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+
+        <!-- ── TITLE ── -->
+        <mxCell id="t1" value="PHS CDP — Layer Architecture" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;fontSize=20;fontStyle=1;fontColor=#1a237e;" vertex="1" parent="1">
+          <mxGeometry x="200" y="20" width="760" height="40" as="geometry"/>
+        </mxCell>
+        <mxCell id="t2" value="Marketing nhìn thấy Layer 6 (CDP UI) duy nhất · BFF ngồi TRÊN RS + Mautic · Events KHÔNG đi qua BFF" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;fontSize=12;fontColor=#546e7a;" vertex="1" parent="1">
+          <mxGeometry x="150" y="58" width="860" height="24" as="geometry"/>
+        </mxCell>
+
+        <!-- ══ LAYER 1 — DATA SOURCES ══ -->
+        <mxCell id="L1bg" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;opacity=30;" vertex="1" parent="1">
+          <mxGeometry x="40" y="100" width="1089" height="130" as="geometry"/>
+        </mxCell>
+        <mxCell id="L1lbl" value="① DATA SOURCES" style="text;html=1;align=left;verticalAlign=top;resizable=0;points=[];strokeColor=none;fillColor=none;fontSize=10;fontStyle=1;fontColor=#1565c0;" vertex="1" parent="1">
+          <mxGeometry x="50" y="106" width="200" height="20" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="L1a" value="📱 Mobile App&#xa;RudderStack Mobile SDK&#xa;track() · identify()&#xa;iOS / Android · STREAM" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;align=center;" vertex="1" parent="1">
+          <mxGeometry x="60" y="128" width="220" height="90" as="geometry"/>
+        </mxCell>
+        <mxCell id="L1b" value="🌐 Web Browser&#xa;RudderStack JS SDK&#xa;page() · track() · identify()&#xa;SPA / MPA · STREAM" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;align=center;" vertex="1" parent="1">
+          <mxGeometry x="310" y="128" width="220" height="90" as="geometry"/>
+        </mxCell>
+        <mxCell id="L1c" value="📊 Trading System&#xa;REST API → RS Server-side&#xa;OR Kafka → RS Connector&#xa;REST: 200ms–2s · Kafka: &lt;10ms" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;align=center;" vertex="1" parent="1">
+          <mxGeometry x="560" y="128" width="240" height="90" as="geometry"/>
+        </mxCell>
+        <mxCell id="L1d" value="🔗 Third Party&#xa;AppsFlyer / Social / Email&#xa;SFTP → CSV / RS SFTP Source&#xa;BATCH · Scheduled" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=11;align=center;" vertex="1" parent="1">
+          <mxGeometry x="830" y="128" width="240" height="90" as="geometry"/>
+        </mxCell>
+
+        <!-- Arrow L1 → L2 -->
+        <mxCell id="arr1" value="SDK → RS :8080 trực tiếp&#xa;REST POST /v1/track&#xa;SFTP batch" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;strokeColor=#1565c0;fontColor=#1565c0;fontSize=10;align=center;" edge="1" source="L1bg" target="L2bg" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+
+        <!-- ══ LAYER 2 — INGESTION ══ -->
+        <mxCell id="L2bg" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff8e1;strokeColor=#f59e0b;opacity=30;" vertex="1" parent="1">
+          <mxGeometry x="40" y="290" width="1089" height="120" as="geometry"/>
+        </mxCell>
+        <mxCell id="L2lbl" value="② INGESTION LAYER" style="text;html=1;align=left;verticalAlign=top;resizable=0;points=[];strokeColor=none;fillColor=none;fontSize=10;fontStyle=1;fontColor=#e65100;" vertex="1" parent="1">
+          <mxGeometry x="50" y="296" width="200" height="20" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="L2a" value="⚡ RudderStack Data Plane :8080&#xa;POST /v1/track · /v1/identify · /v1/page · /v1/batch&#xa;Xác thực Write Key · Ghi ngay vào PostgreSQL job queue&#xa;Return 200 OK ngay · BFF KHÔNG đứng giữa luồng này" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff8e1;strokeColor=#f59e0b;fontSize=11;align=center;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="60" y="318" width="700" height="80" as="geometry"/>
+        </mxCell>
+        <mxCell id="L2b" value="⚡ Kafka :9092&#xa;(Optional Phase 2+)&#xa;RS Kafka Source Connector&#xa;Trading &lt;10ms latency" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fce4ec;strokeColor=#e53935;fontSize=11;align=center;strokeDasharray=6 3;" vertex="1" parent="1">
+          <mxGeometry x="790" y="318" width="280" height="80" as="geometry"/>
+        </mxCell>
+
+        <!-- Arrow L2 → L3 -->
+        <mxCell id="arr2" value="RS đọc từ PostgreSQL job queue → xử lý event" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#f59e0b;fontColor=#e65100;fontSize=10;" edge="1" source="L2bg" target="L3bg" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+
+        <!-- ══ LAYER 3 — PROCESSING ══ -->
+        <mxCell id="L3bg" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff8e1;strokeColor=#d97706;opacity=30;" vertex="1" parent="1">
+          <mxGeometry x="40" y="468" width="1089" height="130" as="geometry"/>
+        </mxCell>
+        <mxCell id="L3lbl" value="③ PROCESSING &amp; ROUTING — bên trong RudderStack" style="text;html=1;align=left;verticalAlign=top;resizable=0;points=[];strokeColor=none;fillColor=none;fontSize=10;fontStyle=1;fontColor=#d97706;" vertex="1" parent="1">
+          <mxGeometry x="50" y="474" width="400" height="20" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="L3a" value="① Validation&#xa;Kiểm tra Tracking Plan schema&#xa;Reject event không hợp lệ&#xa;Flag data quality issue" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff8e1;strokeColor=#d97706;fontSize=11;align=center;" vertex="1" parent="1">
+          <mxGeometry x="60" y="496" width="300" height="90" as="geometry"/>
+        </mxCell>
+        <mxCell id="L3b" value="② Transform + Identity&#xa;User Transformer (JavaScript)&#xa;PII masking trước khi route ra ngoài&#xa;anonymousId ↔ userId merge · Identity graph" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff8e1;strokeColor=#d97706;fontSize=11;align=center;" vertex="1" parent="1">
+          <mxGeometry x="394" y="496" width="300" height="90" as="geometry"/>
+        </mxCell>
+        <mxCell id="L3c" value="③ Destination Routing&#xa;→ PostgreSQL (RS internal store)&#xa;→ Webhook Dest (async POST → BFF)&#xa;→ Warehouse S3/BigQuery (future)&#xa;Fan-out SAU KHI lưu PG xong" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff8e1;strokeColor=#d97706;fontSize=11;align=center;" vertex="1" parent="1">
+          <mxGeometry x="728" y="496" width="340" height="90" as="geometry"/>
+        </mxCell>
+
+        <!-- Arrow L3 → L4 -->
+        <mxCell id="arr3" value="RS lưu vào stores · Webhook async → BFF :3001" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#546e7a;fontColor=#546e7a;fontSize=10;" edge="1" source="L3bg" target="L4bg" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+
+        <!-- ══ LAYER 4 — STORAGE ══ -->
+        <mxCell id="L4bg" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e8f5e9;strokeColor=#2e7d32;opacity=30;" vertex="1" parent="1">
+          <mxGeometry x="40" y="656" width="1089" height="130" as="geometry"/>
+        </mxCell>
+        <mxCell id="L4lbl" value="④ STORAGE — Source of Truth" style="text;html=1;align=left;verticalAlign=top;resizable=0;points=[];strokeColor=none;fillColor=none;fontSize=10;fontStyle=1;fontColor=#2e7d32;" vertex="1" parent="1">
+          <mxGeometry x="50" y="662" width="300" height="20" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="L4a" value="🗄 PostgreSQL · RS Internal · :5432&#xa;users → identity, traits, lifecycle&#xa;tracks → behavioral events history&#xa;identifies → identity resolution graph&#xa;jobs → RS processing queue (internal)&#xa;BFF đọc qua RS Control Plane API :3000" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e8f5e9;strokeColor=#2e7d32;fontSize=11;align=center;" vertex="1" parent="1">
+          <mxGeometry x="60" y="684" width="510" height="90" as="geometry"/>
+        </mxCell>
+        <mxCell id="L4b" value="🗄 MySQL · Mautic Internal · :3306&#xa;contacts → phs_customer_id, email, name&#xa;custom_fields → lifecycle_stage, tier, product&#xa;lead_lists → audience / segment definitions&#xa;lead_list_leads → contact ↔ segment membership&#xa;Source of truth: audience + segment" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e8f5e9;strokeColor=#2e7d32;fontSize=11;align=center;" vertex="1" parent="1">
+          <mxGeometry x="600" y="684" width="470" height="90" as="geometry"/>
+        </mxCell>
+
+        <!-- ── SEPARATOR: EXPERIENCE LAYER ── -->
+        <mxCell id="sep" value="── EXPERIENCE LAYER ── BFF + CDP UI ngồi TRÊN RS + Mautic ──" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];strokeColor=#7c3aed;fillColor=none;fontSize=12;fontStyle=3;fontColor=#7c3aed;dashed=1;" vertex="1" parent="1">
+          <mxGeometry x="40" y="800" width="1089" height="30" as="geometry"/>
+        </mxCell>
+
+        <!-- Dashed line separator -->
+        <mxCell id="sepline" value="" style="endArrow=none;dashed=1;html=1;dashPattern=8 4;strokeWidth=2;strokeColor=#7c3aed;" edge="1" parent="1">
+          <mxGeometry x="40" y="815" width="50" height="50" as="geometry">
+            <Array as="points"/>
+            <mxPoint x="40" y="815" as="sourcePoint"/>
+            <mxPoint x="1129" y="815" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+
+        <!-- Arrow L4 → BFF (via webhook) -->
+        <mxCell id="arr4a" value="BFF reads via RS API :3000" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#7c3aed;fontColor=#7c3aed;fontSize=10;dashed=1;dashPattern=5 3;" edge="1" source="L4a" target="L5bg" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="arr4b" value="BFF reads via Mautic API :8081&#xa;+ Webhook async sync" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#7c3aed;fontColor=#7c3aed;fontSize=10;dashed=1;dashPattern=5 3;" edge="1" source="L4b" target="L5bg" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+
+        <!-- ══ LAYER 5 — BFF ══ -->
+        <mxCell id="L5bg" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f3e5f5;strokeColor=#7c3aed;opacity=40;" vertex="1" parent="1">
+          <mxGeometry x="40" y="840" width="1089" height="140" as="geometry"/>
+        </mxCell>
+        <mxCell id="L5lbl" value="⑤ BFF API :3001 — ORCHESTRATION LAYER (Node.js / Express) — KHÔNG trong event stream" style="text;html=1;align=left;verticalAlign=top;resizable=0;points=[];strokeColor=none;fillColor=none;fontSize=10;fontStyle=1;fontColor=#7c3aed;" vertex="1" parent="1">
+          <mxGeometry x="50" y="846" width="700" height="20" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="L5a" value="Business API → UI&#xa;GET /api/customers · /api/customers/:id&#xa;GET/POST /api/audiences · /api/segments&#xa;POST /api/campaigns · /api/journeys&#xa;GET /api/events · /api/data-quality" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f3e5f5;strokeColor=#7c3aed;fontSize=11;align=center;" vertex="1" parent="1">
+          <mxGeometry x="60" y="868" width="310" height="100" as="geometry"/>
+        </mxCell>
+        <mxCell id="L5b" value="Governance&#xa;JWT Auth · RBAC (6 roles)&#xa;PII Masking theo role&#xa;Audit Log mọi action&#xa;Consent Check · Rate Limiting" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f3e5f5;strokeColor=#7c3aed;fontSize=11;align=center;" vertex="1" parent="1">
+          <mxGeometry x="400" y="868" width="280" height="100" as="geometry"/>
+        </mxCell>
+        <mxCell id="L5c" value="Adapters (replaceable)&#xa;RudderStackAdapter → RS API :3000&#xa;MauticAdapter → Mautic API :8081&#xa;POST /internal/rudder-sync ← RS Webhook&#xa;Nhận event async → sync Mautic contact" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f3e5f5;strokeColor=#7c3aed;fontSize=11;align=center;" vertex="1" parent="1">
+          <mxGeometry x="710" y="868" width="360" height="100" as="geometry"/>
+        </mxCell>
+
+        <!-- Arrow BFF → UI -->
+        <mxCell id="arr5" value="HTTP /api/* response JSON ↔ Marketing UI" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#1565c0;fontColor=#1565c0;fontSize=10;" edge="1" source="L5bg" target="L6bg" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+
+        <!-- ══ LAYER 6 — CDP UI ══ -->
+        <mxCell id="L6bg" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e3f2fd;strokeColor=#1565c0;opacity=40;" vertex="1" parent="1">
+          <mxGeometry x="40" y="1040" width="1089" height="170" as="geometry"/>
+        </mxCell>
+        <mxCell id="L6lbl" value="⑥ PHS CDP UI — MARKETING WORKSPACE (HTML/CSS/JS) — MARKETING NHÌN THẤY DUY NHẤT" style="text;html=1;align=left;verticalAlign=top;resizable=0;points=[];strokeColor=none;fillColor=none;fontSize=10;fontStyle=1;fontColor=#1565c0;" vertex="1" parent="1">
+          <mxGeometry x="50" y="1046" width="800" height="20" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="L6a" value="📊 Dashboard&#xa;KPI · Health&#xa;Real-time" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e3f2fd;strokeColor=#1565c0;fontSize=11;align=center;" vertex="1" parent="1">
+          <mxGeometry x="60" y="1072" width="130" height="120" as="geometry"/>
+        </mxCell>
+        <mxCell id="L6b" value="👤 Customer 360&#xa;Profile · Events&#xa;Identity · Lifecycle" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e3f2fd;strokeColor=#1565c0;fontSize=11;align=center;" vertex="1" parent="1">
+          <mxGeometry x="210" y="1072" width="130" height="120" as="geometry"/>
+        </mxCell>
+        <mxCell id="L6c" value="🎯 Audiences&#xa;Rule Builder&#xa;Segments · Preview" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e3f2fd;strokeColor=#1565c0;fontSize=11;align=center;" vertex="1" parent="1">
+          <mxGeometry x="360" y="1072" width="130" height="120" as="geometry"/>
+        </mxCell>
+        <mxCell id="L6d" value="📣 Campaigns&#xa;Create · Activate&#xa;Performance" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e3f2fd;strokeColor=#1565c0;fontSize=11;align=center;" vertex="1" parent="1">
+          <mxGeometry x="510" y="1072" width="130" height="120" as="geometry"/>
+        </mxCell>
+        <mxCell id="L6e" value="🗺 Journeys&#xa;Visual Builder&#xa;Trigger · Branch" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e3f2fd;strokeColor=#1565c0;fontSize=11;align=center;" vertex="1" parent="1">
+          <mxGeometry x="660" y="1072" width="130" height="120" as="geometry"/>
+        </mxCell>
+        <mxCell id="L6f" value="📋 Data Quality&#xa;Tracking Plans&#xa;Event Coverage" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e3f2fd;strokeColor=#1565c0;fontSize=11;align=center;" vertex="1" parent="1">
+          <mxGeometry x="810" y="1072" width="130" height="120" as="geometry"/>
+        </mxCell>
+        <mxCell id="L6g" value="⚙ Administration&#xa;RBAC · Audit Log&#xa;Integrations · Health" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e3f2fd;strokeColor=#1565c0;fontSize=11;align=center;" vertex="1" parent="1">
+          <mxGeometry x="960" y="1072" width="150" height="120" as="geometry"/>
+        </mxCell>
+
+        <!-- KEY NOTE -->
+        <mxCell id="note1" value="⚡ KEY PRINCIPLES:  ①SDK events → RS :8080 trực tiếp · BFF KHÔNG đứng giữa event stream   ②RS nhận → lưu PG queue TRƯỚC → process → fan-out destinations (Webhook async → BFF)   ③BFF reads via RS API :3000 + Mautic API :8081 · KHÔNG truy cập DB trực tiếp   ④Marketing chỉ nhìn thấy CDP UI · không biết RS hay Mautic tồn tại" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];strokeColor=#7c3aed;fillColor=#faf5ff;fontSize=11;fontStyle=1;rounded=1;" vertex="1" parent="1">
+          <mxGeometry x="40" y="1230" width="1089" height="60" as="geometry"/>
+        </mxCell>
+
+      </root>
+    </mxGraphModel>
+  </diagram>
+
+  <!-- ═══════════════════════════════════════════
+       PAGE 2 — DATA INGESTION FLOW
+  ═══════════════════════════════════════════ -->
+  <diagram name="Data Ingestion Flow" id="page2">
+    <mxGraphModel dx="1200" dy="800" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1654" pageHeight="1169" math="0" shadow="0">
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+
+        <!-- TITLE -->
+        <mxCell id="p2t1" value="PHS CDP — Data Ingestion Flow" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;fontSize=20;fontStyle=1;fontColor=#1a237e;" vertex="1" parent="1">
+          <mxGeometry x="300" y="20" width="1060" height="40" as="geometry"/>
+        </mxCell>
+        <mxCell id="p2t2" value="Chi tiết luồng dữ liệu: Sources → RS :8080 → PostgreSQL queue → Processing → Destinations → BFF async → Mautic" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];strokeColor=none;fillColor=none;fontSize=12;fontColor=#546e7a;" vertex="1" parent="1">
+          <mxGeometry x="200" y="58" width="1250" height="24" as="geometry"/>
+        </mxCell>
+
+        <!-- ══ BAND 1: DATA SOURCES ══ -->
+        <mxCell id="b1bg" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;opacity=20;" vertex="1" parent="1">
+          <mxGeometry x="30" y="100" width="1580" height="160" as="geometry"/>
+        </mxCell>
+        <mxCell id="b1lbl" value="① DATA SOURCES" style="text;html=1;align=left;verticalAlign=top;strokeColor=none;fillColor=none;fontSize=10;fontStyle=1;fontColor=#1565c0;" vertex="1" parent="1">
+          <mxGeometry x="40" y="106" width="200" height="20" as="geometry"/>
+        </mxCell>
+
+        <!-- Mobile -->
+        <mxCell id="s1" value="📱 Mobile App&#xa;RudderStack Mobile SDK&#xa;track() · identify()&#xa;anonymousId → userId khi login&#xa;→ RS :8080 trực tiếp · STREAM" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="50" y="126" width="330" height="120" as="geometry"/>
+        </mxCell>
+
+        <!-- Web -->
+        <mxCell id="s2" value="🌐 Web / Browser&#xa;RudderStack JS SDK&#xa;rudderanalytics.track() · page()&#xa;Session tracking · UTM params&#xa;→ RS :8080 trực tiếp · STREAM" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="420" y="126" width="330" height="120" as="geometry"/>
+        </mxCell>
+
+        <!-- Trading - REST -->
+        <mxCell id="s3" value="📊 Trading System (REST)&#xa;POST /v1/track {event:&quot;Trade Executed&quot;}&#xa;POST /v1/identify {userId, accountId}&#xa;Server-side · 200ms–2s&#xa;→ RS :8080 · STREAM" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="790" y="126" width="330" height="120" as="geometry"/>
+        </mxCell>
+
+        <!-- Third Party SFTP -->
+        <mxCell id="s4" value="🔗 Third Party / CRM&#xa;AppsFlyer · Social · Email export&#xa;SFTP → CSV / JSON / .gz&#xa;RS SFTP Source (scheduled)&#xa;→ Batch ingestion · BATCH" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="1160" y="126" width="330" height="120" as="geometry"/>
+        </mxCell>
+
+        <!-- Trading - Kafka (optional) -->
+        <mxCell id="s5" value="⚡ Trading System (Kafka)&#xa;Optional Phase 2+&#xa;Kafka topic → RS Connector&#xa;&lt;10ms latency&#xa;Order matching · Margin call" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fce4ec;strokeColor=#e53935;fontSize=11;strokeDasharray=6 3;" vertex="1" parent="1">
+          <mxGeometry x="1160" y="260" width="330" height="110" as="geometry"/>
+        </mxCell>
+        <mxCell id="s5lbl" value="(Optional)" style="text;html=1;align=center;strokeColor=none;fillColor=none;fontSize=9;fontColor=#e53935;fontStyle=2;" vertex="1" parent="1">
+          <mxGeometry x="1160" y="248" width="100" height="16" as="geometry"/>
+        </mxCell>
+
+        <!-- ══ ARROWS: SOURCES → RS DP ══ -->
+        <mxCell id="a1" value="SDK STREAM" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#1565c0;fontColor=#1565c0;fontSize=9;entryX=0.15;entryY=0;entryDx=0;entryDy=0;" edge="1" source="s1" target="rs_dp" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="a2" value="JS SDK STREAM" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#1565c0;fontColor=#1565c0;fontSize=9;entryX=0.35;entryY=0;entryDx=0;entryDy=0;" edge="1" source="s2" target="rs_dp" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="a3" value="REST API" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#f59e0b;fontColor=#e65100;fontSize=9;entryX=0.55;entryY=0;entryDx=0;entryDy=0;" edge="1" source="s3" target="rs_dp" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="a4" value="SFTP Batch" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#d79b00;fontColor=#d79b00;fontSize=9;entryX=0.75;entryY=0;entryDx=0;entryDy=0;" edge="1" source="s4" target="rs_dp" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1325" y="290"/>
+              <mxPoint x="1325" y="390"/>
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="a5" value="Kafka optional" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#e53935;fontColor=#e53935;fontSize=9;dashed=1;dashPattern=5 3;entryX=0.88;entryY=0;entryDx=0;entryDy=0;" edge="1" source="s5" target="rs_dp" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1440" y="320"/>
+              <mxPoint x="1440" y="390"/>
+            </Array>
+          </mxGeometry>
+        </mxCell>
+
+        <!-- ══ BAND 2: RS DATA PLANE ══ -->
+        <mxCell id="rs_dp" value="⚡ RudderStack Data Plane :8080&#xa;Entry point · Xác thực Write Key · Return 200 OK ngay&#xa;BFF KHÔNG đứng giữa luồng này" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff8e1;strokeColor=#f59e0b;strokeWidth=2;fontSize=13;fontStyle=1;align=center;" vertex="1" parent="1">
+          <mxGeometry x="400" y="390" width="860" height="80" as="geometry"/>
+        </mxCell>
+
+        <!-- Arrow: RS DP → PG (immediate write) -->
+        <mxCell id="a_dp_pg" value="① Ghi NGAY vào job queue&#xa;(synchronous, trước khi xử lý)" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#2e7d32;fontColor=#2e7d32;fontSize=10;fontStyle=1;endArrow=block;endFill=1;" edge="1" source="rs_dp" target="pg_queue" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+
+        <!-- ══ PostgreSQL Job Queue ══ -->
+        <mxCell id="pg_queue" value="🗄 PostgreSQL — RS Internal Job Queue&#xa;table: jobs (status: waiting → processing → succeeded)&#xa;RS lưu event vào đây TRƯỚC KHI xử lý · Retry nếu fail" style="shape=cylinder3;whiteSpace=wrap;html=1;fillColor=#e8f5e9;strokeColor=#2e7d32;fontSize=11;align=center;" vertex="1" parent="1">
+          <mxGeometry x="550" y="530" width="560" height="100" as="geometry"/>
+        </mxCell>
+
+        <!-- Arrow: PG Queue → RS Processor -->
+        <mxCell id="a_pg_proc" value="② RS đọc từ queue → xử lý async" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#f59e0b;fontColor=#e65100;fontSize=10;fontStyle=1;endArrow=block;endFill=1;" edge="1" source="pg_queue" target="rs_proc" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+
+        <!-- ══ RS PROCESSOR ══ -->
+        <mxCell id="rs_proc" value="RS Event Processor&#xa;Validation → Transformation (JS) → Identity Resolution&#xa;PII masking · anonymousId ↔ userId merge" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff8e1;strokeColor=#d97706;strokeWidth=2;fontSize=12;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="500" y="700" width="660" height="80" as="geometry"/>
+        </mxCell>
+
+        <!-- Arrow: RS Proc → Destination Router -->
+        <mxCell id="a_proc_route" value="③ Fan-out to destinations" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#d97706;fontColor=#d97706;fontSize=10;fontStyle=1;endArrow=block;endFill=1;" edge="1" source="rs_proc" target="dest_router" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+
+        <!-- ══ DESTINATION ROUTER ══ -->
+        <mxCell id="dest_router" value="RS Destination Router" style="rhombus;whiteSpace=wrap;html=1;fillColor=#fff8e1;strokeColor=#d97706;strokeWidth=2;fontSize=12;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="730" y="840" width="200" height="80" as="geometry"/>
+        </mxCell>
+
+        <!-- ══ DESTINATIONS ══ -->
+        <!-- Dest 1: RS PostgreSQL store -->
+        <mxCell id="dest_pg" value="🗄 PostgreSQL&#xa;RS Profile Store&#xa;users · tracks · identifies&#xa;Source of truth" style="shape=cylinder3;whiteSpace=wrap;html=1;fillColor=#e8f5e9;strokeColor=#2e7d32;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="200" y="960" width="220" height="110" as="geometry"/>
+        </mxCell>
+
+        <!-- Dest 2: Webhook → BFF -->
+        <mxCell id="dest_webhook" value="Webhook Destination&#xa;POST async → BFF :3001&#xa;/internal/rudder-sync&#xa;KHÔNG block RS processing" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f3e5f5;strokeColor=#7c3aed;strokeWidth=2;fontSize=11;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="710" y="980" width="240" height="90" as="geometry"/>
+        </mxCell>
+
+        <!-- Dest 3: Warehouse (future) -->
+        <mxCell id="dest_wh" value="☁ Warehouse&#xa;S3 / BigQuery&#xa;(future phase)&#xa;Analytics" style="shape=cylinder3;whiteSpace=wrap;html=1;fillColor=#e8eaf6;strokeColor=#5c6bc0;fontSize=11;strokeDasharray=6 3;" vertex="1" parent="1">
+          <mxGeometry x="1180" y="960" width="220" height="110" as="geometry"/>
+        </mxCell>
+
+        <!-- Arrows: Router → Destinations -->
+        <mxCell id="a_r_pg" value="→ PG store" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#2e7d32;fontColor=#2e7d32;fontSize=9;endArrow=block;endFill=1;" edge="1" source="dest_router" target="dest_pg" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_r_wh" value="→ Webhook async" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#7c3aed;fontColor=#7c3aed;fontSize=9;endArrow=block;endFill=1;" edge="1" source="dest_router" target="dest_webhook" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_r_s3" value="→ Warehouse (future)" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#5c6bc0;fontColor=#5c6bc0;fontSize=9;dashed=1;dashPattern=5 3;endArrow=block;endFill=1;" edge="1" source="dest_router" target="dest_wh" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+
+        <!-- ══ BFF ══ -->
+        <mxCell id="bff" value="⚙ BFF API :3001&#xa;Nhận webhook từ RS · Auth · RBAC · PII Masking · Audit Log&#xa;RudderStackAdapter · MauticAdapter" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f3e5f5;strokeColor=#7c3aed;strokeWidth=2;fontSize=12;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="590" y="1130" width="480" height="80" as="geometry"/>
+        </mxCell>
+
+        <!-- Arrow: Webhook → BFF -->
+        <mxCell id="a_wh_bff" value="async POST (sau khi RS xong)" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#7c3aed;fontColor=#7c3aed;fontSize=10;fontStyle=1;dashed=1;dashPattern=5 3;endArrow=block;endFill=1;" edge="1" source="dest_webhook" target="bff" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+
+        <!-- BFF reads RS PostgreSQL via API -->
+        <mxCell id="a_bff_pg" value="BFF reads via RS&#xa;Control Plane :3000" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#7c3aed;fontColor=#7c3aed;fontSize=9;dashed=1;dashPattern=4 2;endArrow=open;" edge="1" source="bff" target="dest_pg" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+
+        <!-- ══ MAUTIC ══ -->
+        <mxCell id="mautic" value="🟢 Mautic :8081&#xa;Audience / Segment Engine&#xa;Sync contact từ BFF&#xa;lead_lists · lead_list_leads" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e8f5e9;strokeColor=#2e7d32;strokeWidth=2;fontSize=12;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="590" y="1270" width="480" height="90" as="geometry"/>
+        </mxCell>
+
+        <!-- Arrow: BFF → Mautic -->
+        <mxCell id="a_bff_ma" value="MauticAdapter.createOrUpdateContact()&#xa;POST /api/contacts" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#2e7d32;fontColor=#2e7d32;fontSize=10;fontStyle=1;endArrow=block;endFill=1;" edge="1" source="bff" target="mautic" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+
+        <!-- ══ CDP UI ══ -->
+        <mxCell id="cdp_ui" value="📱 PHS CDP UI — Marketing Workspace&#xa;BFF đọc data từ RS + Mautic → trả về cho UI qua /api/*&#xa;Marketing chỉ nhìn thấy layer này · Không biết RS hay Mautic" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e3f2fd;strokeColor=#1565c0;strokeWidth=2;fontSize=12;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="450" y="1420" width="760" height="80" as="geometry"/>
+        </mxCell>
+
+        <!-- Arrow: BFF → UI (bidirectional) -->
+        <mxCell id="a_bff_ui" value="HTTP /api/* ↔ Marketing UI" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#1565c0;fontColor=#1565c0;fontSize=10;fontStyle=1;endArrow=block;endFill=1;" edge="1" source="bff" target="cdp_ui" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="830" y="1210"/>
+              <mxPoint x="1450" y="1210"/>
+              <mxPoint x="1450" y="1460"/>
+            </Array>
+          </mxGeometry>
+        </mxCell>
+
+        <!-- KEY NOTES at bottom -->
+        <mxCell id="n1" value="⚠ SDK Events KHÔNG đi qua BFF · Vào thẳng RS :8080" style="text;html=1;align=center;strokeColor=#e53935;fillColor=#fce4ec;fontSize=11;fontStyle=1;rounded=1;" vertex="1" parent="1">
+          <mxGeometry x="30" y="540" width="480" height="40" as="geometry"/>
+        </mxCell>
+        <mxCell id="n2" value="⚠ RS lưu PostgreSQL TRƯỚC (queue) → rồi mới xử lý và fan-out" style="text;html=1;align=center;strokeColor=#f59e0b;fillColor=#fff8e1;fontSize=11;fontStyle=1;rounded=1;" vertex="1" parent="1">
+          <mxGeometry x="30" y="640" width="480" height="40" as="geometry"/>
+        </mxCell>
+        <mxCell id="n3" value="⚠ Webhook → BFF là async · BFF fail KHÔNG ảnh hưởng RS" style="text;html=1;align=center;strokeColor=#7c3aed;fillColor=#f3e5f5;fontSize=11;fontStyle=1;rounded=1;" vertex="1" parent="1">
+          <mxGeometry x="30" y="1000" width="480" height="40" as="geometry"/>
+        </mxCell>
+        <mxCell id="n4" value="⚠ BFF đọc data qua RS API :3000 · KHÔNG truy cập PG/MySQL trực tiếp" style="text;html=1;align=center;strokeColor=#2e7d32;fillColor=#e8f5e9;fontSize=11;fontStyle=1;rounded=1;" vertex="1" parent="1">
+          <mxGeometry x="30" y="1150" width="530" height="40" as="geometry"/>
+        </mxCell>
+
+      </root>
+    </mxGraphModel>
+  </diagram>
+
+</mxfile>

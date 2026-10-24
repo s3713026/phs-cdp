@@ -1,0 +1,76 @@
+/*
+  PHS CDP Design System — Tabs
+  Underline-style tabs (role="tablist"). JS in js/components/tabs.js
+  wires activation; this file is purely presentational.
+*/
+
+.tabs {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.tabs__tab {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-3);
+  background: transparent;
+  border: none;
+  font-size: var(--text-sm);
+  font-weight: var(--weight-medium);
+  color: var(--text-tertiary);
+  cursor: pointer;
+  transition: color var(--duration-fast) var(--ease-standard);
+}
+
+.tabs__tab svg { width: 15px; height: 15px; }
+
+.tabs__tab:hover {
+  color: var(--text-primary);
+}
+
+.tabs__tab[aria-selected="true"] {
+  color: var(--text-primary);
+}
+
+.tabs__tab[aria-selected="true"]::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -1px;
+  height: 2px;
+  background: var(--color-primary-500);
+  border-radius: var(--radius-full) var(--radius-full) 0 0;
+}
+
+.tabs__panel {
+  padding-top: var(--space-5);
+}
+.tabs__panel[hidden] {
+  display: none;
+}
+
+/* Pill tabs — a quieter alternative for secondary/nested tab groups */
+.tabs--pill {
+  border-bottom: none;
+  background: var(--color-ink-100);
+  padding: 3px;
+  border-radius: var(--radius-sm);
+  display: inline-flex;
+  gap: 2px;
+}
+.tabs--pill .tabs__tab {
+  padding: var(--space-1) var(--space-3);
+  border-radius: calc(var(--radius-sm) - 1px);
+}
+.tabs--pill .tabs__tab[aria-selected="true"] {
+  background: var(--surface-panel);
+  box-shadow: var(--shadow-sm);
+}
+.tabs--pill .tabs__tab[aria-selected="true"]::after {
+  display: none;
+}

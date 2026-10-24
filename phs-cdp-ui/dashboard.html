@@ -1,0 +1,466 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dashboard — PHS CDP</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&display=swap"
+    rel="stylesheet"
+  />
+
+  <link rel="stylesheet" href="css/main.css" />
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="app-shell__sidebar" data-sidebar-mount></aside>
+    <div class="app-shell__topbar" data-topbar-mount></div>
+
+    <main class="app-shell__main">
+      <div class="page">
+        <div class="page-header">
+          <div>
+            <div class="page-header__eyebrow">
+              <i data-lucide="layout-dashboard" style="width: 13px; height: 13px;"></i>
+              PHS CDP · Overview
+            </div>
+            <h1 class="page-header__title">Dashboard</h1>
+            <p class="page-header__description">Unified view of customer profiles, lifecycle, engagement and platform health across the PHS ecosystem.</p>
+          </div>
+        </div>
+
+        <div class="tabs" role="tablist" aria-label="Dashboard sections" data-dashboard-tabs style="margin-bottom: var(--space-6);">
+          <button class="tabs__tab" role="tab" aria-selected="true" aria-controls="dash-panel-customer" id="dash-tab-customer">Customer Overview</button>
+          <button class="tabs__tab" role="tab" aria-selected="false" aria-controls="dash-panel-system" id="dash-tab-system">System &amp; Engagement</button>
+        </div>
+
+        <!-- ============================================================ -->
+        <!-- TAB PANEL — CUSTOMER OVERVIEW                                 -->
+        <!-- ============================================================ -->
+        <div class="tabs__panel" id="dash-panel-customer" role="tabpanel" aria-labelledby="dash-tab-customer">
+
+          <!-- KPI row -->
+          <section class="section">
+            <div class="section__body">
+              <div class="metric-row">
+                <div class="metric metric--primary">
+                  <span class="metric__label">Total Profiles</span>
+                  <div class="metric__value-row"><span class="metric__value">1,284,392</span></div>
+                  <span class="metric__delta metric__delta--up"><i data-lucide="arrow-up-right"></i>+2.4% vs. last period</span>
+                </div>
+                <div class="metric">
+                  <span class="metric__label">Known Profiles</span>
+                  <div class="metric__value-row"><span class="metric__value" style="font-size: var(--text-xl);">824,615</span></div>
+                  <span class="metric__delta metric__delta--up"><i data-lucide="arrow-up-right"></i>+3.1%</span>
+                </div>
+                <div class="metric">
+                  <span class="metric__label">Anonymous Profiles</span>
+                  <div class="metric__value-row"><span class="metric__value" style="font-size: var(--text-xl);">459,777</span></div>
+                  <span class="metric__delta metric__delta--down"><i data-lucide="arrow-down-right"></i>-1.8%</span>
+                </div>
+                <div class="metric">
+                  <span class="metric__label">Active Customers</span>
+                  <div class="metric__value-row"><span class="metric__value" style="font-size: var(--text-xl);">126,482</span></div>
+                  <span class="metric__delta metric__delta--up"><i data-lucide="arrow-up-right"></i>+5.6%</span>
+                </div>
+                <div class="metric">
+                  <span class="metric__label">Events Today</span>
+                  <div class="metric__value-row"><span class="metric__value tabular-nums" style="font-size: var(--text-xl);" data-kpi-events-today>—</span></div>
+                  <span class="metric__delta metric__delta--up"><i data-lucide="arrow-up-right"></i>Sum of today's event catalog</span>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <!-- Customer Profile Growth -->
+          <section class="section">
+            <div class="section__header">
+              <div>
+                <h2 class="section__title">Customer Profile Growth</h2>
+                <p class="section__subtitle">Total, known and anonymous profiles over time.</p>
+              </div>
+              <div class="tabs tabs--pill" role="tablist" aria-label="Growth period" data-growth-period>
+                <button class="tabs__tab" role="tab" aria-selected="false" data-period="7d">7D</button>
+                <button class="tabs__tab" role="tab" aria-selected="true" data-period="30d">30D</button>
+                <button class="tabs__tab" role="tab" aria-selected="false" data-period="90d">90D</button>
+              </div>
+            </div>
+            <div class="section__body">
+              <div class="panel">
+                <div data-growth-chart></div>
+              </div>
+            </div>
+          </section>
+
+          <!-- Customer Lifecycle + Profile Samples -->
+          <section class="section">
+            <div class="section__body grid-main-side">
+              <div>
+                <div class="section__header" style="padding: 0; margin-bottom: var(--space-4);">
+                  <div>
+                    <h2 class="section__title">Customer Lifecycle</h2>
+                    <p class="section__subtitle">Distribution of the 1,284,392 profiles across PHS lifecycle stages.</p>
+                  </div>
+                </div>
+                <div class="chart-hbars">
+                  <div class="chart-hbar">
+                    <span class="chart-hbar__label">New User<span class="chart-hbar__sublabel">8.0% of total</span></span>
+                    <div class="chart-hbar__track"><div class="chart-hbar__fill" style="width: 25%; background: var(--chart-blue);"></div></div>
+                    <span class="chart-hbar__value tabular-nums">102,751</span>
+                  </div>
+                  <div class="chart-hbar">
+                    <span class="chart-hbar__label">Active Investor<span class="chart-hbar__sublabel">32.0% of total</span></span>
+                    <div class="chart-hbar__track"><div class="chart-hbar__fill" style="width: 100%; background: var(--chart-green);"></div></div>
+                    <span class="chart-hbar__value tabular-nums">411,005</span>
+                  </div>
+                  <div class="chart-hbar">
+                    <span class="chart-hbar__label">Engaged<span class="chart-hbar__sublabel">24.0% of total</span></span>
+                    <div class="chart-hbar__track"><div class="chart-hbar__fill" style="width: 75%; background: var(--color-primary-700);"></div></div>
+                    <span class="chart-hbar__value tabular-nums">308,254</span>
+                  </div>
+                  <div class="chart-hbar">
+                    <span class="chart-hbar__label">High Engagement<span class="chart-hbar__sublabel">12.0% of total</span></span>
+                    <div class="chart-hbar__track"><div class="chart-hbar__fill" style="width: 37.5%; background: var(--chart-gold);"></div></div>
+                    <span class="chart-hbar__value tabular-nums">154,127</span>
+                  </div>
+                  <div class="chart-hbar">
+                    <span class="chart-hbar__label">Dormant Customer<span class="chart-hbar__sublabel">24.0% of total</span></span>
+                    <div class="chart-hbar__track"><div class="chart-hbar__fill" style="width: 75%; background: var(--chart-neutral);"></div></div>
+                    <span class="chart-hbar__value tabular-nums">308,255</span>
+                  </div>
+                </div>
+              </div>
+
+              <div>
+                <div class="section__header" style="padding: 0; margin-bottom: var(--space-4);">
+                  <div>
+                    <h2 class="section__title">Profile Samples</h2>
+                    <p class="section__subtitle">5 synthetic demo profiles — not a customer directory.</p>
+                  </div>
+                </div>
+                <div class="profile-sample-grid" data-profile-samples></div>
+              </div>
+            </div>
+          </section>
+
+          <!-- Customer Activity -->
+          <section class="section" style="margin-bottom: 0;">
+            <div class="section__header">
+              <div>
+                <h2 class="section__title">Customer Activity</h2>
+                <p class="section__subtitle">Most recent customer-level events. Click a row for detail.</p>
+              </div>
+            </div>
+            <div class="section__body">
+              <div class="table-wrap">
+                <table class="table table--dense">
+                  <thead>
+                    <tr>
+                      <th aria-sort="descending"><span class="th-sort">Timestamp <i data-lucide="chevron-down"></i></span></th>
+                      <th>Event</th>
+                      <th>Source / Channel</th>
+                      <th>Status</th>
+                      <th class="cell-check"></th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr tabindex="0" role="button" data-detail-row data-type="event"
+                        data-timestamp="18 minutes ago" data-customer="CRM-••••291" data-event="Buy — VNM"
+                        data-channel="Trading System" data-status="Completed">
+                      <td class="cell-muted">18 minutes ago</td>
+                      <td class="cell-primary">Buy — VNM</td>
+                      <td class="cell-muted">Trading System</td>
+                      <td><span class="badge badge--success">Completed</span></td>
+                      <td><i class="row-affordance" data-lucide="chevron-right"></i></td>
+                    </tr>
+                    <tr tabindex="0" role="button" data-detail-row data-type="event"
+                        data-timestamp="26 minutes ago" data-customer="CRM-••••292" data-event="Deposit"
+                        data-channel="Mobile App" data-status="Completed">
+                      <td class="cell-muted">26 minutes ago</td>
+                      <td class="cell-primary">Deposit</td>
+                      <td class="cell-muted">Mobile App</td>
+                      <td><span class="badge badge--success">Completed</span></td>
+                      <td><i class="row-affordance" data-lucide="chevron-right"></i></td>
+                    </tr>
+                    <tr tabindex="0" role="button" data-detail-row data-type="event"
+                        data-timestamp="34 minutes ago" data-customer="CRM-••••013" data-event="View Stock — HPG"
+                        data-channel="Website" data-status="Received">
+                      <td class="cell-muted">34 minutes ago</td>
+                      <td class="cell-primary">View Stock — HPG</td>
+                      <td class="cell-muted">Website</td>
+                      <td><span class="badge badge--neutral">Received</span></td>
+                      <td><i class="row-affordance" data-lucide="chevron-right"></i></td>
+                    </tr>
+                    <tr tabindex="0" role="button" data-detail-row data-type="event"
+                        data-timestamp="41 minutes ago" data-customer="CRM-••••842" data-event="Watchlist Add — FPT"
+                        data-channel="Mobile App" data-status="Received">
+                      <td class="cell-muted">41 minutes ago</td>
+                      <td class="cell-primary">Watchlist Add — FPT</td>
+                      <td class="cell-muted">Mobile App</td>
+                      <td><span class="badge badge--neutral">Received</span></td>
+                      <td><i class="row-affordance" data-lucide="chevron-right"></i></td>
+                    </tr>
+                    <tr tabindex="0" role="button" data-detail-row data-type="event"
+                        data-timestamp="52 minutes ago" data-customer="CRM-••••217" data-event="Push Open"
+                        data-channel="Push" data-status="Opened">
+                      <td class="cell-muted">52 minutes ago</td>
+                      <td class="cell-primary">Push Open</td>
+                      <td class="cell-muted">Push</td>
+                      <td><span class="badge badge--info">Opened</span></td>
+                      <td><i class="row-affordance" data-lucide="chevron-right"></i></td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </section>
+        </div>
+
+        <!-- ============================================================ -->
+        <!-- TAB PANEL — SYSTEM & ENGAGEMENT                               -->
+        <!-- ============================================================ -->
+        <div class="tabs__panel" id="dash-panel-system" role="tabpanel" aria-labelledby="dash-tab-system" hidden>
+
+          <!-- Engagement -->
+          <section class="section">
+            <div class="section__header">
+              <div>
+                <h2 class="section__title">Engagement</h2>
+                <p class="section__subtitle">Active users and channel reach are distinct from profile counts and investor lifecycle stages.</p>
+              </div>
+            </div>
+            <div class="section__body">
+              <div class="metric-row" style="margin-bottom: var(--space-6);">
+                <div class="metric">
+                  <span class="metric__label">Daily Active Users</span>
+                  <div class="metric__value-row"><span class="metric__value tabular-nums" style="font-size: var(--text-xl);" data-kpi-dau>—</span></div>
+                  <span class="section__meta" style="text-transform:none; letter-spacing:normal; font-weight:var(--weight-regular); color: var(--text-tertiary);">Unique customers, App Open today</span>
+                </div>
+                <div class="metric">
+                  <span class="metric__label">Monthly Active Users</span>
+                  <div class="metric__value-row"><span class="metric__value" style="font-size: var(--text-xl);">126,482</span></div>
+                  <span class="section__meta" style="text-transform:none; letter-spacing:normal; font-weight:var(--weight-regular); color: var(--text-tertiary);">Same figure as Active Customers</span>
+                </div>
+                <div class="metric">
+                  <span class="metric__label">New vs. Returning</span>
+                  <div class="metric__value-row"><span class="metric__value" style="font-size: var(--text-xl);">8% / 92%</span></div>
+                  <span class="section__meta" style="text-transform:none; letter-spacing:normal; font-weight:var(--weight-regular); color: var(--text-tertiary);">New User lifecycle share vs. all other active stages</span>
+                </div>
+              </div>
+              <p class="subhead">Activity trend — last 7 days</p>
+              <div class="panel" style="margin-bottom: var(--space-6);">
+                <div data-activity-trend-chart></div>
+              </div>
+              <p class="subhead">Reach by channel — last 30 days</p>
+              <div class="grid-2">
+                <div class="chart-vbars">
+                  <div class="chart-vbar">
+                    <span class="chart-vbar__value">68%</span>
+                    <div class="chart-vbar__col" style="height: 140px;"><div class="chart-vbar__fill" style="height: 68%; background: var(--chart-green);"></div></div>
+                    <span class="chart-vbar__label">App</span>
+                  </div>
+                  <div class="chart-vbar">
+                    <span class="chart-vbar__value">41%</span>
+                    <div class="chart-vbar__col" style="height: 140px;"><div class="chart-vbar__fill" style="height: 41%; background: var(--chart-blue);"></div></div>
+                    <span class="chart-vbar__label">Push</span>
+                  </div>
+                  <div class="chart-vbar">
+                    <span class="chart-vbar__value">24%</span>
+                    <div class="chart-vbar__col" style="height: 140px;"><div class="chart-vbar__fill" style="height: 24%; background: var(--chart-teal);"></div></div>
+                    <span class="chart-vbar__label">Email</span>
+                  </div>
+                  <div class="chart-vbar">
+                    <span class="chart-vbar__value">57%</span>
+                    <div class="chart-vbar__col" style="height: 140px;"><div class="chart-vbar__fill" style="height: 57%; background: var(--chart-gold);"></div></div>
+                    <span class="chart-vbar__label">Trading</span>
+                  </div>
+                </div>
+                <div class="stack gap-4">
+                  <p class="subhead">Highlights</p>
+                  <div class="cluster gap-3" style="align-items: flex-start;">
+                    <i data-lucide="arrow-up-right" style="width: 15px; height: 15px; color: var(--color-success-600); margin-top: 2px; flex-shrink: 0;"></i>
+                    <span style="font-size: var(--text-sm); color: var(--text-secondary);">App engagement leads at 68%, up 4.1pt on last month.</span>
+                  </div>
+                  <div class="cluster gap-3" style="align-items: flex-start;">
+                    <i data-lucide="arrow-up-right" style="width: 15px; height: 15px; color: var(--color-success-600); margin-top: 2px; flex-shrink: 0;"></i>
+                    <span style="font-size: var(--text-sm); color: var(--text-secondary);">Trading engagement up 6.3pt, driven by watchlist-triggered price alerts.</span>
+                  </div>
+                  <div class="cluster gap-3" style="align-items: flex-start;">
+                    <i data-lucide="arrow-down-right" style="width: 15px; height: 15px; color: var(--color-danger-600); margin-top: 2px; flex-shrink: 0;"></i>
+                    <span style="font-size: var(--text-sm); color: var(--text-secondary);">Email remains the weakest channel at 24% — candidate for re-engagement testing.</span>
+                  </div>
+                  <div class="cluster gap-3" style="align-items: flex-start;">
+                    <i data-lucide="minus" style="width: 15px; height: 15px; color: var(--text-tertiary); margin-top: 2px; flex-shrink: 0;"></i>
+                    <span style="font-size: var(--text-sm); color: var(--text-secondary);">Push engagement flat at 41%, in line with the last two periods.</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <!-- Platform Health -->
+          <section class="section" style="margin-bottom: 0;">
+            <div class="section__header">
+              <div>
+                <h2 class="section__title">Platform Health</h2>
+                <p class="section__subtitle">Connected data sources and the most recent platform events.</p>
+              </div>
+              <a class="btn btn--outline btn--sm" href="data-flows.html"><i data-lucide="link"></i> View Data Flows</a>
+            </div>
+            <div class="section__body grid-main-side">
+              <div class="table-wrap">
+                <table class="table table--dense">
+                  <thead>
+                    <tr>
+                      <th>Source</th>
+                      <th>Status</th>
+                      <th>Last sync</th>
+                      <th class="num">Records</th>
+                      <th class="num">Events (24h)</th>
+                      <th>Health</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td class="cell-primary">CRM</td>
+                      <td><span class="status-dot status-dot--success">Connected</span></td>
+                      <td class="cell-muted">2 min ago</td>
+                      <td class="num tabular-nums">1,284,392</td>
+                      <td class="num tabular-nums">48,392</td>
+                      <td><span class="badge badge--success">99% Healthy</span></td>
+                    </tr>
+                    <tr>
+                      <td class="cell-primary">Mobile App</td>
+                      <td><span class="status-dot status-dot--success">Connected</span></td>
+                      <td class="cell-muted">1 min ago</td>
+                      <td class="num tabular-nums">1,102,884</td>
+                      <td class="num tabular-nums">214,600</td>
+                      <td><span class="badge badge--success">98% Healthy</span></td>
+                    </tr>
+                    <tr>
+                      <td class="cell-primary">Trading System</td>
+                      <td><span class="status-dot status-dot--success">Connected</span></td>
+                      <td class="cell-muted">3 min ago</td>
+                      <td class="num tabular-nums">892,410</td>
+                      <td class="num tabular-nums">61,204</td>
+                      <td><span class="badge badge--success">97% Healthy</span></td>
+                    </tr>
+                    <tr>
+                      <td class="cell-primary">Website</td>
+                      <td><span class="status-dot status-dot--success">Connected</span></td>
+                      <td class="cell-muted">5 min ago</td>
+                      <td class="num tabular-nums">456,700</td>
+                      <td class="num tabular-nums">38,912</td>
+                      <td><span class="badge badge--success">95% Healthy</span></td>
+                    </tr>
+                    <tr>
+                      <td class="cell-primary">AppsFlyer</td>
+                      <td><span class="status-dot status-dot--warning">Warning</span></td>
+                      <td class="cell-muted">42 min ago</td>
+                      <td class="num tabular-nums">1,284,392</td>
+                      <td class="num tabular-nums">96,340</td>
+                      <td><span class="badge badge--warning">76% Degraded</span></td>
+                    </tr>
+                    <tr>
+                      <td class="cell-primary">GA4</td>
+                      <td><span class="status-dot status-dot--success">Connected</span></td>
+                      <td class="cell-muted">8 min ago</td>
+                      <td class="num tabular-nums">1,284,392</td>
+                      <td class="num tabular-nums">182,450</td>
+                      <td><span class="badge badge--success">94% Healthy</span></td>
+                    </tr>
+                    <tr>
+                      <td class="cell-primary">n8n</td>
+                      <td><span class="status-dot status-dot--danger">Disconnected</span></td>
+                      <td class="cell-muted">6 hours ago</td>
+                      <td class="num cell-muted">—</td>
+                      <td class="num cell-muted">—</td>
+                      <td><span class="badge badge--danger">Offline</span></td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+
+              <div>
+                <p class="subhead">Recent activity</p>
+                <div class="timeline">
+                  <div class="timeline__item">
+                    <div class="timeline__rail"><span class="timeline__dot timeline__dot--success"></span><span class="timeline__line"></span></div>
+                    <div class="timeline__content">
+                      <p class="timeline__text">12,482 new profiles identified</p>
+                      <p class="timeline__time">8 minutes ago</p>
+                    </div>
+                  </div>
+                  <div class="timeline__item">
+                    <div class="timeline__rail"><span class="timeline__dot timeline__dot--success"></span><span class="timeline__line"></span></div>
+                    <div class="timeline__content">
+                      <p class="timeline__text">AppsFlyer event stream synchronized</p>
+                      <p class="timeline__time">24 minutes ago</p>
+                    </div>
+                  </div>
+                  <div class="timeline__item">
+                    <div class="timeline__rail"><span class="timeline__dot timeline__dot--info"></span><span class="timeline__line"></span></div>
+                    <div class="timeline__content">
+                      <p class="timeline__text">Audience "Active Investors" updated — 284,612 members</p>
+                      <p class="timeline__time">41 minutes ago</p>
+                    </div>
+                  </div>
+                  <div class="timeline__item">
+                    <div class="timeline__rail"><span class="timeline__dot timeline__dot--success"></span><span class="timeline__line"></span></div>
+                    <div class="timeline__content">
+                      <p class="timeline__text">CRM data source synchronized — 1,284,392 records</p>
+                      <p class="timeline__time">1 hour ago</p>
+                    </div>
+                  </div>
+                  <div class="timeline__item">
+                    <div class="timeline__rail"><span class="timeline__dot timeline__dot--danger"></span></div>
+                    <div class="timeline__content">
+                      <p class="timeline__text">n8n connection lost — retrying</p>
+                      <p class="timeline__time">6 hours ago</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+        </div>
+
+      </div>
+    </main>
+  </div>
+
+  <!-- Shared detail drawer — populated per row by js/pages/dashboard.js -->
+  <div class="drawer-overlay" id="detail-drawer">
+    <aside class="drawer" role="dialog" aria-modal="true" aria-labelledby="detail-drawer-title">
+      <div class="drawer__header">
+        <div>
+          <div class="drawer__eyebrow" data-drawer-eyebrow>Detail</div>
+          <h3 class="drawer__title" id="detail-drawer-title" data-drawer-title>—</h3>
+        </div>
+        <button class="btn btn--ghost btn--icon" data-drawer-close aria-label="Close"><i data-lucide="x"></i></button>
+      </div>
+      <div class="drawer__body" data-drawer-body></div>
+      <div class="drawer__footer">
+        <button class="btn btn--secondary" data-drawer-close>Close</button>
+      </div>
+    </aside>
+  </div>
+
+  <!-- BFF integration -->
+  <script src="./js/api.js"></script>
+  <script src="https://unpkg.com/lucide@1.47.0/dist/umd/lucide.js"></script>
+  <script type="module">
+    import { bootstrapPage } from "./js/main.js";
+    import { initDashboard } from "./js/pages/dashboard.js";
+
+    bootstrapPage({
+      currentNavId: "dashboard",
+      breadcrumb: [{ label: "PHS CDP", href: "index.html" }, { label: "Dashboard" }],
+    });
+    initDashboard();
+  </script>
+</body>
+</html>

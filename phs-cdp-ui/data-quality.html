@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Data Quality — PHS CDP</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&display=swap"
+    rel="stylesheet"
+  />
+
+  <link rel="stylesheet" href="css/main.css" />
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="app-shell__sidebar" data-sidebar-mount></aside>
+    <div class="app-shell__topbar" data-topbar-mount></div>
+
+    <main class="app-shell__main">
+      <div class="page">
+        <div class="page-header">
+          <div>
+            <div class="page-header__eyebrow">
+              <i data-lucide="badge-check" style="width: 13px; height: 13px;"></i>
+              Data · Data Quality
+            </div>
+            <h1 class="page-header__title">Data Quality</h1>
+            <p class="page-header__description">Monitor event validation, Tracking Plan compliance, schema violations, and destination delivery health. Prototype telemetry — not real production data.</p>
+          </div>
+          <div class="page-header__actions">
+            <div class="col-manager-anchor">
+              <div class="select select--sm" style="width: 160px;">
+                <select data-dq-daterange aria-label="Date range"></select>
+                <i class="select__chevron" data-lucide="chevron-down"></i>
+              </div>
+              <div class="col-manager" data-dq-custom-range-panel style="width: 300px;"></div>
+            </div>
+            <button class="btn btn--outline btn--sm" data-dq-refresh><i data-lucide="refresh-cw"></i> Refresh</button>
+            <button class="btn btn--outline btn--sm" data-dq-export><i data-lucide="download"></i> Export</button>
+          </div>
+        </div>
+
+        <!-- Top KPIs -->
+        <section class="section">
+          <div class="section__body event-summary-grid">
+            <div class="metric"><span class="metric__label">Events Validated</span><div class="metric__value-row"><span class="metric__value tabular-nums" data-kpi-validated style="font-size: var(--text-xl);">—</span></div></div>
+            <div class="metric metric--danger"><span class="metric__label">Events With Violations</span><div class="metric__value-row"><span class="metric__value tabular-nums" data-kpi-violations style="font-size: var(--text-xl);">—</span></div></div>
+            <div class="metric"><span class="metric__label">Events Dropped</span><div class="metric__value-row"><span class="metric__value tabular-nums" data-kpi-dropped style="font-size: var(--text-xl);">—</span></div></div>
+            <div class="metric"><span class="metric__label">Violation Rate</span><div class="metric__value-row"><span class="metric__value tabular-nums" data-kpi-rate style="font-size: var(--text-xl);">—</span></div></div>
+            <div class="metric metric--primary"><span class="metric__label">Active Sources</span><div class="metric__value-row"><span class="metric__value tabular-nums" data-kpi-sources style="font-size: var(--text-xl);">—</span></div></div>
+            <div class="metric metric--success"><span class="metric__label">Active Tracking Plans</span><div class="metric__value-row"><span class="metric__value tabular-nums" data-kpi-plans style="font-size: var(--text-xl);">—</span></div></div>
+          </div>
+        </section>
+
+        <!-- Tracking Plan Compliance (primary) -->
+        <section class="section">
+          <div class="section__header"><div><h2 class="section__title">Tracking Plan Compliance</h2><p class="section__subtitle">Are incoming events conforming to their Tracking Plans?</p></div></div>
+          <div class="section__body" data-tp-compliance></div>
+        </section>
+
+        <!-- Violations Over Time -->
+        <section class="section">
+          <div class="section__header"><div><h2 class="section__title">Violations Over Time</h2><p class="section__subtitle" data-violations-range>Last 24 hours</p></div></div>
+          <div class="section__body" data-violations-chart></div>
+        </section>
+
+        <!-- Event Volume -->
+        <section class="section">
+          <div class="section__header"><div><h2 class="section__title">Event Volume</h2><p class="section__subtitle">Events received vs. validated, with violations, and dropped.</p></div></div>
+          <div class="section__body" data-volume-chart></div>
+        </section>
+
+        <!-- Quality by Source -->
+        <section class="section">
+          <div class="section__header"><div><h2 class="section__title">Quality by Source</h2><p class="section__subtitle">Source → Tracking Plan → Event Validation → Violations.</p></div></div>
+          <div class="section__body">
+            <div class="table-wrap">
+              <table class="table" data-source-quality-table>
+                <thead><tr><th>Source</th><th class="num">Events Validated</th><th class="num">Events With Violations</th><th class="num">Violation Rate</th><th class="num">Events Dropped</th><th>Tracking Plan</th><th>Status</th></tr></thead>
+                <tbody></tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <!-- Quality by Tracking Plan -->
+        <section class="section">
+          <div class="section__header"><div><h2 class="section__title">Quality by Tracking Plan</h2></div></div>
+          <div class="section__body">
+            <div class="table-wrap">
+              <table class="table" data-plan-quality-table>
+                <thead><tr><th>Tracking Plan</th><th>Version</th><th class="num">Sources</th><th class="num">Events Validated</th><th class="num">Violations</th><th class="num">Violation Rate</th><th class="num">Events Dropped</th><th>Status</th></tr></thead>
+                <tbody></tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <!-- Destination Delivery Health -->
+        <section class="section">
+          <div class="section__header"><div><h2 class="section__title">Destination Delivery Health</h2><p class="section__subtitle">Whether validated data is successfully delivered downstream — separate from schema/Tracking Plan compliance above.</p></div></div>
+          <div class="section__body">
+            <div class="table-wrap">
+              <table class="table" data-delivery-table>
+                <thead><tr><th>Destination</th><th>Type</th><th class="num">Events Sent</th><th class="num">Delivery Failures</th><th class="num">Failure Rate</th><th>Last Delivery</th><th>Status</th></tr></thead>
+                <tbody></tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <!-- Violations table -->
+        <section class="section" style="margin-bottom: 0;">
+          <div class="section__header"><div><h2 class="section__title">Violations</h2></div></div>
+          <div class="section__body">
+            <div class="table-wrap">
+              <div class="table__toolbar">
+                <div class="cluster gap-2" style="flex-wrap: wrap; align-items: center;">
+                  <div class="search-field" style="width: 220px;">
+                    <i data-lucide="search"></i>
+                    <input class="input" type="text" placeholder="Search event, property, source…" data-violation-search aria-label="Search violations" />
+                  </div>
+                </div>
+                <div class="cluster gap-2">
+                  <div class="col-manager-anchor">
+                    <button class="btn btn--outline btn--sm" data-violation-filter-trigger><i data-lucide="filter"></i> Filter<span class="filter-count-badge" data-violation-filter-count hidden>0</span></button>
+                    <div class="col-manager" data-violation-filter-panel></div>
+                  </div>
+                </div>
+              </div>
+              <table class="table" data-violation-table>
+                <thead><tr><th>Timestamp</th><th>Source</th><th>Event</th><th>Violation Type</th><th>Property</th><th>Tracking Plan</th><th>Severity</th><th>Status</th></tr></thead>
+                <tbody></tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+      </div>
+    </main>
+  </div>
+
+  <!-- Violation detail drawer -->
+  <div class="drawer-overlay" id="violation-detail-drawer">
+    <aside class="drawer" role="dialog" aria-modal="true" aria-label="Violation detail">
+      <div class="drawer__header">
+        <div>
+          <div class="drawer__eyebrow">Violation</div>
+          <div class="drawer__title" data-violation-drawer-title>—</div>
+        </div>
+        <button class="btn btn--ghost btn--sm" data-drawer-close aria-label="Close"><i data-lucide="x"></i></button>
+      </div>
+      <div class="drawer__body" data-violation-drawer-body></div>
+    </aside>
+  </div>
+
+  <!-- BFF integration -->
+  <script src="./js/api.js"></script>
+  <script src="https://unpkg.com/lucide@1.47.0/dist/umd/lucide.js"></script>
+  <script type="module">
+    import { bootstrapPage } from "./js/main.js";
+    import { initDataQuality } from "./js/pages/data-quality.js";
+
+    bootstrapPage({
+      currentNavId: "data-quality",
+      breadcrumb: [{"label": "PHS CDP", "href": "index.html"}, {"label": "Data"}, {"label": "Data Quality"}],
+    });
+    initDataQuality();
+  </script>
+</body>
+</html>

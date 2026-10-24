@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Audiences — PHS CDP</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&display=swap"
+    rel="stylesheet"
+  />
+
+  <link rel="stylesheet" href="css/main.css" />
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="app-shell__sidebar" data-sidebar-mount></aside>
+    <div class="app-shell__topbar" data-topbar-mount></div>
+
+    <main class="app-shell__main">
+      <div class="page">
+        <div class="page-header">
+          <div style="flex: 1; min-width: 0;">
+            <div class="page-header__eyebrow">
+              <i data-lucide="users-round" style="width: 13px; height: 13px;"></i>
+              Audiences
+            </div>
+            <h1 class="page-header__title">Audiences</h1>
+            <p class="page-header__description">
+              Customer segments built from identity, attributes, behavior, consent and engagement data.
+            </p>
+          </div>
+          <div class="page-header__actions">
+            <button class="btn btn--primary" data-create-audience>
+              <i data-lucide="plus"></i>
+              Create Audience
+            </button>
+          </div>
+        </div>
+
+        <!-- ============================================================ -->
+        <!-- LIST VIEW                                                     -->
+        <!-- ============================================================ -->
+        <div data-view-list>
+          <section class="section">
+            <div class="section__body" data-audience-summary></div>
+          </section>
+
+          <section class="section" style="margin-bottom: 0;">
+            <div class="section__header">
+              <div>
+                <h2 class="section__title">All Audiences</h2>
+                <p class="section__subtitle">Click an audience to inspect its definition, members and activation destinations.</p>
+              </div>
+            </div>
+            <div class="section__body">
+              <div class="table-wrap">
+                <div class="table__toolbar">
+                  <div class="search-field" style="width: 260px;">
+                    <i data-lucide="search"></i>
+                    <input class="input" type="text" placeholder="Search audiences…" data-audience-search aria-label="Search audiences" />
+                  </div>
+                  <div class="cluster gap-2" style="flex-wrap: wrap;">
+                    <div class="select select--sm" style="width: 150px;">
+                      <select data-filter-type aria-label="Filter by type"></select>
+                      <i class="select__chevron" data-lucide="chevron-down"></i>
+                    </div>
+                    <div class="select select--sm" style="width: 130px;">
+                      <select data-filter-status aria-label="Filter by status"></select>
+                      <i class="select__chevron" data-lucide="chevron-down"></i>
+                    </div>
+                    <div class="select select--sm" style="width: 150px;">
+                      <select data-filter-owner aria-label="Filter by owner"></select>
+                      <i class="select__chevron" data-lucide="chevron-down"></i>
+                    </div>
+                    <div class="select select--sm" style="width: 140px;">
+                      <select data-filter-updated aria-label="Filter by last updated"></select>
+                      <i class="select__chevron" data-lucide="chevron-down"></i>
+                    </div>
+                  </div>
+                </div>
+                <table class="table" data-audience-table>
+                  <thead>
+                    <tr>
+                      <th>Audience</th>
+                      <th>Description</th>
+                      <th>Type</th>
+                      <th class="num">Members</th>
+                      <th>Updated</th>
+                      <th>Status</th>
+                      <th>Owner</th>
+                    </tr>
+                  </thead>
+                  <tbody></tbody>
+                </table>
+              </div>
+            </div>
+          </section>
+        </div>
+
+        <!-- ============================================================ -->
+        <!-- DETAIL VIEW                                                   -->
+        <!-- ============================================================ -->
+        <div data-view-detail hidden>
+          <button class="btn btn--ghost btn--sm" data-back-to-list style="margin-bottom: var(--space-5);">
+            <i data-lucide="arrow-left"></i>
+            All Audiences
+          </button>
+
+          <div class="page-header">
+            <div style="flex: 1; min-width: 0;" data-detail-header></div>
+            <div class="page-header__actions">
+              <button class="btn btn--outline btn--sm" data-edit-audience>
+                <i data-lucide="pencil"></i>
+                Edit Audience
+              </button>
+              <button class="btn btn--outline btn--sm" data-delete-audience style="color: var(--color-danger, #dc2626); border-color: var(--color-danger, #dc2626);">
+                <i data-lucide="trash-2"></i>
+                Delete
+              </button>
+            </div>
+          </div>
+
+          <section class="section">
+            <div class="section__body" data-detail-summary></div>
+          </section>
+
+          <div class="tabs" role="tablist" aria-label="Audience detail sections" data-detail-tabs style="margin-bottom: var(--space-8);">
+            <button class="tabs__tab" role="tab" aria-selected="true" aria-controls="aud-panel-overview" id="aud-tab-overview">
+              <i data-lucide="pie-chart"></i>
+              Overview
+            </button>
+            <button class="tabs__tab" role="tab" aria-selected="false" aria-controls="aud-panel-definition" id="aud-tab-definition">
+              <i data-lucide="sliders-horizontal"></i>
+              Definition
+            </button>
+            <button class="tabs__tab" role="tab" aria-selected="false" aria-controls="aud-panel-members" id="aud-tab-members">
+              <i data-lucide="users-round"></i>
+              Members
+            </button>
+            <button class="tabs__tab" role="tab" aria-selected="false" aria-controls="aud-panel-activation" id="aud-tab-activation">
+              <i data-lucide="send"></i>
+              Activation
+            </button>
+          </div>
+
+          <div class="tabs__panel" id="aud-panel-overview" role="tabpanel" aria-labelledby="aud-tab-overview" data-tab-overview></div>
+          <div class="tabs__panel" id="aud-panel-definition" role="tabpanel" aria-labelledby="aud-tab-definition" data-tab-definition hidden></div>
+          <div class="tabs__panel" id="aud-panel-members" role="tabpanel" aria-labelledby="aud-tab-members" data-tab-members hidden></div>
+          <div class="tabs__panel" id="aud-panel-activation" role="tabpanel" aria-labelledby="aud-tab-activation" data-tab-activation hidden></div>
+        </div>
+
+        <!-- ============================================================ -->
+        <!-- CREATE AUDIENCE (BUILDER) VIEW                                -->
+        <!-- ============================================================ -->
+        <div data-view-builder hidden>
+          <div class="page-header">
+            <div>
+              <div class="page-header__eyebrow">
+                <i data-lucide="sliders-horizontal" style="width: 13px; height: 13px;"></i>
+                <span data-builder-eyebrow>Audiences · New</span>
+              </div>
+              <h1 class="page-header__title" data-builder-heading>Create Audience</h1>
+              <p class="page-header__description" data-builder-subtitle>Define who belongs in this audience using profile, identity, behavior, engagement and consent conditions.</p>
+            </div>
+            <div class="page-header__actions">
+              <button class="btn btn--ghost" data-builder-cancel>Cancel</button>
+            </div>
+          </div>
+
+          <div class="rule-row" data-unsaved-banner hidden style="margin-bottom: var(--space-6); align-items: center; justify-content: space-between;">
+            <span class="cluster gap-2" style="color: var(--text-primary);">
+              <i data-lucide="alert-circle" style="width: 14px; height: 14px; color: var(--color-warning-600);"></i>
+              <strong>Unsaved changes</strong>
+              <span style="color: var(--text-secondary); font-weight: var(--weight-regular);">You have unsaved changes to this audience.</span>
+            </span>
+            <span class="cluster gap-2">
+              <button type="button" class="btn btn--outline btn--sm" data-keep-editing>Keep Editing</button>
+              <button type="button" class="btn btn--ghost btn--sm" data-discard-changes>Discard Changes</button>
+            </span>
+          </div>
+
+          <section class="section">
+            <div class="section__header">
+              <div>
+                <h2 class="section__title">Audience Details</h2>
+              </div>
+            </div>
+            <div class="section__body grid-3">
+              <div class="field">
+                <label class="field__label" for="builder-name">Audience Name</label>
+                <div class="field__control">
+                  <input class="input" id="builder-name" type="text" placeholder="e.g. High Engagement — No Recent Trade" data-builder-name />
+                </div>
+              </div>
+              <div class="field" style="grid-column: span 1;">
+                <label class="field__label" for="builder-type">Audience Type</label>
+                <div class="select">
+                  <select id="builder-type" data-builder-type></select>
+                  <i class="select__chevron" data-lucide="chevron-down"></i>
+                </div>
+              </div>
+              <div class="field" style="grid-column: 1 / -1;">
+                <label class="field__label" for="builder-description">Description <span class="field__optional">(optional)</span></label>
+                <textarea class="input" id="builder-description" placeholder="Describe who this audience represents…" data-builder-description></textarea>
+              </div>
+            </div>
+          </section>
+
+          <section class="section" data-examples-section>
+            <div class="section__header">
+              <div>
+                <h2 class="section__title">Example Audiences</h2>
+                <p class="section__subtitle">Click one to populate the builder below with a realistic starting definition.</p>
+              </div>
+            </div>
+            <div class="section__body">
+              <div class="rule-examples" data-audience-examples></div>
+            </div>
+          </section>
+
+          <section class="section">
+            <div class="section__header">
+              <div>
+                <h2 class="section__title">Define Conditions</h2>
+                <p class="section__subtitle">Every condition in the main list must match (ALL / AND). Add a condition group for an ANY / OR set. Operators and value controls are typed to each field — you can't type a raw amount into a Value Band, for example.</p>
+              </div>
+            </div>
+            <div class="section__body">
+              <p class="rule-error" data-builder-banner hidden></p>
+              <div data-builder-conditions></div>
+              <div class="rule-builder-actions">
+                <button type="button" class="btn btn--outline btn--sm" data-add-condition><i data-lucide="plus"></i>Add condition</button>
+                <button type="button" class="btn btn--outline btn--sm" data-add-condition-group><i data-lucide="layers"></i>Add condition group</button>
+                <button type="button" class="btn btn--ghost btn--sm" data-clear-conditions><i data-lucide="trash-2"></i>Clear</button>
+              </div>
+            </div>
+          </section>
+
+          <section class="section" style="margin-bottom: 0;">
+            <div class="section__header">
+              <div>
+                <h2 class="section__title">Estimated Audience</h2>
+              </div>
+            </div>
+            <div class="section__body stack gap-4">
+              <div class="audience-estimate">
+                <span class="audience-estimate__value tabular-nums" data-estimate-value>1,284,392</span>
+                <span class="audience-estimate__label">profiles</span>
+                <span class="audience-estimate__meta" data-estimate-meta>Updated just now</span>
+              </div>
+              <p style="font-size: var(--text-xs); color: var(--text-tertiary);">
+                Estimated based on current profile and event data. This is a prototype estimation, not a live backend calculation.
+              </p>
+
+              <div>
+                <button type="button" class="btn btn--outline btn--sm" data-preview-audience>
+                  <i data-lucide="eye"></i>
+                  Preview Audience
+                </button>
+              </div>
+
+              <div data-preview-panel hidden>
+                <p class="subhead">Preview profiles</p>
+                <div class="table-wrap">
+                  <table class="table table--dense">
+                    <thead>
+                      <tr><th>Customer</th><th>CRM ID</th><th>Customer Tier</th><th>Lifecycle</th><th>Location</th><th>Last Active</th></tr>
+                    </thead>
+                    <tbody>
+                      <tr>
+                        <td class="cell-primary">Nguyễn Minh Anh</td>
+                        <td class="cell-muted font-mono">CRM-847291</td>
+                        <td><span class="badge badge--neutral">Platinum</span></td>
+                        <td>Active Investor</td>
+                        <td class="cell-muted">Ho Chi Minh City</td>
+                        <td class="cell-muted">Today</td>
+                      </tr>
+                      <tr>
+                        <td class="cell-primary">Trần Quốc Bảo</td>
+                        <td class="cell-muted font-mono">CRM-847292</td>
+                        <td><span class="badge badge--neutral">Gold</span></td>
+                        <td>Engaged</td>
+                        <td class="cell-muted">Hanoi</td>
+                        <td class="cell-muted">Yesterday</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              <div class="cluster gap-3" style="justify-content: flex-end; border-top: 1px solid var(--border-subtle); padding-top: var(--space-5); margin-top: var(--space-2);">
+                <button type="button" class="btn btn--outline" data-save-draft>Save as Draft</button>
+                <button type="button" class="btn btn--primary" data-save-audience>
+                  <i data-lucide="save"></i>
+                  Save Audience
+                </button>
+                <button type="button" class="btn btn--primary" data-save-changes hidden>
+                  <i data-lucide="save"></i>
+                  Save Changes
+                </button>
+              </div>
+            </div>
+          </section>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script src="https://unpkg.com/lucide@1.47.0/dist/umd/lucide.js"></script>
+  <!-- BFF integration -->
+  <script src="js/config.js"></script>
+  <script src="./js/api.js"></script>
+  <script type="module">
+    import { bootstrapPage } from "./js/main.js?v=2";
+    import { initAudiences } from "./js/pages/audiences.js?v=2";
+
+    // "All Audiences" and "Segment Builder" are two sidebar entries
+    // into this same page — the query param tells us which one, so
+    // the active nav item and the initial view both match the link
+    // that was actually clicked.
+    const openToBuilder = new URLSearchParams(location.search).get("view") === "builder";
+
+    bootstrapPage({
+      currentNavId: openToBuilder ? "segment-builder" : "all-audiences",
+      breadcrumb: [
+        { label: "PHS CDP", href: "index.html" },
+        { label: "Audiences", href: "audiences.html" },
+        ...(openToBuilder ? [{ label: "Segment Builder" }] : []),
+      ],
+    });
+    initAudiences({ openBuilderOnLoad: openToBuilder });
+  </script>
+</body>
+</html>

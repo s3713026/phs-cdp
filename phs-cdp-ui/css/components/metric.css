@@ -1,0 +1,108 @@
+/*
+  PHS CDP Design System — Metric
+  KPI tile: label, value, delta, optional sparkline/footnote.
+  Deliberately NOT a boxed card by default — a left accent rule and
+  generous internal rhythm carry the hierarchy instead of a border
+  drawn on all four sides plus a shadow. A bordered variant exists
+  for when a metric needs to sit inside a denser grid.
+*/
+
+.metric {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding-left: var(--space-4);
+  border-left: 2px solid var(--border-default);
+}
+
+.metric--primary { border-left-color: var(--color-primary-500); }
+.metric--success { border-left-color: var(--color-success-500); }
+.metric--warning { border-left-color: var(--color-warning-500); }
+.metric--danger { border-left-color: var(--color-danger-500); }
+.metric--info { border-left-color: var(--color-info-500); }
+
+.metric__label {
+  font-size: var(--text-xs);
+  font-weight: var(--weight-semibold);
+  letter-spacing: var(--tracking-wide);
+  text-transform: uppercase;
+  color: var(--text-tertiary);
+}
+
+.metric__value-row {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-3);
+}
+
+.metric__value {
+  /* Display Number: system font, 32–40px, weight 600, tabular-nums. */
+  font-size: var(--text-2xl);
+  font-weight: var(--weight-semibold);
+  letter-spacing: var(--tracking-tight);
+  color: var(--text-primary);
+  font-variant-numeric: tabular-nums;
+}
+
+.metric__unit {
+  font-size: var(--text-sm);
+  color: var(--text-tertiary);
+}
+
+.metric__delta {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-size: var(--text-xs);
+  font-weight: var(--weight-semibold);
+  font-variant-numeric: tabular-nums;
+}
+.metric__delta svg { width: 13px; height: 13px; }
+
+.metric__delta--up { color: var(--color-success-600); }
+.metric__delta--down { color: var(--color-danger-600); }
+.metric__delta--flat { color: var(--text-tertiary); }
+
+.metric__footnote {
+  font-size: var(--text-xs);
+  color: var(--text-tertiary);
+}
+
+.metric__spark {
+  margin-top: var(--space-1);
+  color: var(--color-primary-400);
+}
+.metric__spark svg {
+  width: 100%;
+  height: 32px;
+  overflow: visible;
+}
+
+/* Bordered variant — self-contained tile for use inside grid_auto */
+.metric--boxed {
+  border-left: none;
+  padding: var(--space-4) var(--space-5);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  background: var(--surface-panel);
+}
+.metric--boxed.metric--primary { border-top: 2px solid var(--color-primary-500); }
+.metric--boxed.metric--success { border-top: 2px solid var(--color-success-500); }
+.metric--boxed.metric--warning { border-top: 2px solid var(--color-warning-500); }
+.metric--boxed.metric--danger { border-top: 2px solid var(--color-danger-500); }
+.metric--boxed.metric--info { border-top: 2px solid var(--color-info-500); }
+
+/* Compact row layout — several metrics inline, divided not boxed */
+.metric-row {
+  display: flex;
+  align-items: stretch;
+}
+.metric-row .metric {
+  flex: 1;
+  padding: 0 var(--space-6);
+  border-left: 1px solid var(--border-subtle);
+}
+.metric-row .metric:first-child {
+  padding-left: 0;
+  border-left: none;
+}

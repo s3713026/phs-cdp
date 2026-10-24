@@ -1,0 +1,20 @@
+const CUSTOMERS = [
+  { id:'PHS-001234', name:'Nguyễn Văn Minh', email:'nguyen.van.minh@email.com', phone:'0912345678', lifecycle:'active_investor', tier:'gold', segment:'growth_investor', joinDate:'2022-03-15', lastActive:'2024-01-15T10:30:00Z', tradingFrequency:'high', cashUtilization:45, productInterests:['margin','elites_pick'], emailOpenRate:68, pushEngagement:72, webVisits:24, productViews:18 },
+  { id:'PHS-001235', name:'Trần Thị Lan', email:'tran.thi.lan@email.com', phone:'0923456789', lifecycle:'new_account', tier:'silver', segment:'new_investor', joinDate:'2023-11-20', lastActive:'2024-01-14T14:20:00Z', tradingFrequency:'low', cashUtilization:80, productInterests:['elites_seeds'], emailOpenRate:45, pushEngagement:30, webVisits:8, productViews:5 },
+  { id:'PHS-001236', name:'Lê Hoàng Nam', email:'le.hoang.nam@email.com', phone:'0934567890', lifecycle:'active_investor', tier:'platinum', segment:'vip_investor', joinDate:'2021-06-10', lastActive:'2024-01-15T09:45:00Z', tradingFrequency:'very_high', cashUtilization:20, productInterests:['margin','elites_pick','elites_portfolio'], emailOpenRate:82, pushEngagement:90, webVisits:45, productViews:32 },
+  { id:'PHS-001237', name:'Phạm Thu Hương', email:'pham.thu.huong@email.com', phone:'0945678901', lifecycle:'dormant', tier:'bronze', segment:'reactivation', joinDate:'2020-09-05', lastActive:'2023-10-01T16:00:00Z', tradingFrequency:'none', cashUtilization:95, productInterests:[], emailOpenRate:12, pushEngagement:5, webVisits:1, productViews:0 },
+  { id:'PHS-001238', name:'Hoàng Đức Thắng', email:'hoang.duc.thang@email.com', phone:'0956789012', lifecycle:'churn_risk', tier:'silver', segment:'at_risk', joinDate:'2022-01-20', lastActive:'2023-12-15T11:30:00Z', tradingFrequency:'low', cashUtilization:70, productInterests:['elites_pick'], emailOpenRate:25, pushEngagement:15, webVisits:3, productViews:2 },
+  { id:'PHS-001239', name:'Vũ Thị Mai', email:'vu.thi.mai@email.com', phone:'0967890123', lifecycle:'active_investor', tier:'gold', segment:'engaged_investor', joinDate:'2021-12-08', lastActive:'2024-01-15T08:15:00Z', tradingFrequency:'medium', cashUtilization:55, productInterests:['margin','elites_seeds'], emailOpenRate:71, pushEngagement:65, webVisits:19, productViews:12 },
+  { id:'PHS-001240', name:'Đặng Quốc Bảo', email:'dang.quoc.bao@email.com', phone:'0978901234', lifecycle:'ekyc', tier:'bronze', segment:'new_prospect', joinDate:'2024-01-10', lastActive:'2024-01-15T13:45:00Z', tradingFrequency:'none', cashUtilization:100, productInterests:[], emailOpenRate:0, pushEngagement:0, webVisits:2, productViews:1 },
+  { id:'PHS-001241', name:'Bùi Minh Tuấn', email:'bui.minh.tuan@email.com', phone:'0989012345', lifecycle:'active_investor', tier:'platinum', segment:'high_value', joinDate:'2019-05-22', lastActive:'2024-01-15T07:30:00Z', tradingFrequency:'very_high', cashUtilization:15, productInterests:['margin','elites_pick','elites_portfolio'], emailOpenRate:88, pushEngagement:95, webVisits:60, productViews:45 },
+  { id:'PHS-001242', name:'Ngô Thị Thanh', email:'ngo.thi.thanh@email.com', phone:'0901234567', lifecycle:'first_trade', tier:'silver', segment:'new_trader', joinDate:'2023-12-01', lastActive:'2024-01-13T15:00:00Z', tradingFrequency:'low', cashUtilization:60, productInterests:['elites_pick'], emailOpenRate:55, pushEngagement:40, webVisits:10, productViews:7 },
+  { id:'PHS-001243', name:'Trịnh Văn Hùng', email:'trinh.van.hung@email.com', phone:'0912345600', lifecycle:'vip', tier:'platinum', segment:'vip_high', joinDate:'2018-03-10', lastActive:'2024-01-15T06:00:00Z', tradingFrequency:'very_high', cashUtilization:10, productInterests:['margin','elites_pick','elites_portfolio'], emailOpenRate:90, pushEngagement:98, webVisits:80, productViews:60 },
+];
+
+const LIFECYCLE_LABELS = {
+  prospect:'Prospect', lead:'Lead', ekyc:'eKYC', new_account:'New Account',
+  funding:'Funding', first_trade:'First Trade', active_investor:'Active Investor',
+  vip:'VIP', dormant:'Dormant', churn_risk:'Churn Risk', reactivation:'Reactivation',
+};
+
+module.exports = { CUSTOMERS, LIFECYCLE_LABELS };

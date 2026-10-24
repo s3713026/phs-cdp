@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Journeys — PHS CDP</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&display=swap"
+    rel="stylesheet"
+  />
+
+  <link rel="stylesheet" href="css/main.css" />
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="app-shell__sidebar" data-sidebar-mount></aside>
+    <div class="app-shell__topbar" data-topbar-mount></div>
+
+    <main class="app-shell__main">
+      <div class="page">
+        <div class="page-header">
+          <div style="flex: 1; min-width: 0;">
+            <div class="page-header__eyebrow">
+              <i data-lucide="workflow" style="width: 13px; height: 13px;"></i>
+              Journeys
+            </div>
+            <h1 class="page-header__title">Journeys</h1>
+            <p class="page-header__description">
+              Design and orchestrate customer lifecycle journeys using profile, behavioral, audience and consent signals.
+            </p>
+          </div>
+          <div class="page-header__actions">
+            <a class="btn btn--primary" href="journey-builder.html">
+              <i data-lucide="plus"></i>
+              Create Journey
+            </a>
+          </div>
+        </div>
+
+        <!-- ============================================================ -->
+        <!-- LIST VIEW                                                     -->
+        <!-- ============================================================ -->
+        <div data-view-list>
+          <section class="section">
+            <div class="section__body" data-journey-summary></div>
+          </section>
+
+          <section class="section" style="margin-bottom: 0;">
+            <div class="section__header">
+              <div>
+                <h2 class="section__title">All Journeys</h2>
+                <p class="section__subtitle">Click a journey to inspect its flow, audience and activity.</p>
+              </div>
+            </div>
+            <div class="section__body">
+              <div class="table-wrap">
+                <div class="table__toolbar">
+                  <div class="search-field" style="width: 260px;">
+                    <i data-lucide="search"></i>
+                    <input class="input" type="text" placeholder="Search journeys…" data-journey-search aria-label="Search journeys" />
+                  </div>
+                  <div class="select select--sm" style="width: 140px;">
+                    <select data-filter-status aria-label="Filter by status"></select>
+                    <i class="select__chevron" data-lucide="chevron-down"></i>
+                  </div>
+                </div>
+                <table class="table" data-journey-table>
+                  <thead>
+                    <tr>
+                      <th>Journey</th>
+                      <th>Entry</th>
+                      <th>Status</th>
+                      <th class="num">Audience</th>
+                      <th>Last Updated</th>
+                      <th>Owner</th>
+                    </tr>
+                  </thead>
+                  <tbody></tbody>
+                </table>
+              </div>
+            </div>
+          </section>
+        </div>
+
+        <!-- ============================================================ -->
+        <!-- DETAIL VIEW                                                   -->
+        <!-- ============================================================ -->
+        <div data-view-detail hidden>
+          <button class="btn btn--ghost btn--sm" data-back-to-list style="margin-bottom: var(--space-5);">
+            <i data-lucide="arrow-left"></i>
+            All Journeys
+          </button>
+
+          <div class="page-header">
+            <div style="flex: 1; min-width: 0;" data-detail-header></div>
+            <div class="page-header__actions">
+              <button class="btn btn--outline btn--sm" data-modal-open="journey-test-modal">
+                <i data-lucide="play"></i>
+                Test Journey
+              </button>
+              <a class="btn btn--outline btn--sm" data-edit-journey href="#">
+                <i data-lucide="pencil"></i>
+                Edit Journey
+              </a>
+            </div>
+          </div>
+
+          <div class="tabs" role="tablist" aria-label="Journey detail sections" style="margin-bottom: var(--space-8);">
+            <button class="tabs__tab" role="tab" aria-selected="true" aria-controls="jr-panel-overview" id="jr-tab-overview">
+              <i data-lucide="layout-list"></i>
+              Overview
+            </button>
+            <button class="tabs__tab" role="tab" aria-selected="false" aria-controls="jr-panel-flow" id="jr-tab-flow">
+              <i data-lucide="workflow"></i>
+              Flow
+            </button>
+            <button class="tabs__tab" role="tab" aria-selected="false" aria-controls="jr-panel-audience" id="jr-tab-audience">
+              <i data-lucide="users-round"></i>
+              Audience
+            </button>
+            <button class="tabs__tab" role="tab" aria-selected="false" aria-controls="jr-panel-activity" id="jr-tab-activity">
+              <i data-lucide="activity"></i>
+              Activity
+            </button>
+          </div>
+
+          <div class="tabs__panel" id="jr-panel-overview" role="tabpanel" aria-labelledby="jr-tab-overview" data-tab-overview></div>
+          <div class="tabs__panel" id="jr-panel-flow" role="tabpanel" aria-labelledby="jr-tab-flow" data-tab-flow hidden></div>
+          <div class="tabs__panel" id="jr-panel-audience" role="tabpanel" aria-labelledby="jr-tab-audience" data-tab-audience hidden></div>
+          <div class="tabs__panel" id="jr-panel-activity" role="tabpanel" aria-labelledby="jr-tab-activity" data-tab-activity hidden></div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- ================================================================ -->
+  <!-- READ-ONLY NODE INFO DRAWER (Flow tab)                             -->
+  <!-- ================================================================ -->
+  <div class="drawer-overlay" id="journey-node-drawer">
+    <aside class="drawer" role="dialog" aria-modal="true" aria-label="Journey step detail">
+      <div class="drawer__header">
+        <div>
+          <div class="drawer__eyebrow" data-drawer-eyebrow>Step</div>
+          <div class="drawer__title" data-drawer-title>—</div>
+        </div>
+        <button class="btn btn--ghost btn--sm" data-drawer-close aria-label="Close"><i data-lucide="x"></i></button>
+      </div>
+      <div class="drawer__body" data-drawer-body></div>
+    </aside>
+  </div>
+
+  <!-- ================================================================ -->
+  <!-- TEST JOURNEY MODAL                                                -->
+  <!-- ================================================================ -->
+  <div class="modal-overlay" id="journey-test-modal">
+    <div class="modal modal--lg" role="dialog" aria-modal="true" aria-labelledby="journey-test-title">
+      <div class="modal__header">
+        <div>
+          <div class="modal__title" id="journey-test-title">Test Journey</div>
+          <p class="modal__description">Step through this journey for a single mock customer. No real message, sync or forward is ever executed.</p>
+        </div>
+        <button class="btn btn--ghost btn--sm modal__close" data-modal-close aria-label="Close"><i data-lucide="x"></i></button>
+      </div>
+      <div class="modal__body stack gap-4">
+        <div class="journey-sim-banner">
+          <i data-lucide="info"></i>
+          Simulation — No real actions will be executed.
+        </div>
+        <div class="field">
+          <label class="field__label" for="test-journey-customer">Customer</label>
+          <div class="select">
+            <select id="test-journey-customer" data-test-customer></select>
+            <i class="select__chevron" data-lucide="chevron-down"></i>
+          </div>
+        </div>
+        <div>
+          <button class="btn btn--primary btn--sm" data-test-run>
+            <i data-lucide="play"></i>
+            Run Simulation
+          </button>
+        </div>
+        <div data-test-results hidden></div>
+      </div>
+      <div class="modal__footer">
+        <button class="btn btn--ghost" data-modal-close>Close</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://unpkg.com/lucide@1.47.0/dist/umd/lucide.js"></script>
+  <script type="module">
+    import { bootstrapPage } from "./js/main.js";
+    import { initJourneys } from "./js/pages/journeys.js";
+
+    bootstrapPage({
+      currentNavId: "all-journeys",
+      breadcrumb: [
+        { label: "PHS CDP", href: "index.html" },
+        { label: "Journeys" },
+      ],
+    });
+    initJourneys();
+  </script>
+</body>
+</html>

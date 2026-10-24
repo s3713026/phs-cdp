@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Live Events — PHS CDP</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&display=swap"
+    rel="stylesheet"
+  />
+
+  <link rel="stylesheet" href="css/main.css" />
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="app-shell__sidebar" data-sidebar-mount></aside>
+    <div class="app-shell__topbar" data-topbar-mount></div>
+
+    <main class="app-shell__main">
+      <div class="page">
+        <div class="page-header">
+          <div>
+            <div class="page-header__eyebrow">
+              <i data-lucide="radio" style="width: 13px; height: 13px;"></i>
+              Monitor · Live Events
+            </div>
+            <h1 class="page-header__title">Live Events</h1>
+            <p class="page-header__description">Explore customer events as they are received by the PHS CDP. Prototype event data — not live production volume.</p>
+          </div>
+        </div>
+
+        <section class="section">
+          <div class="section__body event-summary-grid">
+            <div class="metric metric--primary"><span class="metric__label">Events Today</span><div class="metric__value-row"><span class="metric__value tabular-nums" data-summary-events style="font-size: var(--text-xl);">—</span></div></div>
+            <div class="metric"><span class="metric__label">Unique Customers</span><div class="metric__value-row"><span class="metric__value tabular-nums" data-summary-customers style="font-size: var(--text-xl);">—</span></div></div>
+            <div class="metric metric--success"><span class="metric__label">Active Event Definitions</span><div class="metric__value-row"><span class="metric__value tabular-nums" data-summary-definitions style="font-size: var(--text-xl);">—</span></div></div>
+            <div class="metric"><span class="metric__label">Sources Receiving Events</span><div class="metric__value-row"><span class="metric__value tabular-nums" data-summary-sources style="font-size: var(--text-xl);">—</span></div></div>
+          </div>
+        </section>
+
+        <section class="section" style="margin-bottom: 0;">
+          <div class="section__body">
+            <div class="table-wrap">
+              <div class="table__toolbar">
+                <div class="cluster gap-2" style="flex-wrap: wrap; align-items: center;">
+                  <div class="search-field" style="width: 220px;">
+                    <i data-lucide="search"></i>
+                    <input class="input" type="text" placeholder="Search events…" data-explorer-search aria-label="Search events" />
+                  </div>
+                  <div class="select select--sm" style="width: 140px;">
+                    <select data-explorer-daterange aria-label="Date range"></select>
+                    <i class="select__chevron" data-lucide="chevron-down"></i>
+                  </div>
+                  <div class="select select--sm" style="width: 150px;">
+                    <select data-explorer-category aria-label="Category"></select>
+                    <i class="select__chevron" data-lucide="chevron-down"></i>
+                  </div>
+                  <div class="select select--sm" style="width: 150px;">
+                    <select data-explorer-source aria-label="Source"></select>
+                    <i class="select__chevron" data-lucide="chevron-down"></i>
+                  </div>
+                  <div class="select select--sm" style="width: 160px;">
+                    <select data-explorer-event aria-label="Event"></select>
+                    <i class="select__chevron" data-lucide="chevron-down"></i>
+                  </div>
+                  <div class="select select--sm" style="width: 140px;">
+                    <select data-explorer-status aria-label="Status"></select>
+                    <i class="select__chevron" data-lucide="chevron-down"></i>
+                  </div>
+                </div>
+              </div>
+              <table class="table table--dense" data-explorer-table>
+                <thead>
+                  <tr>
+                    <th>Timestamp</th>
+                    <th>Event</th>
+                    <th>Category</th>
+                    <th>Source</th>
+                    <th>Customer</th>
+                    <th>Properties</th>
+                    <th>Status</th>
+                  </tr>
+                </thead>
+                <tbody></tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+      </div>
+    </main>
+  </div>
+
+  <!-- Event Detail drawer -->
+  <div class="drawer-overlay" id="event-detail-drawer">
+    <aside class="drawer" role="dialog" aria-modal="true" aria-label="Event detail">
+      <div class="drawer__header">
+        <div>
+          <div class="drawer__eyebrow">Event</div>
+          <div class="drawer__title" data-drawer-title>—</div>
+        </div>
+        <button class="btn btn--ghost btn--sm" data-drawer-close aria-label="Close"><i data-lucide="x"></i></button>
+      </div>
+      <div class="drawer__body" data-drawer-body></div>
+    </aside>
+  </div>
+
+  <!-- BFF integration -->
+  <script src="js/config.js"></script>
+  <script src="./js/api.js"></script>
+  <script src="https://unpkg.com/lucide@1.47.0/dist/umd/lucide.js"></script>
+  <script type="module">
+    import { bootstrapPage } from "./js/main.js";
+    import { initLiveEvents } from "./js/pages/live-events.js";
+
+    bootstrapPage({
+      currentNavId: "live-events",
+      breadcrumb: [{"label": "PHS CDP", "href": "index.html"}, {"label": "Monitor"}, {"label": "Live Events"}],
+    });
+    initLiveEvents();
+  </script>
+</body>
+</html>

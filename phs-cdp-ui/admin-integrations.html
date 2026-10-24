@@ -1,0 +1,490 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Infrastructure — PHS CDP Admin</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/main.css" />
+
+  <style>
+    /* ── Admin banner ─────────────────────────────────────────── */
+    .admin-banner {
+      display: flex; align-items: center; gap: var(--space-3);
+      padding: var(--space-3) var(--space-4);
+      background: color-mix(in srgb, #f59e0b 10%, transparent);
+      border: 1px solid color-mix(in srgb, #f59e0b 30%, transparent);
+      border-radius: var(--radius-lg);
+      margin-bottom: var(--space-5);
+      font-size: var(--text-sm);
+      color: var(--text-primary);
+    }
+    .admin-banner svg { flex-shrink: 0; color: #f59e0b; }
+
+    /* ── Infra cards ──────────────────────────────────────────── */
+    .infra-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(480px, 1fr));
+      gap: var(--space-5);
+    }
+    @media (max-width: 700px) { .infra-grid { grid-template-columns: 1fr; } }
+
+    .infra-card {
+      background: var(--surface-1);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+    }
+    .infra-card--healthy { border-color: color-mix(in srgb, var(--success, #22c55e) 35%, transparent); }
+    .infra-card--warning { border-color: color-mix(in srgb, #f59e0b 35%, transparent); }
+    .infra-card--error   { border-color: color-mix(in srgb, var(--error, #ef4444) 35%, transparent); }
+
+    .infra-card__header {
+      display: flex; align-items: center; gap: var(--space-3);
+      padding: var(--space-4) var(--space-4) var(--space-3);
+      border-bottom: 1px solid var(--border);
+    }
+    .infra-card__icon {
+      width: 42px; height: 42px; border-radius: var(--radius-md);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 20px; flex-shrink: 0;
+    }
+    .infra-card__icon--mautic  { background: color-mix(in srgb, #7952b3 15%, transparent); }
+    .infra-card__icon--postgres { background: color-mix(in srgb, #336791 15%, transparent); }
+
+    .infra-card__title-wrap { flex: 1; min-width: 0; }
+    .infra-card__title {
+      font-size: var(--text-base); font-weight: 600; color: var(--text-primary);
+    }
+    .infra-card__subtitle { font-size: var(--text-sm); color: var(--text-muted); }
+
+    .infra-card__badge {
+      display: inline-flex; align-items: center; gap: 5px;
+      padding: 3px 10px; border-radius: 99px;
+      font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .04em;
+    }
+    .badge-healthy { background: color-mix(in srgb, #22c55e 12%, transparent); color: #16a34a; }
+    .badge-warning { background: color-mix(in srgb, #f59e0b 12%, transparent); color: #b45309; }
+    .badge-error   { background: color-mix(in srgb, #ef4444 12%, transparent); color: #dc2626; }
+    .badge-unknown { background: var(--surface-2); color: var(--text-muted); }
+
+    .infra-card__body { padding: var(--space-4); }
+
+    .infra-field-grid {
+      display: grid; grid-template-columns: 1fr 1fr;
+      gap: var(--space-3) var(--space-4);
+      margin-bottom: var(--space-4);
+    }
+    .infra-field__label {
+      font-size: 11px; font-weight: 600; text-transform: uppercase;
+      letter-spacing: .04em; color: var(--text-muted); margin-bottom: 2px;
+    }
+    .infra-field__value {
+      font-size: var(--text-sm); color: var(--text-primary); word-break: break-all;
+    }
+    .infra-field__value--mono {
+      font-family: 'IBM Plex Mono', monospace; font-size: 12px;
+    }
+    .infra-field__value--masked {
+      letter-spacing: 3px; color: var(--text-muted);
+    }
+
+    .infra-card__footer {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: var(--space-3) var(--space-4);
+      border-top: 1px solid var(--border);
+      background: var(--surface-2);
+    }
+    .infra-last-check { font-size: 11px; color: var(--text-muted); }
+
+    /* ── Connection test spinner ─────────────────────────────── */
+    .spin { display: inline-block; animation: spin .7s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── Toast ───────────────────────────────────────────────── */
+    #toast-rack {
+      position: fixed; bottom: 24px; right: 24px; z-index: 9999;
+      display: flex; flex-direction: column; gap: 8px; pointer-events: none;
+    }
+    .toast {
+      background: var(--surface-1); border: 1px solid var(--border);
+      border-radius: var(--radius-md); padding: 10px 16px;
+      font-size: var(--text-sm); color: var(--text-primary);
+      box-shadow: 0 4px 12px rgba(0,0,0,.15);
+      pointer-events: auto; animation: toast-in .2s ease;
+    }
+    @keyframes toast-in { from { opacity:0; transform: translateY(8px); } }
+    .toast--ok  { border-left: 3px solid #22c55e; }
+    .toast--err { border-left: 3px solid #ef4444; }
+  </style>
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="app-shell__sidebar" data-sidebar-mount></aside>
+    <div class="app-shell__topbar" data-topbar-mount></div>
+
+    <main class="app-shell__main">
+      <div class="page">
+
+        <!-- Page header -->
+        <div class="page-header">
+          <div>
+            <div class="page-header__eyebrow">
+              <i data-lucide="shield-alert" style="width:13px;height:13px;"></i>
+              Administration · Infrastructure
+            </div>
+            <h1 class="page-header__title">Infrastructure Connections</h1>
+            <p class="page-header__description">
+              CDP engine connections — Mautic (audience engine) and Data Warehouse (event storage).
+              These are internal CDP infrastructure and are not visible to Marketing users.
+            </p>
+          </div>
+        </div>
+
+        <!-- Admin banner -->
+        <div class="admin-banner">
+          <i data-lucide="lock" style="width:16px;height:16px;"></i>
+          <span>
+            <strong>Technical Admin only.</strong>
+            Changes here affect the core CDP data pipeline. Coordinate with the engineering team before modifying credentials or connection settings.
+          </span>
+        </div>
+
+        <!-- Infrastructure cards -->
+        <div class="infra-grid" id="infra-grid">
+
+          <!-- ── Mautic ── -->
+          <div class="infra-card" id="card-mautic">
+            <div class="infra-card__header">
+              <div class="infra-card__icon infra-card__icon--mautic">🎯</div>
+              <div class="infra-card__title-wrap">
+                <div class="infra-card__title">Mautic Marketing Engine</div>
+                <div class="infra-card__subtitle">Audience segmentation &amp; marketing automation</div>
+              </div>
+              <span class="infra-card__badge badge-unknown" id="mautic-badge">
+                <i data-lucide="circle-dot" style="width:10px;height:10px;"></i>
+                Checking…
+              </span>
+            </div>
+
+            <div class="infra-card__body">
+              <div class="infra-field-grid" id="mautic-fields">
+                <div>
+                  <div class="infra-field__label">Platform URL</div>
+                  <div class="infra-field__value infra-field__value--mono" id="mautic-url">—</div>
+                </div>
+                <div>
+                  <div class="infra-field__label">Auth User</div>
+                  <div class="infra-field__value" id="mautic-user">—</div>
+                </div>
+                <div>
+                  <div class="infra-field__label">Destination ID</div>
+                  <div class="infra-field__value infra-field__value--mono" id="mautic-id">—</div>
+                </div>
+                <div>
+                  <div class="infra-field__label">Password</div>
+                  <div class="infra-field__value infra-field__value--masked">••••••••</div>
+                </div>
+              </div>
+
+              <div style="margin-bottom: var(--space-3);">
+                <div class="infra-field__label" style="margin-bottom: 6px;">Connected Sources</div>
+                <div id="mautic-sources" style="font-size:var(--text-sm);color:var(--text-muted);">Loading…</div>
+              </div>
+
+              <div style="background:var(--surface-2);border-radius:var(--radius-md);padding:var(--space-3);font-size:var(--text-sm);color:var(--text-muted);">
+                <strong style="color:var(--text-primary);">Role:</strong>
+                Receives customer profiles and segment assignments from RudderStack.
+                Used by CDP to query and manage audience memberships.
+                Marketing users interact with Mautic through the Audiences module — they never access Mautic directly.
+              </div>
+            </div>
+
+            <div class="infra-card__footer">
+              <span class="infra-last-check" id="mautic-last-check">Last check: —</span>
+              <div style="display:flex;gap:var(--space-2);">
+                <button class="btn btn--secondary btn--sm" onclick="testMautic()">
+                  <i data-lucide="activity" style="width:14px;height:14px;"></i>
+                  Test Connection
+                </button>
+                <button class="btn btn--secondary btn--sm" onclick="openMauticAdmin()">
+                  <i data-lucide="external-link" style="width:14px;height:14px;"></i>
+                  Open Mautic
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- ── PHS Data Warehouse ── -->
+          <div class="infra-card" id="card-dw">
+            <div class="infra-card__header">
+              <div class="infra-card__icon infra-card__icon--postgres">🗄️</div>
+              <div class="infra-card__title-wrap">
+                <div class="infra-card__title">PHS Data Warehouse</div>
+                <div class="infra-card__subtitle">PostgreSQL — RudderStack event warehouse</div>
+              </div>
+              <span class="infra-card__badge badge-unknown" id="dw-badge">
+                <i data-lucide="circle-dot" style="width:10px;height:10px;"></i>
+                Checking…
+              </span>
+            </div>
+
+            <div class="infra-card__body">
+              <div class="infra-field-grid">
+                <div>
+                  <div class="infra-field__label">Host</div>
+                  <div class="infra-field__value infra-field__value--mono" id="dw-host">—</div>
+                </div>
+                <div>
+                  <div class="infra-field__label">Port</div>
+                  <div class="infra-field__value infra-field__value--mono" id="dw-port">—</div>
+                </div>
+                <div>
+                  <div class="infra-field__label">Database</div>
+                  <div class="infra-field__value infra-field__value--mono" id="dw-database">—</div>
+                </div>
+                <div>
+                  <div class="infra-field__label">Destination ID</div>
+                  <div class="infra-field__value infra-field__value--mono" id="dw-id">—</div>
+                </div>
+              </div>
+
+              <div style="margin-bottom: var(--space-3);">
+                <div class="infra-field__label" style="margin-bottom: 6px;">Connected Sources</div>
+                <div id="dw-sources" style="font-size:var(--text-sm);color:var(--text-muted);">Loading…</div>
+              </div>
+
+              <div style="background:var(--surface-2);border-radius:var(--radius-md);padding:var(--space-3);font-size:var(--text-sm);color:var(--text-muted);">
+                <strong style="color:var(--text-primary);">Role:</strong>
+                Receives all RudderStack events (tracks, identifies, pages, per-event tables) for historical storage.
+                This is <em>not</em> a Customer 360 database — it stores raw RS event tables.
+                Customer 360 profiles require a separate ETL/dbt transform layer on top of this warehouse.
+              </div>
+            </div>
+
+            <div class="infra-card__footer">
+              <span class="infra-last-check" id="dw-last-check">Last check: —</span>
+              <div style="display:flex;gap:var(--space-2);">
+                <button class="btn btn--secondary btn--sm" onclick="testDW()">
+                  <i data-lucide="activity" style="width:14px;height:14px;"></i>
+                  Test Connection
+                </button>
+              </div>
+            </div>
+          </div>
+
+        </div><!-- /infra-grid -->
+
+        <!-- RS link note -->
+        <div style="margin-top: var(--space-5); background: var(--surface-1); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: var(--space-4);">
+          <div style="font-size:var(--text-sm);font-weight:600;color:var(--text-primary);margin-bottom:var(--space-2);">
+            <i data-lucide="info" style="width:14px;height:14px;vertical-align:middle;margin-right:4px;"></i>
+            Why aren't these in the Connection Manager?
+          </div>
+          <p style="font-size:var(--text-sm);color:var(--text-muted);margin:0;">
+            The Connection Manager is designed for Marketing users to configure <strong>Activation Channels</strong> —
+            where customer data is sent for campaigns (Webhooks, Email, Push, SMS).
+            Mautic and the Data Warehouse are <strong>CDP infrastructure</strong>: they power the backend engines that
+            Marketing users interact with through the Audiences and Data modules.
+            Exposing their raw config to Marketing users would violate the platform's
+            "hide backend complexity" principle.
+          </p>
+        </div>
+
+      </div><!-- /page -->
+    </main>
+  </div>
+
+  <div id="toast-rack"></div>
+
+  <script src="https://unpkg.com/lucide@1.47.0/dist/umd/lucide.js"></script>
+  <script type="module">
+    import { bootstrapPage } from "./js/main.js";
+
+    bootstrapPage({
+      currentNavId: "admin-infrastructure",
+      breadcrumb: [
+        { label: "PHS CDP", href: "index.html" },
+        { label: "Administration" },
+        { label: "Infrastructure" },
+      ],
+    });
+
+    // ── Load config from BFF ──────────────────────────────────────────────────
+    const BASE = (window.PHS_API_BASE) ||
+      (location.protocol === 'file:' || [5500,5501,3000,4173,8080,8811,8888].includes(+location.port)
+        ? 'http://localhost:3001/api' : '/api');
+
+    let mauticDest = null;
+    let dwDest = null;
+    let allSources = [];
+
+    async function loadConfig() {
+      try {
+        const [dr, sr] = await Promise.all([
+          fetch(`${BASE}/connections/destinations?category=infrastructure`).then(r => r.json()),
+          fetch(`${BASE}/connections/sources`).then(r => r.json()),
+        ]);
+
+        const dests = dr?.data ?? [];
+        allSources = sr?.data ?? [];
+
+        mauticDest = dests.find(d => d.destinationDefinitionId === 'MAUTIC');
+        dwDest     = dests.find(d => d.destinationDefinitionId === 'POSTGRES');
+
+        renderMautic();
+        renderDW();
+        checkConnections();
+      } catch (e) {
+        console.error('Failed to load infrastructure config', e);
+      }
+    }
+
+    function connectedSources(destId) {
+      const matched = allSources.filter(s => (s.destinations || []).includes(destId));
+      if (!matched.length) return '<span style="color:var(--text-muted);">No sources connected</span>';
+      return matched.map(s =>
+        `<span style="display:inline-flex;align-items:center;gap:4px;background:var(--surface-2);border:1px solid var(--border);border-radius:6px;padding:2px 8px;font-size:11px;margin:2px;">${s.name}</span>`
+      ).join(' ');
+    }
+
+    function renderMautic() {
+      if (!mauticDest) {
+        document.getElementById('mautic-url').textContent  = 'Not configured';
+        document.getElementById('mautic-user').textContent = '—';
+        document.getElementById('mautic-id').textContent   = '—';
+        document.getElementById('mautic-sources').innerHTML = '<span style="color:var(--text-muted);">Destination not found in config</span>';
+        return;
+      }
+      document.getElementById('mautic-url').textContent  = mauticDest.config?.mauticUrl || '—';
+      document.getElementById('mautic-user').textContent = mauticDest.config?.username  || '—';
+      document.getElementById('mautic-id').textContent   = mauticDest.id;
+      document.getElementById('mautic-sources').innerHTML = connectedSources(mauticDest.id);
+    }
+
+    function renderDW() {
+      if (!dwDest) {
+        document.getElementById('dw-host').textContent     = 'Not configured';
+        document.getElementById('dw-port').textContent     = '—';
+        document.getElementById('dw-database').textContent = '—';
+        document.getElementById('dw-id').textContent       = '—';
+        document.getElementById('dw-sources').innerHTML    = '<span style="color:var(--text-muted);">Destination not found in config</span>';
+        return;
+      }
+      document.getElementById('dw-host').textContent     = dwDest.config?.host     || '—';
+      document.getElementById('dw-port').textContent     = String(dwDest.config?.port || '—');
+      document.getElementById('dw-database').textContent = dwDest.config?.database  || '—';
+      document.getElementById('dw-id').textContent       = dwDest.id;
+      document.getElementById('dw-sources').innerHTML    = connectedSources(dwDest.id);
+    }
+
+    // ── Ping health checks ────────────────────────────────────────────────────
+    async function checkConnections() {
+      checkMautic();
+      checkDWViaRS();
+    }
+
+    async function checkMautic() {
+      const badge = document.getElementById('mautic-badge');
+      const check = document.getElementById('mautic-last-check');
+      if (!mauticDest?.config?.mauticUrl) {
+        setBadge(badge, 'unknown', 'Not configured');
+        return;
+      }
+      setBadge(badge, 'checking');
+      try {
+        const r = await fetch(`${BASE}/connections/reload`, { method: 'POST' });
+        // We can't directly ping Mautic from the browser (CORS) — use BFF health
+        // For now treat RS config reload reachability as a proxy for infrastructure health
+        if (r.ok) {
+          setBadge(badge, 'healthy', 'BFF reachable');
+          check.textContent = 'Last check: ' + new Date().toLocaleTimeString();
+          document.getElementById('card-mautic').classList.add('infra-card--healthy');
+        } else {
+          setBadge(badge, 'warning', 'Check failed');
+          document.getElementById('card-mautic').classList.add('infra-card--warning');
+        }
+      } catch {
+        setBadge(badge, 'error', 'Unreachable');
+        document.getElementById('card-mautic').classList.add('infra-card--error');
+      }
+    }
+
+    async function checkDWViaRS() {
+      const badge = document.getElementById('dw-badge');
+      const check = document.getElementById('dw-last-check');
+      if (!dwDest) {
+        setBadge(badge, 'unknown', 'Not configured');
+        return;
+      }
+      setBadge(badge, 'checking');
+      // Ping BFF health as proxy (DW is internal, can't ping from browser)
+      try {
+        const r = await fetch(`${BASE.replace('/api','')}/health`);
+        if (r.ok) {
+          setBadge(badge, 'healthy', 'Config loaded');
+          check.textContent = 'Last check: ' + new Date().toLocaleTimeString();
+          document.getElementById('card-dw').classList.add('infra-card--healthy');
+        } else {
+          setBadge(badge, 'warning', 'BFF unavailable');
+          document.getElementById('card-dw').classList.add('infra-card--warning');
+        }
+      } catch {
+        setBadge(badge, 'warning', 'Cannot reach BFF');
+        document.getElementById('card-dw').classList.add('infra-card--warning');
+      }
+    }
+
+    function setBadge(el, state, label) {
+      const map = {
+        healthy:  { cls: 'badge-healthy', icon: 'check-circle', text: label || 'Healthy' },
+        warning:  { cls: 'badge-warning', icon: 'alert-triangle', text: label || 'Warning' },
+        error:    { cls: 'badge-error',   icon: 'x-circle',        text: label || 'Error' },
+        checking: { cls: 'badge-unknown', icon: 'loader',          text: 'Checking…' },
+        unknown:  { cls: 'badge-unknown', icon: 'minus-circle',    text: label || 'Unknown' },
+      };
+      const cfg = map[state] || map.unknown;
+      el.className = `infra-card__badge ${cfg.cls}`;
+      const spin = state === 'checking' ? ' class="spin"' : '';
+      el.innerHTML = `<i data-lucide="${cfg.icon}"${spin} style="width:10px;height:10px;"></i> ${cfg.text}`;
+      if (window.lucide) lucide.createIcons({ nodes: [el] });
+    }
+
+    // ── Actions ───────────────────────────────────────────────────────────────
+    window.testMautic = async function () {
+      toast('Testing Mautic connection…', 'inf');
+      await checkMautic();
+      toast('Mautic check complete — see badge for result.', 'ok');
+    };
+
+    window.testDW = async function () {
+      toast('Testing Data Warehouse connection…', 'inf');
+      await checkDWViaRS();
+      toast('Data Warehouse check complete — see badge for result.', 'ok');
+    };
+
+    window.openMauticAdmin = function () {
+      const url = mauticDest?.config?.mauticUrl;
+      if (url) window.open(url, '_blank');
+      else toast('Mautic URL not configured', 'err');
+    };
+
+    // ── Toast ─────────────────────────────────────────────────────────────────
+    function toast(msg, type = 'inf') {
+      const rack = document.getElementById('toast-rack');
+      const el = document.createElement('div');
+      el.className = `toast${type === 'ok' ? ' toast--ok' : type === 'err' ? ' toast--err' : ''}`;
+      el.textContent = msg;
+      rack.appendChild(el);
+      setTimeout(() => el.remove(), 3500);
+    }
+
+    // ── Init ──────────────────────────────────────────────────────────────────
+    loadConfig();
+    lucide.createIcons();
+  </script>
+</body>
+</html>

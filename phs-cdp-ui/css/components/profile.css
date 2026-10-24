@@ -1,0 +1,577 @@
+/*
+  PHS CDP Design System — Profile
+  Primitives for presenting a unified record: an identity list (many
+  sources → one profile), a compact attribute grid, a behavior-count
+  grid, and a lifecycle stage stepper. Built for Customer 360 but
+  generic enough for any future "360" view (e.g. an Identity Graph
+  node's detail).
+*/
+
+/* Identity — one row per unified identity, source-tagged. */
+.identity-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.identity-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: var(--space-3) 0;
+  border-bottom: 1px solid var(--border-subtle);
+}
+.identity-row:last-child {
+  border-bottom: none;
+}
+
+.identity-row__main {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.identity-row__label {
+  font-size: var(--text-xs);
+  font-weight: var(--weight-semibold);
+  letter-spacing: var(--tracking-wide);
+  text-transform: uppercase;
+  color: var(--text-tertiary);
+}
+
+.identity-row__value {
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+  color: var(--text-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.identity-row__meta {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.identity-row__verify {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  color: var(--text-tertiary);
+}
+.identity-row__verify svg { width: 12px; height: 12px; }
+.identity-row__verify--verified { color: var(--color-success-600); }
+
+.identity-row__seen {
+  font-size: 11px;
+  color: var(--text-tertiary);
+}
+
+/* Multiple values per identity type — collapsed by default (the
+   most-recent value only) to keep the profile compact and
+   privacy-aware. The count itself is the affordance to expand. */
+.identity-row__more {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 16px;
+  padding: 0 6px;
+  margin-left: var(--space-1);
+  border: none;
+  border-radius: var(--radius-full);
+  background: var(--color-primary-50);
+  color: var(--color-primary-700);
+  font-size: 10px;
+  font-weight: var(--weight-semibold);
+  cursor: pointer;
+}
+.identity-row__more:hover {
+  background: var(--color-primary-100);
+}
+
+.identity-row__extra {
+  margin: 0 0 var(--space-2) var(--space-1);
+  padding-left: var(--space-4);
+  border-left: 2px solid var(--border-subtle);
+}
+.identity-row__extra .identity-row {
+  padding: var(--space-2) 0;
+}
+
+/* Identity grid — compact 2-column variant of the identity list
+   above, for a profile with many identity types (12+). Each item is
+   a stacked label/value/meta block, separated by a hairline rather
+   than boxed — a dense grid, not a card collection. */
+.identity-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0 var(--space-8);
+}
+
+.identity-item {
+  padding: var(--space-3) 0;
+  border-bottom: 1px solid var(--border-subtle);
+  border-radius: var(--radius-xs);
+}
+
+.identity-item--expandable {
+  cursor: pointer;
+}
+.identity-item--expandable:hover {
+  background: var(--color-ink-50);
+}
+
+.identity-item__head {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  margin-bottom: 2px;
+}
+
+.identity-item__label {
+  font-size: var(--text-xs);
+  font-weight: var(--weight-semibold);
+  letter-spacing: var(--tracking-wide);
+  text-transform: uppercase;
+  color: var(--text-tertiary);
+}
+
+.identity-item__value {
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+  color: var(--text-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  margin-bottom: var(--space-2);
+}
+
+.identity-item__meta {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.identity-item__seen {
+  font-size: 11px;
+  color: var(--text-tertiary);
+  margin-left: auto;
+}
+
+.identity-item__extra {
+  margin-top: var(--space-3);
+  padding-left: var(--space-3);
+  border-left: 2px solid var(--border-subtle);
+}
+.identity-item__extra-row + .identity-item__extra-row {
+  margin-top: var(--space-2);
+  padding-top: var(--space-2);
+  border-top: 1px solid var(--border-subtle);
+}
+
+@media (max-width: 640px) {
+  .identity-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Attributes — compact definition-list grid. Base is 2 columns;
+   `.attr-grid--3` widens to 3 on desktop for sections with more
+   fields to scan (Customer Attributes). */
+.attr-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--space-4) var(--space-6);
+}
+
+.attr-grid--3 {
+  grid-template-columns: repeat(3, 1fr);
+}
+
+@media (max-width: 900px) {
+  .attr-grid--3 {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+@media (max-width: 640px) {
+  .attr-grid--3 {
+    grid-template-columns: 1fr;
+  }
+}
+
+.attr-item {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.attr-item__label {
+  font-size: var(--text-xs);
+  color: var(--text-tertiary);
+}
+
+.attr-item__value {
+  font-size: var(--text-sm);
+  font-weight: var(--weight-medium);
+  color: var(--text-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Behavior — count grid, deliberately not a set of metric cards. */
+.behavior-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-5) var(--space-6);
+}
+
+.behavior-item {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.behavior-item__label {
+  font-size: var(--text-xs);
+  font-weight: var(--weight-semibold);
+  letter-spacing: var(--tracking-wide);
+  text-transform: uppercase;
+  color: var(--text-tertiary);
+}
+
+.behavior-item__value {
+  font-size: var(--text-md);
+  font-weight: var(--weight-semibold);
+  font-variant-numeric: tabular-nums;
+  color: var(--text-primary);
+}
+
+/* Stage stepper — lifecycle funnel, one node highlighted. */
+.stage-stepper {
+  display: flex;
+  padding: 0 var(--space-2);
+}
+
+.stage-stepper__node {
+  position: relative;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.stage-stepper__node:not(:first-child)::before {
+  content: "";
+  position: absolute;
+  top: 6px;
+  left: -50%;
+  width: 100%;
+  height: 2px;
+  background: var(--border-default);
+  z-index: 0;
+}
+
+.stage-stepper__node.is-complete:not(:first-child)::before,
+.stage-stepper__node.is-current:not(:first-child)::before {
+  background: var(--color-primary-300);
+}
+
+.stage-stepper__dot {
+  position: relative;
+  z-index: 1;
+  width: 14px;
+  height: 14px;
+  border-radius: var(--radius-full);
+  background: var(--surface-panel);
+  border: 2px solid var(--border-default);
+}
+
+.stage-stepper__node.is-complete .stage-stepper__dot {
+  background: var(--color-primary-300);
+  border-color: var(--color-primary-300);
+}
+
+.stage-stepper__node.is-current .stage-stepper__dot {
+  background: var(--color-primary-500);
+  border-color: var(--color-primary-500);
+  box-shadow: 0 0 0 4px var(--color-primary-100);
+}
+
+.stage-stepper__label {
+  margin-top: var(--space-2);
+  font-size: var(--text-xs);
+  color: var(--text-tertiary);
+  text-align: center;
+}
+
+.stage-stepper__node.is-current .stage-stepper__label {
+  color: var(--text-primary);
+  font-weight: var(--weight-semibold);
+}
+
+/* ------------------------------------------------------------------ */
+/* Customer 360 chart redesign — new primitives only (heatmap, donut, */
+/* funnel, chart-type switch). The shared chart system (chart.css's   */
+/* .chart-vbars/.chart-hbars, chart.js's renderLineChart) is reused    */
+/* unmodified elsewhere; everything below is additive and unique to   */
+/* these new Customer 360 views, so it cannot collide with or affect  */
+/* any other page.                                                     */
+/* ------------------------------------------------------------------ */
+
+/* ---- Chart-type switch — small pill button group ---- */
+.c360-chart-switch {
+  display: inline-flex;
+  gap: 2px;
+  padding: 2px;
+  background: var(--color-ink-100);
+  border-radius: var(--radius-sm);
+  margin-bottom: var(--space-3);
+}
+.c360-chart-switch__btn {
+  appearance: none;
+  border: none;
+  background: transparent;
+  font-size: var(--text-xs);
+  font-weight: var(--weight-medium);
+  color: var(--text-secondary);
+  padding: var(--space-1) var(--space-3);
+  border-radius: var(--radius-xs);
+  cursor: pointer;
+}
+.c360-chart-switch__btn:hover {
+  color: var(--text-primary);
+}
+.c360-chart-switch__btn.is-active {
+  background: var(--surface-panel);
+  color: var(--text-primary);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
+}
+
+/* ---- Heatmap — generic rows × columns × intensity grid ---- */
+.c360-heatmap {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  overflow-x: auto;
+}
+.c360-heatmap__row {
+  display: grid;
+  grid-template-columns: 76px 1fr;
+  align-items: center;
+  gap: var(--space-2);
+}
+.c360-heatmap__row--header .c360-heatmap__collabel {
+  font-size: 10px;
+  color: var(--text-tertiary);
+  text-align: center;
+}
+.c360-heatmap__rowlabel {
+  font-size: var(--text-xs);
+  color: var(--text-tertiary);
+  text-align: right;
+  white-space: nowrap;
+}
+.c360-heatmap__cells {
+  display: grid;
+  gap: 2px;
+}
+.c360-heatmap__cell {
+  height: 20px;
+  border-radius: 2px;
+  background: var(--chart-green);
+}
+.c360-heatmap__cell--empty {
+  background: repeating-linear-gradient(45deg, var(--color-ink-100), var(--color-ink-100) 3px, transparent 3px, transparent 6px);
+}
+
+/* ---- Donut chart — inline SVG ----
+   Column layout: donut centered on top, legend below — NOT side by
+   side (a row layout left-aligns the donut and can never center it
+   independently of the legend's width). Both Web vs. App Usage and
+   Device Breakdown share this exact markup/CSS, so they stay visually
+   identical (same height, diameter, title alignment, spacing). */
+.c360-donut {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-4);
+  width: 100%;
+}
+.c360-donut svg {
+  width: 200px;
+  height: 200px;
+  max-width: 100%;
+  flex-shrink: 0;
+}
+.c360-donut__arc {
+  transition: opacity 0.1s ease;
+}
+.c360-donut__total {
+  font-size: 26px;
+  font-weight: var(--weight-semibold);
+  fill: var(--text-primary);
+  font-family: var(--font-ui);
+}
+.c360-donut__total-label {
+  font-size: 11px;
+  fill: var(--text-tertiary);
+  font-family: var(--font-ui);
+}
+.c360-donut .chart-legend {
+  justify-content: center;
+  margin-top: 0;
+}
+
+/* ---- Funnel — centered or left-aligned decreasing-width bars ---- */
+.c360-funnel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+.c360-funnel__row {
+  display: grid;
+  grid-template-columns: 110px 1fr 56px;
+  align-items: center;
+  gap: var(--space-3);
+}
+.c360-funnel__label {
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+  white-space: nowrap;
+}
+.c360-funnel__track {
+  height: 22px;
+  border-radius: var(--radius-xs);
+  background: var(--color-ink-100);
+  overflow: hidden;
+}
+.c360-funnel__row--centered .c360-funnel__track {
+  display: flex;
+  justify-content: center;
+  background: transparent;
+}
+.c360-funnel__row--centered .c360-funnel__bar {
+  border-radius: var(--radius-xs);
+}
+.c360-funnel__bar {
+  height: 100%;
+  border-radius: var(--radius-xs) 0 0 var(--radius-xs);
+}
+.c360-funnel__value {
+  font-size: var(--text-sm);
+  font-weight: var(--weight-semibold);
+  font-variant-numeric: tabular-nums;
+  color: var(--text-primary);
+  text-align: right;
+}
+
+/* ---- Behavior-to-Need signal card ---- */
+.c360-signal-card {
+  padding: var(--space-4);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  background: var(--surface-panel);
+  margin-bottom: var(--space-3);
+}
+.c360-signal-card__header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-3);
+  margin-bottom: var(--space-2);
+}
+.c360-signal-card__title {
+  font-size: var(--text-sm);
+  font-weight: var(--weight-semibold);
+  color: var(--text-primary);
+}
+.c360-signal-card__meta {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--space-2) var(--space-4);
+  font-size: var(--text-xs);
+  color: var(--text-tertiary);
+  margin-bottom: var(--space-2);
+}
+.c360-signal-card__meta strong {
+  color: var(--text-secondary);
+  font-weight: var(--weight-medium);
+}
+.c360-signal-card__caveat {
+  font-size: var(--text-xs);
+  color: var(--text-tertiary);
+  margin: var(--space-2) 0 0;
+  padding-top: var(--space-2);
+  border-top: 1px solid var(--border-subtle);
+}
+
+/* ---- "Synthetic demo data" label ---- */
+.c360-synthetic-note {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--text-xs);
+  color: var(--text-tertiary);
+  background: var(--surface-sunken);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-full);
+  padding: var(--space-1) var(--space-3);
+}
+
+/* ---- Population Context section wrapper (native <details>) ---- */
+.c360-population-section > summary {
+  cursor: pointer;
+  list-style: none;
+}
+.c360-population-section > summary::-webkit-details-marker {
+  display: none;
+}
+
+/* ---- RFM scatter plot ---- */
+.c360-scatter svg {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+.c360-scatter__axis-label {
+  font-size: 10px;
+  fill: var(--text-tertiary);
+  font-family: var(--font-ui);
+}
+.c360-scatter__dot {
+  transition: opacity 0.1s ease;
+}
+
+/* ---- Customer-relative summary card (Population Context top block) ---- */
+.c360-relative-summary {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: var(--space-4);
+  padding: var(--space-5);
+  background: var(--surface-panel);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  margin-bottom: var(--space-6);
+}
+.c360-relative-summary__item {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.c360-relative-summary__label {
+  font-size: var(--text-xs);
+  color: var(--text-tertiary);
+}
+.c360-relative-summary__value {
+  font-size: var(--text-base);
+  font-weight: var(--weight-semibold);
+  color: var(--text-primary);
+}

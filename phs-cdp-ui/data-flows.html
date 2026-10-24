@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Data Flows — PHS CDP</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&display=swap"
+    rel="stylesheet"
+  />
+
+  <link rel="stylesheet" href="css/main.css" />
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="app-shell__sidebar" data-sidebar-mount></aside>
+    <div class="app-shell__topbar" data-topbar-mount></div>
+
+    <main class="app-shell__main">
+      <div class="page">
+        <div class="page-header">
+          <div style="flex: 1; min-width: 0;">
+            <div class="page-header__eyebrow">
+              <i data-lucide="workflow" style="width: 13px; height: 13px;"></i>
+              Data Flows
+            </div>
+            <h1 class="page-header__title">Data Flows</h1>
+            <p class="page-header__description">
+              Monitor how customer profile, behavioral, consent and audience data moves into and out of the PHS CDP.
+            </p>
+          </div>
+          <div class="page-header__actions">
+            <button class="btn btn--primary" data-modal-open="df-add-modal">
+              <i data-lucide="plus"></i>
+              Add Data Flow
+            </button>
+          </div>
+        </div>
+
+        <section class="section">
+          <div class="section__body" data-flow-summary></div>
+        </section>
+
+        <section class="section" style="margin-bottom: var(--space-6);">
+          <div class="section__body">
+            <div class="table-wrap">
+              <div class="table__toolbar">
+                <div class="search-field" style="width: 240px;">
+                  <i data-lucide="search"></i>
+                  <input class="input" type="text" placeholder="Search source, destination, system type…" data-flow-search aria-label="Search data flows" />
+                </div>
+                <div class="cluster gap-2" style="flex-wrap: wrap;">
+                  <div class="select select--sm" style="width: 130px;">
+                    <select data-filter-direction aria-label="Filter by direction"></select>
+                    <i class="select__chevron" data-lucide="chevron-down"></i>
+                  </div>
+                  <div class="select select--sm" style="width: 130px;">
+                    <select data-filter-datatype aria-label="Filter by data type"></select>
+                    <i class="select__chevron" data-lucide="chevron-down"></i>
+                  </div>
+                  <div class="select select--sm" style="width: 130px;">
+                    <select data-filter-delivery aria-label="Filter by delivery mode"></select>
+                    <i class="select__chevron" data-lucide="chevron-down"></i>
+                  </div>
+                  <div class="select select--sm" style="width: 130px;">
+                    <select data-filter-status aria-label="Filter by status"></select>
+                    <i class="select__chevron" data-lucide="chevron-down"></i>
+                  </div>
+                  <div class="select select--sm" style="width: 160px;">
+                    <select data-filter-systemtype aria-label="Filter by system type"></select>
+                    <i class="select__chevron" data-lucide="chevron-down"></i>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="section">
+          <div class="section__header">
+            <div>
+              <h2 class="section__title">Source → Destination Connections</h2>
+              <p class="section__subtitle">Hover a Source or Destination to see its connected counterparts. Click a node for details.</p>
+            </div>
+          </div>
+          <div class="section__body">
+            <div class="table__toolbar" style="margin-bottom: var(--space-5);">
+              <div class="search-field" style="width: 260px;">
+                <i data-lucide="search"></i>
+                <input class="input" type="text" placeholder="Search sources or destinations…" data-cm-search aria-label="Search connection map" />
+              </div>
+              <div class="cluster gap-2" style="flex-wrap: wrap;">
+                <div class="select select--sm" style="width: 160px;">
+                  <select data-cm-filter-type aria-label="Filter by type"></select>
+                  <i class="select__chevron" data-lucide="chevron-down"></i>
+                </div>
+                <div class="select select--sm" style="width: 170px;">
+                  <select data-cm-filter-status aria-label="Filter by relationship status"></select>
+                  <i class="select__chevron" data-lucide="chevron-down"></i>
+                </div>
+              </div>
+            </div>
+
+            <div class="dataflow-map" data-cm-map>
+              <svg class="cm-paths" data-cm-paths aria-hidden="true"></svg>
+              <div class="cm-tooltip" data-cm-tooltip hidden></div>
+
+              <div class="dataflow-col">
+                <div class="dataflow-col__head"><i data-lucide="arrow-down-to-line"></i> Sources</div>
+                <div data-cm-sources-col></div>
+              </div>
+
+              <div class="dataflow-layer" aria-hidden="true">
+                <span class="dataflow-layer__line"></span>
+                <i data-lucide="chevron-right"></i>
+                <span class="dataflow-layer__label">Conceptual ingestion layer</span>
+                <span class="dataflow-layer__line"></span>
+              </div>
+
+              <div class="dataflow-cdp" data-cm-cdp>
+                <div class="dataflow-cdp__mark"><img src="assets/logo.webp" alt="" /></div>
+                <div>
+                  <div class="dataflow-cdp__title">PHS CDP</div>
+                  <div class="dataflow-cdp__subtitle">Central customer data platform</div>
+                </div>
+                <div class="dataflow-cdp__caps">
+                  <div class="dataflow-cdp__cap"><i data-lucide="network"></i> Identity Resolution</div>
+                  <div class="dataflow-cdp__cap"><i data-lucide="user-round"></i> Customer Profiles</div>
+                  <div class="dataflow-cdp__cap"><i data-lucide="activity"></i> Behavioral Events</div>
+                  <div class="dataflow-cdp__cap"><i data-lucide="shield-check"></i> Consent & Preferences</div>
+                </div>
+              </div>
+
+              <div class="dataflow-layer" aria-hidden="true">
+                <span class="dataflow-layer__line"></span>
+                <i data-lucide="chevron-right"></i>
+                <span class="dataflow-layer__label">Conceptual activation layer</span>
+                <span class="dataflow-layer__line"></span>
+              </div>
+
+              <div class="dataflow-col">
+                <div class="dataflow-col__head"><i data-lucide="arrow-up-from-line"></i> Destinations</div>
+                <div data-cm-dest-col></div>
+              </div>
+            </div>
+
+            <p class="table__empty" data-cm-empty hidden>No sources or destinations match your search and filters.</p>
+
+            <div class="cluster gap-4" style="flex-wrap: wrap; margin-top: var(--space-5); padding-top: var(--space-4); border-top: 1px solid var(--border-subtle);">
+              <span class="graph-legend__item"><span class="graph-legend__swatch" style="background: var(--color-primary-500);"></span>Active connection</span>
+              <span class="graph-legend__item"><span class="graph-legend__swatch" style="background: var(--color-ink-300);"></span>Pending (not yet fully connected)</span>
+              <span class="graph-legend__item"><span class="graph-legend__swatch" style="background: var(--color-warning-500);"></span>Paused</span>
+              <span class="graph-legend__item"><span class="graph-legend__swatch" style="background: var(--color-danger-500);"></span>Error</span>
+            </div>
+
+            <div class="dataflow-note" style="margin-top: var(--space-5);">
+              <i data-lucide="info"></i>
+              <span>Illustrative connection map — relationships, statuses and the PHS CDP processing layer are mock/demo data for this prototype, not proof of a real RudderStack deployment architecture. No connection shown here is linked to a production PHS system.</span>
+            </div>
+          </div>
+        </section>
+
+        <section class="section" style="margin-bottom: 0;">
+          <div class="section__header">
+            <div>
+              <h2 class="section__title">All Data Flows</h2>
+              <p class="section__subtitle">Click a row to inspect a flow's connection details.</p>
+            </div>
+          </div>
+          <div class="section__body">
+            <div class="table-wrap">
+              <table class="table" data-flow-table>
+                <thead>
+                  <tr>
+                    <th>Flow</th>
+                    <th>Direction</th>
+                    <th>Data Type</th>
+                    <th>Delivery</th>
+                    <th>Status</th>
+                    <th>Last Sync</th>
+                    <th class="num">Records</th>
+                  </tr>
+                </thead>
+                <tbody></tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+      </div>
+    </main>
+  </div>
+
+  <!-- ================================================================ -->
+  <!-- FLOW DETAIL DRAWER                                                -->
+  <!-- ================================================================ -->
+  <div class="drawer-overlay" id="df-detail-drawer">
+    <aside class="drawer" role="dialog" aria-modal="true" aria-label="Data flow detail">
+      <div class="drawer__header">
+        <div>
+          <div class="drawer__eyebrow" data-drawer-eyebrow>Data Flow</div>
+          <div class="drawer__title" data-drawer-title>—</div>
+        </div>
+        <button class="btn btn--ghost btn--sm" data-drawer-close aria-label="Close">
+          <i data-lucide="x"></i>
+        </button>
+      </div>
+      <div class="drawer__body" data-drawer-body></div>
+    </aside>
+  </div>
+
+  <!-- ================================================================ -->
+  <!-- CONNECTION MAP DETAIL DRAWER (click a Source/Destination node)   -->
+  <!-- ================================================================ -->
+  <div class="drawer-overlay" id="cm-detail-drawer">
+    <aside class="drawer" role="dialog" aria-modal="true" aria-label="Connection detail">
+      <div class="drawer__header">
+        <div>
+          <div class="drawer__eyebrow" data-drawer-eyebrow>Source</div>
+          <div class="drawer__title" data-drawer-title>—</div>
+        </div>
+        <button class="btn btn--ghost btn--sm" data-drawer-close aria-label="Close">
+          <i data-lucide="x"></i>
+        </button>
+      </div>
+      <div class="drawer__body" data-drawer-body></div>
+      <div class="drawer__footer">
+        <a class="btn btn--primary" data-cm-detail-link href="#">
+          <i data-lucide="arrow-right"></i>
+          View full details
+        </a>
+      </div>
+    </aside>
+  </div>
+
+  <!-- ================================================================ -->
+  <!-- ADD DATA FLOW MODAL                                               -->
+  <!-- ================================================================ -->
+  <div class="modal-overlay" id="df-add-modal">
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="df-add-title">
+      <div class="modal__header">
+        <div>
+          <div class="modal__title" id="df-add-title">Add Data Flow</div>
+          <p class="modal__description">Register a new inbound or outbound data flow. This is a mock, frontend-only entry — no credentials are collected or stored.</p>
+        </div>
+        <button class="btn btn--ghost btn--sm modal__close" data-modal-close aria-label="Close">
+          <i data-lucide="x"></i>
+        </button>
+      </div>
+      <div class="modal__body stack gap-4">
+        <p class="rule-error" data-add-error hidden></p>
+        <div class="field">
+          <label class="field__label" for="add-direction">Direction</label>
+          <div class="select">
+            <select id="add-direction" data-add-direction></select>
+            <i class="select__chevron" data-lucide="chevron-down"></i>
+          </div>
+        </div>
+        <div class="field">
+          <label class="field__label" for="add-system">System</label>
+          <div class="select">
+            <select id="add-system" data-add-system></select>
+            <i class="select__chevron" data-lucide="chevron-down"></i>
+          </div>
+        </div>
+        <div class="field">
+          <span class="field__label">Data Type <span class="field__optional">(select at least one)</span></span>
+          <div class="stack gap-2" data-add-datatypes></div>
+        </div>
+        <div class="field">
+          <label class="field__label" for="add-delivery">Delivery Mode</label>
+          <div class="select">
+            <select id="add-delivery" data-add-delivery></select>
+            <i class="select__chevron" data-lucide="chevron-down"></i>
+          </div>
+        </div>
+        <div class="field">
+          <label class="field__label" for="add-status">Status</label>
+          <div class="select">
+            <select id="add-status" data-add-status></select>
+            <i class="select__chevron" data-lucide="chevron-down"></i>
+          </div>
+        </div>
+      </div>
+      <div class="modal__footer">
+        <button class="btn btn--ghost" data-modal-close>Cancel</button>
+        <button class="btn btn--primary" data-add-save>
+          <i data-lucide="save"></i>
+          Save Data Flow
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- BFF integration -->
+  <script src="js/config.js"></script>
+  <script src="./js/api.js"></script>
+  <script src="https://unpkg.com/lucide@1.47.0/dist/umd/lucide.js"></script>
+  <script type="module">
+    import { bootstrapPage } from "./js/main.js";
+    import { initDataFlows } from "./js/pages/data-flows.js";
+
+    bootstrapPage({
+      currentNavId: "data-flows",
+      breadcrumb: [
+        { label: "PHS CDP", href: "index.html" },
+        { label: "Data Flows" },
+      ],
+    });
+    initDataFlows();
+  </script>
+</body>
+</html>

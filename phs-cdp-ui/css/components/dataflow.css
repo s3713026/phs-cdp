@@ -1,0 +1,353 @@
+/*
+  PHS CDP Design System — Data Flow
+  Structured two-sided architecture view for the Data Flows module:
+  configured Sources -> ingestion layer -> PHS CDP -> activation layer
+  -> configured Destinations. The connection map (.cm-*) draws real
+  SVG paths between explicitly-linked Source/Destination nodes (see
+  js/data/connection-map.js) with hover highlight/dim — the rest of
+  this file's structural classes (columns, the center PHS CDP node,
+  conceptual layer dividers) are reused as-is underneath it.
+*/
+
+.dataflow-map {
+  position: relative;
+  display: grid;
+  grid-template-columns: 1fr 72px 295px 72px 1fr;
+  gap: var(--space-2);
+  align-items: start;
+}
+
+/* Connection paths — absolutely positioned behind every node (first in
+   DOM = painted first = behind later siblings). Geometry is computed
+   in JS from real rendered node rects, not guessed. */
+.cm-paths {
+  position: absolute;
+  inset: 0;
+  grid-column: 1 / -1;
+  grid-row: 1 / -1;
+  pointer-events: none;
+  overflow: visible;
+}
+.cm-path {
+  stroke: var(--color-ink-300);
+  stroke-width: 1.5;
+  opacity: 0.55;
+  transition: opacity var(--duration-fast) var(--ease-standard), stroke var(--duration-fast) var(--ease-standard);
+}
+.cm-path--pending { stroke: var(--color-ink-300); }
+.cm-path--active { stroke: var(--color-ink-300); }
+.cm-path--paused { stroke: var(--color-warning-500); }
+.cm-path--error { stroke: var(--color-danger-500); }
+.cm-path.is-cm-active {
+  opacity: 1;
+  stroke-width: 2.5;
+}
+.cm-path--active.is-cm-active { stroke: var(--color-primary-500); }
+.cm-path--pending.is-cm-active { stroke: var(--color-ink-400); }
+.cm-path--paused.is-cm-active { stroke: var(--color-warning-500); }
+.cm-path--error.is-cm-active { stroke: var(--color-danger-500); }
+.cm-path.is-cm-dimmed { opacity: 0.08; }
+
+/* Node highlight/dim states — reuse .flow-node, just add the two
+   hover-driven modifiers; no layout shift, only border/background. */
+.flow-node.is-cm-active {
+  border-color: var(--color-primary-500);
+  border-width: 1.5px;
+  background: var(--color-primary-50);
+  box-shadow: var(--shadow-sm);
+}
+.flow-node.is-cm-dimmed {
+  opacity: 0.3;
+}
+
+.cm-tooltip {
+  position: absolute;
+  z-index: 2;
+  transform: translateY(-100%);
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-xs);
+  background: var(--surface-inverse);
+  color: var(--text-on-dark);
+  font-size: var(--text-xs);
+  font-weight: var(--weight-medium);
+  white-space: nowrap;
+  pointer-events: none;
+  box-shadow: var(--shadow-sm);
+}
+
+.dataflow-col {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  min-width: 0;
+}
+
+.dataflow-col__head {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: 0 var(--space-1) var(--space-2);
+  font-size: var(--text-xs);
+  font-weight: var(--weight-semibold);
+  letter-spacing: var(--tracking-wide);
+  text-transform: uppercase;
+  color: var(--text-tertiary);
+}
+.dataflow-col__head svg { width: 13px; height: 13px; }
+
+/* Conceptual ingestion/activation layer — a thin vertical zone with a
+   centered label and directional arrow, not a literal wiring diagram. */
+.dataflow-layer {
+  position: sticky;
+  top: 88px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  min-height: 220px;
+  padding-top: 32px;
+}
+
+.dataflow-layer__line {
+  flex: 1;
+  width: 1px;
+  background: var(--border-default);
+  min-height: var(--space-6);
+}
+
+.dataflow-layer__label {
+  writing-mode: vertical-rl;
+  text-orientation: mixed;
+  font-size: 10px;
+  font-weight: var(--weight-semibold);
+  letter-spacing: var(--tracking-wide);
+  text-transform: uppercase;
+  color: var(--text-tertiary);
+  white-space: nowrap;
+}
+
+.dataflow-layer svg {
+  width: 14px;
+  height: 14px;
+  color: var(--color-primary-400);
+  flex-shrink: 0;
+}
+
+/* Central PHS CDP anchor. */
+.dataflow-cdp {
+  position: sticky;
+  top: 88px;
+  /* Nudges the whole node down relative to the Source/Destination
+     columns so it reads as sitting slightly below their midline,
+     without affecting the sticky scroll offset above. */
+  margin-top: 28px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-4);
+  padding: var(--space-8) var(--space-6);
+  border: 1.5px solid var(--color-primary-300);
+  border-radius: var(--radius-md);
+  background: var(--color-primary-50);
+  text-align: center;
+}
+
+.dataflow-cdp__mark {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 46px;
+  height: 46px;
+  border-radius: var(--radius-full);
+  background: var(--surface-panel);
+  border: 1px solid var(--color-primary-200);
+}
+.dataflow-cdp__mark img { width: 25px; height: 25px; object-fit: contain; }
+
+.dataflow-cdp__title {
+  font-size: var(--text-md);
+  font-weight: var(--weight-semibold);
+  color: var(--color-primary-800);
+}
+
+.dataflow-cdp__subtitle {
+  margin-top: -var(--space-2);
+  font-size: var(--text-xs);
+  color: var(--color-primary-700);
+}
+
+.dataflow-cdp__caps {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  text-align: left;
+}
+
+.dataflow-cdp__cap {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-3);
+  border-radius: var(--radius-xs);
+  background: var(--surface-panel);
+  border: 1px solid var(--color-primary-100);
+  font-size: var(--text-xs);
+  font-weight: var(--weight-medium);
+  color: var(--text-primary);
+}
+.dataflow-cdp__cap svg { width: 14px; height: 14px; color: var(--color-primary-600); flex-shrink: 0; }
+
+/* Compact source/destination node. */
+.flow-node {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-3);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  background: var(--surface-panel);
+  cursor: pointer;
+  transition: border-color var(--duration-fast) var(--ease-standard), background var(--duration-fast) var(--ease-standard);
+}
+.flow-node:hover,
+.flow-node:focus-visible {
+  border-color: var(--color-primary-300);
+  background: var(--color-primary-50);
+}
+
+.flow-node__head {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.flow-node__icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border-radius: var(--radius-xs);
+  background: var(--color-ink-100);
+  color: var(--text-secondary);
+  flex-shrink: 0;
+}
+.flow-node__icon svg { width: 14px; height: 14px; }
+
+.flow-node__name-wrap {
+  min-width: 0;
+}
+
+.flow-node__name {
+  font-size: var(--text-sm);
+  font-weight: var(--weight-semibold);
+  color: var(--text-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.flow-node__type {
+  font-size: 11px;
+  color: var(--text-tertiary);
+}
+
+.flow-node__badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1);
+}
+
+.flow-node__foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  padding-top: var(--space-2);
+  border-top: 1px solid var(--border-subtle);
+  font-size: 11px;
+  color: var(--text-tertiary);
+}
+
+.flow-node__foot .tabular-nums { color: var(--text-secondary); }
+
+/* Data type / delivery mode badges carry an icon + text, never color
+   alone — per the "no color-only" rule. */
+.badge--flow-type svg { width: 11px; height: 11px; }
+.badge--flow-delivery svg { width: 11px; height: 11px; }
+
+.dataflow-note {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  background: var(--color-ink-50);
+  font-size: var(--text-xs);
+  color: var(--text-tertiary);
+}
+.dataflow-note svg { width: 14px; height: 14px; flex-shrink: 0; margin-top: 1px; color: var(--text-tertiary); }
+
+/* Connection info block used in the detail drawer — endpoint shown in
+   mono (technical identifier), credential always masked. */
+.dataflow-connection {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: var(--space-3);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  background: var(--color-ink-50);
+}
+
+.dataflow-connection__row {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.dataflow-connection__label {
+  font-size: 11px;
+  font-weight: var(--weight-semibold);
+  letter-spacing: var(--tracking-wide);
+  text-transform: uppercase;
+  color: var(--text-tertiary);
+}
+
+.dataflow-connection__value {
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  color: var(--text-primary);
+  word-break: break-all;
+}
+
+.dataflow-connection__value--masked {
+  letter-spacing: 2px;
+}
+
+@media (max-width: 1180px) {
+  .dataflow-map {
+    grid-template-columns: 1fr;
+  }
+  .dataflow-layer {
+    position: static;
+    flex-direction: row;
+    min-height: 0;
+    padding: var(--space-3) 0;
+  }
+  .dataflow-layer__line {
+    width: auto;
+    height: 1px;
+    flex: 1;
+    min-height: 0;
+  }
+  .dataflow-layer__label {
+    writing-mode: horizontal-tb;
+  }
+  .dataflow-cdp {
+    position: static;
+  }
+}

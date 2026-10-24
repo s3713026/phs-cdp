@@ -1,0 +1,167 @@
+{
+  "sources": [
+    {
+      "id": "phs-web-source",
+      "name": "PHS Web App",
+      "writeKey": "phs_web_write_key_2024",
+      "enabled": true,
+      "sourceDefinitionId": "javascript",
+      "config": {},
+      "destinations": [
+        "phs-dest-warehouse",
+        "phs-dest-mautic",
+        {
+          "destinationId": "dest-mvkbe6ye-ic27"
+        },
+        {
+          "destinationId": "dest-mvkbqzcd-8yjn"
+        },
+        {
+          "destinationId": "dest-mvkbs5kr-x59x"
+        },
+        "dest-mvkbe6ye-ic27"
+      ]
+    },
+    {
+      "id": "phs-mobile-source",
+      "name": "PHS Mobile App",
+      "writeKey": "phs_mobile_write_key_2024",
+      "enabled": true,
+      "sourceDefinitionId": "android",
+      "config": {},
+      "destinations": [
+        "phs-dest-warehouse",
+        "phs-dest-mautic",
+        "dest-mvkbqzcd-8yjn",
+        "dest-mvkbrpmd-jvjn",
+        "dest-mvkc0lje-2l18",
+        "dest-mvkbs5kr-x59x"
+      ]
+    },
+    {
+      "id": "phs-server-source",
+      "name": "PHS Server Side",
+      "writeKey": "phs_server_write_key_2024",
+      "enabled": true,
+      "sourceDefinitionId": "node",
+      "config": {},
+      "destinations": [
+        "phs-dest-warehouse"
+      ]
+    },
+    {
+      "id": "src-mvkb0pfc-7qxc",
+      "name": "PHS JavaScript",
+      "writeKey": "phs_Javascript_mvkb0pfc",
+      "enabled": true,
+      "sourceDefinitionId": "Javascript",
+      "config": {},
+      "destinations": []
+    },
+    {
+      "id": "src-mvklyv1y-1tqc",
+      "name": "PHS Node",
+      "writeKey": "phs_Node_mvklyv1y",
+      "enabled": true,
+      "sourceDefinitionId": "Node",
+      "config": {},
+      "destinations": []
+    },
+    {
+      "id": "src-mvklzlwe-iiin",
+      "name": "PHS Postgres",
+      "writeKey": "phs_postgres_mvklzlwe",
+      "enabled": true,
+      "sourceDefinitionId": "postgres",
+      "config": {},
+      "destinations": []
+    }
+  ],
+  "destinations": [
+    {
+      "id": "phs-dest-warehouse",
+      "name": "PHS Data Warehouse",
+      "destinationDefinitionId": "POSTGRES",
+      "enabled": true,
+      "category": "infrastructure",
+      "config": {
+        "host": "100.117.24.87",
+        "port": 5432,
+        "database": "jobsdb",
+        "user": "rudder"
+      }
+    },
+    {
+      "id": "phs-dest-mautic",
+      "name": "Mautic (Marketing Automation)",
+      "destinationDefinitionId": "MAUTIC",
+      "enabled": true,
+      "category": "infrastructure",
+      "config": {
+        "baseUrl": "http://100.117.24.87:8081",
+        "user": "phs_admin"
+      }
+    },
+    {
+      "id": "dest-mvkbe6ye-ic27",
+      "name": "PHS Facebook Pixel",
+      "destinationDefinitionId": "FACEBOOK_PIXEL",
+      "enabled": true,
+      "config": {}
+    },
+    {
+      "id": "dest-mvkbezfm-n1l1",
+      "name": "PHS Google Analytics 4 (GA4)",
+      "destinationDefinitionId": "GA4",
+      "enabled": true,
+      "config": {}
+    },
+    {
+      "id": "dest-mvkbqzcd-8yjn",
+      "name": "PHS CleverTap",
+      "destinationDefinitionId": "CLEVERTAP",
+      "enabled": true,
+      "config": {}
+    },
+    {
+      "id": "dest-mvkbrpmd-jvjn",
+      "name": "PHS Webhook",
+      "destinationDefinitionId": "WEBHOOK",
+      "enabled": true,
+      "config": {
+        "webhookUrl": "",
+        "method": "",
+        "authHeader": ""
+      }
+    },
+    {
+      "id": "dest-mvkbs5kr-x59x",
+      "name": "PHS OneSignal",
+      "destinationDefinitionId": "ONE_SIGNAL",
+      "enabled": true,
+      "config": {}
+    },
+    {
+      "id": "dest-mvkc0lje-2l18",
+      "name": "PHS CleverTap",
+      "destinationDefinitionId": "CLEVERTAP",
+      "enabled": true,
+      "config": {}
+    },
+    {
+      "id": "dest-mvkc1ili-l1yo",
+      "name": "PHS OneSignal",
+      "destinationDefinitionId": "ONE_SIGNAL",
+      "enabled": true,
+      "config": {}
+    },
+    {
+      "id": "dest-mvkc2xaq-sbrm",
+      "name": "PHS OneSignal",
+      "destinationDefinitionId": "ONE_SIGNAL",
+      "enabled": true,
+      "config": {}
+    }
+  ],
+  "destTransformations": []
+}

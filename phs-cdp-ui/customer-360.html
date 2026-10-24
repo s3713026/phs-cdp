@@ -1,0 +1,619 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Customer 360 — PHS CDP</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&display=swap"
+    rel="stylesheet"
+  />
+
+  <link rel="stylesheet" href="css/main.css" />
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="app-shell__sidebar" data-sidebar-mount></aside>
+    <div class="app-shell__topbar" data-topbar-mount></div>
+
+    <main class="app-shell__main">
+      <div class="page">
+
+        <!-- ============================================================ -->
+        <!-- SEARCH VIEW — the default entry point. No profile, no         -->
+        <!-- directory; search is the only way in from the sidebar.        -->
+        <!-- ============================================================ -->
+        <div data-c360-search-view>
+          <div class="page-header">
+            <div>
+              <div class="page-header__eyebrow">
+                <i data-lucide="circle-user-round" style="width: 13px; height: 13px;"></i>
+                Customers · Customer 360
+              </div>
+              <h1 class="page-header__title">Customer 360</h1>
+              <p class="page-header__description">Search and inspect a specific customer profile.</p>
+            </div>
+          </div>
+
+          <div class="search-panel">
+            <h2 class="search-panel__heading">Find a customer</h2>
+            <form class="search-panel__row" data-c360-search-form novalidate>
+              <div class="search-field">
+                <i data-lucide="search"></i>
+                <input class="input" type="text" placeholder="Search by customer ID or identifier…" data-c360-search-input aria-label="Search by customer ID or identifier" autocomplete="off" />
+              </div>
+              <div class="select">
+                <select data-c360-search-field aria-label="Search field"></select>
+                <i class="select__chevron" data-lucide="chevron-down"></i>
+              </div>
+              <button type="submit" class="btn btn--primary" data-c360-search-submit>
+                <i data-lucide="search"></i>
+                Search profiles
+              </button>
+              <button type="button" class="btn btn--ghost" data-c360-search-reset>Reset</button>
+            </form>
+            <div class="field__error" data-c360-search-error hidden style="margin-top: var(--space-3);">
+              <i data-lucide="circle-alert"></i>
+              <span data-c360-search-error-text></span>
+            </div>
+            <p class="search-panel__helper">Searchable fields: Profile ID, CRM ID, rudderId, email or mobile. Synthetic demo data only — no real PHS customers.</p>
+          </div>
+        </div>
+
+        <!-- ============================================================ -->
+        <!-- RESULTS VIEW                                                  -->
+        <!-- ============================================================ -->
+        <div data-c360-results-view hidden>
+          <div class="page-header">
+            <div>
+              <div class="page-header__eyebrow">
+                <i data-lucide="search" style="width: 13px; height: 13px;"></i>
+                Customers · Customer 360 · Search Results
+              </div>
+              <h1 class="page-header__title">Search Results</h1>
+              <p class="page-header__description" data-c360-results-summary>—</p>
+            </div>
+            <div class="page-header__actions">
+              <button class="btn btn--outline btn--sm" data-c360-back-to-search>
+                <i data-lucide="arrow-left"></i>
+                Back to Search
+              </button>
+            </div>
+          </div>
+
+          <div class="search-bar">
+            <div class="search-field">
+              <i data-lucide="search"></i>
+              <input class="input" type="text" data-c360-results-search-input aria-label="Search by customer ID or identifier" autocomplete="off" />
+            </div>
+            <div class="select">
+              <select data-c360-results-search-field aria-label="Search field"></select>
+              <i class="select__chevron" data-lucide="chevron-down"></i>
+            </div>
+            <button type="button" class="btn btn--primary btn--sm" data-c360-results-search-submit>
+              <i data-lucide="search"></i>
+              Search profiles
+            </button>
+            <button type="button" class="btn btn--ghost btn--sm" data-c360-results-reset>Reset</button>
+          </div>
+
+          <div data-c360-results-body></div>
+        </div>
+
+        <!-- ============================================================ -->
+        <!-- NOT FOUND VIEW                                                -->
+        <!-- ============================================================ -->
+        <div data-c360-notfound-view hidden>
+          <div class="state-empty">
+            <span class="state-empty__icon"><i data-lucide="user-x"></i></span>
+            <h2 class="state-empty__title">Profile not found</h2>
+            <p class="state-empty__description" data-c360-notfound-text>This profile ID doesn't match any demo customer in this prototype.</p>
+            <div class="state-empty__actions">
+              <button class="btn btn--outline btn--sm" data-c360-notfound-back-results hidden>
+                <i data-lucide="arrow-left"></i>
+                Back to Results
+              </button>
+              <button class="btn btn--primary btn--sm" data-c360-notfound-back-search>
+                <i data-lucide="search"></i>
+                Back to Search
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- ============================================================ -->
+        <!-- DETAIL VIEW — existing Customer 360 profile UI, unchanged     -->
+        <!-- below the back-row, only reachable via search or a valid      -->
+        <!-- profile-specific link.                                        -->
+        <!-- ============================================================ -->
+        <div data-c360-detail-view hidden>
+          <div class="cluster gap-2" data-c360-detail-backrow style="margin-bottom: var(--space-4);">
+            <button class="btn btn--ghost btn--sm" data-c360-back-to-results hidden>
+              <i data-lucide="arrow-left"></i>
+              Back to Results
+            </button>
+            <button class="btn btn--ghost btn--sm" data-c360-back-to-search-2>
+              <i data-lucide="search"></i>
+              Back to Search
+            </button>
+          </div>
+
+          <div class="page-header">
+            <div style="flex: 1; min-width: 0;">
+              <div class="page-header__eyebrow">
+                <i data-lucide="circle-user-round" style="width: 13px; height: 13px;"></i>
+                Customers · Customer 360
+              </div>
+              <div data-c360-header></div>
+            </div>
+            <div class="page-header__actions" style="flex-basis: 100%; justify-content: flex-start;">
+              <div class="dropdown" data-customer-switcher>
+                <div class="search-field" style="width: 220px;">
+                  <i data-lucide="search"></i>
+                  <input class="input" type="text" placeholder="Search customer…" data-customer-search aria-label="Search customer" autocomplete="off" />
+                </div>
+                <div class="dropdown__menu dropdown__menu--left" role="listbox" aria-label="Customer results" data-customer-results style="width: 260px; max-height: 320px; overflow-y: auto;"></div>
+              </div>
+              <button class="btn btn--outline btn--sm" data-modal-open="add-audience-modal" data-add-audience-btn>
+                <i data-lucide="users-round"></i>
+                Add to audience
+              </button>
+              <button class="btn btn--outline btn--sm" data-c360-export>
+                <i data-lucide="download"></i>
+                <span data-export-label>Export</span>
+              </button>
+              <div class="dropdown">
+                <button class="btn btn--ghost btn--icon btn--sm" data-dropdown-trigger aria-label="More actions" aria-haspopup="true" aria-expanded="false">
+                  <i data-lucide="more-horizontal"></i>
+                </button>
+                <div class="dropdown__menu" role="menu">
+                  <button class="dropdown__item" role="menuitem"><i data-lucide="pencil"></i>Edit profile</button>
+                  <button class="dropdown__item" role="menuitem"><i data-lucide="network"></i>Merge identities</button>
+                  <button class="dropdown__item" role="menuitem"><i data-lucide="file-json"></i>View raw profile</button>
+                  <hr class="dropdown__separator" />
+                  <button class="dropdown__item dropdown__item--danger" role="menuitem"><i data-lucide="trash-2"></i>Remove from CDP</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- ============================================================ -->
+          <!-- CUSTOMER SUMMARY                                              -->
+          <!-- ============================================================ -->
+          <section class="section">
+            <div class="section__body" data-c360-summary></div>
+          </section>
+
+          <!-- ============================================================ -->
+          <!-- CUSTOMER JOURNEY                                              -->
+          <!-- ============================================================ -->
+          <section class="section">
+            <div class="section__header">
+              <div>
+                <h2 class="section__title">Customer Journey</h2>
+                <p class="section__subtitle">Position in the PHS lifecycle funnel. Descriptive only — not a prediction.</p>
+              </div>
+            </div>
+            <div class="section__body" data-c360-journey></div>
+          </section>
+
+          <!-- ============================================================ -->
+          <!-- PRIMARY TABS                                                  -->
+          <!-- ============================================================ -->
+          <div class="tabs" role="tablist" aria-label="Customer 360 sections" data-c360-primary-tabs style="margin-bottom: var(--space-8);">
+            <button class="tabs__tab" role="tab" aria-selected="true" aria-controls="c360-panel-analytics" id="c360-tab-analytics">
+              <i data-lucide="lightbulb"></i>
+              Profile Analytics
+            </button>
+            <button class="tabs__tab" role="tab" aria-selected="false" aria-controls="c360-panel-identity" id="c360-tab-identity">
+              <i data-lucide="network"></i>
+              Identity &amp; Attributes
+            </button>
+            <button class="tabs__tab" role="tab" aria-selected="false" aria-controls="c360-panel-behavior" id="c360-tab-behavior">
+              <i data-lucide="activity"></i>
+              Behavior &amp; Consent
+            </button>
+            <button class="tabs__tab" role="tab" aria-selected="false" aria-controls="c360-panel-engagement" id="c360-tab-engagement">
+              <i data-lucide="send"></i>
+              Engagement &amp; Support
+            </button>
+          </div>
+
+          <!-- ============================================================ -->
+          <!-- TAB 0 — PROFILE ANALYTICS                                     -->
+          <!-- Decision-support workspace: snapshot, recommended actions,    -->
+          <!-- CRM classification/lifecycle, eKYC insights, support          -->
+          <!-- insights, and action/outcome history — all scoped to the      -->
+          <!-- selected customer. All CRM/eKYC/ticket data here is           -->
+          <!-- synthetic prototype data; see js/data/customer-360-crm.js.    -->
+          <!-- ============================================================ -->
+          <div class="tabs__panel" id="c360-panel-analytics" role="tabpanel" aria-labelledby="c360-tab-analytics">
+            <!-- 1. Customer Snapshot -->
+            <section class="section">
+              <div class="section__header">
+                <div>
+                  <h2 class="section__title">Customer Snapshot</h2>
+                  <p class="section__subtitle">Available CRM, eKYC and support status at a glance.</p>
+                </div>
+              </div>
+              <div class="section__body" data-c360-analytics-snapshot></div>
+            </section>
+
+            <!-- 2. Recommended Next Actions -->
+            <section class="section">
+              <div class="section__header">
+                <div>
+                  <h2 class="section__title">Recommended Next Actions</h2>
+                  <p class="section__subtitle">Rule-based, not predictive ML or generative AI: each card below is produced by a plain if/then condition over this customer's own CRM/eKYC/ticket records (js/data/customer-360-recommendations.js) — no model, no training data, no score. Status changes are prototype-only and do not update CloudGO or any production system.</p>
+                </div>
+              </div>
+              <div class="section__body" data-c360-recommendations></div>
+            </section>
+
+            <!-- 3. CRM Classification -->
+            <section class="section">
+              <div class="section__header">
+                <div>
+                  <h2 class="section__title">CRM Classification</h2>
+                  <p class="section__subtitle">Lead/contact-outcome classification — not a confirmed lifecycle stage or investment-risk score. See Customer Journey above for lifecycle position; it is not repeated here.</p>
+                </div>
+              </div>
+              <div class="section__body" data-c360-classification-lifecycle></div>
+            </section>
+
+            <!-- 4. eKYC & Account Opening Insights -->
+            <section class="section">
+              <div class="section__header">
+                <div>
+                  <h2 class="section__title">eKYC &amp; Account Opening Insights</h2>
+                  <p class="section__subtitle">Current status, latest issue, and outstanding follow-up at a glance, with the full call-attempt record below. Does not imply account opening from eKYC completion, or funding/first trade from account opening.</p>
+                </div>
+              </div>
+              <div class="section__body" data-c360-ekyc-insights></div>
+            </section>
+
+            <!-- 5. Customer Behavior & Usage Insights -->
+            <section class="section">
+              <div class="section__header">
+                <div>
+                  <h2 class="section__title">Customer Behavior &amp; Usage Insights</h2>
+                  <p class="section__subtitle">When and how this customer uses PHS digital channels, derived only from this customer's own recorded events. Charts that need more observations than are on record show an explicit insufficient-data state rather than a misleading pattern. Every "Donut / Bar" or window-filter control renders the exact same underlying numbers, just a different view or range.</p>
+                </div>
+              </div>
+              <div class="section__body" data-c360-behavior-insights></div>
+            </section>
+
+            <!-- 5b. RFM Position — shared RFM engine (js/data/rfm/engine.js), same configuration, scoring and segment mapping as the RFM Analysis page -->
+            <section class="section">
+              <div class="section__header">
+                <div>
+                  <h2 class="section__title">RFM Position</h2>
+                  <p class="section__subtitle">This customer's Recency/Frequency/Monetary result, computed by the exact same shared engine and active configuration as the RFM Analysis page — never a second, independently-calculated score. <a href="rfm-analytics.html" data-lucide-link>View in RFM Analysis <i data-lucide="arrow-up-right" style="width: 13px; height: 13px; vertical-align: -2px;"></i></a></p>
+                </div>
+              </div>
+              <div class="section__body" data-c360-rfm-position></div>
+            </section>
+
+            <!-- 6. Engagement & Customer Support Insights -->
+            <section class="section">
+              <div class="section__header">
+                <div>
+                  <h2 class="section__title">Engagement &amp; Customer Support Insights</h2>
+                  <p class="section__subtitle">Support ticket volume and categories for this customer only.</p>
+                </div>
+              </div>
+              <div class="section__body" data-c360-support-insights></div>
+            </section>
+
+            <!-- 7. Recommendation Activity History -->
+            <section class="section" style="margin-bottom: 0;">
+              <div class="section__header">
+                <div>
+                  <h2 class="section__title">Recommendation Activity History</h2>
+                  <p class="section__subtitle">Tracks prototype recommendation status changes only — not necessarily real customer follow-up or an operational outcome. No separate "action performed" or "customer outcome" record exists in this prototype; see the note in each entry.</p>
+                </div>
+              </div>
+              <div class="section__body" data-c360-outcome-history></div>
+            </section>
+          </div>
+
+          <!-- ============================================================ -->
+          <!-- TAB 1 — IDENTITY & ATTRIBUTES                                 -->
+          <!-- ============================================================ -->
+          <div class="tabs__panel" id="c360-panel-identity" role="tabpanel" aria-labelledby="c360-tab-identity" hidden>
+            <section class="section">
+              <div class="section__header">
+                <div>
+                  <h2 class="section__title">Identity Resolution</h2>
+                  <div class="cluster gap-2" style="color: var(--text-tertiary); font-size: var(--text-xs); margin-top: var(--space-1);">
+                    <i data-lucide="network" style="width: 13px; height: 13px;"></i>
+                    <span data-c360-identity-summary>Unifying identities…</span>
+                  </div>
+                </div>
+              </div>
+              <div class="section__body identity-grid" data-c360-identity></div>
+            </section>
+
+            <section class="section" style="margin-bottom: 0;">
+              <div class="section__header">
+                <div>
+                  <h2 class="section__title">Customer Attributes</h2>
+                  <p class="section__subtitle">Trading account and profile attributes. Birthday is day/month only.</p>
+                </div>
+              </div>
+              <div class="section__body attr-grid attr-grid--3" data-c360-attributes></div>
+            </section>
+          </div>
+
+          <!-- ============================================================ -->
+          <!-- TAB 2 — BEHAVIOR & CONSENT                                    -->
+          <!-- ============================================================ -->
+          <div class="tabs__panel" id="c360-panel-behavior" role="tabpanel" aria-labelledby="c360-tab-behavior" hidden>
+            <section class="section">
+              <div class="section__header">
+                <div>
+                  <h2 class="section__title">Behavioral Summary</h2>
+                  <p class="section__subtitle">Activity over the last 30 days.</p>
+                </div>
+              </div>
+              <div class="section__body behavior-grid" data-c360-behavior></div>
+            </section>
+
+            <section class="section">
+              <div class="section__header">
+                <div>
+                  <h2 class="section__title">Event Timeline</h2>
+                  <p class="section__subtitle">Source first, decoration last — every event is tagged by data-source type.</p>
+                </div>
+                <div class="cluster gap-3">
+                  <div class="tabs tabs--pill" role="tablist" aria-label="Event type filter" data-c360-event-filter>
+                    <button class="tabs__tab" role="tab" aria-selected="true" data-filter="all">All</button>
+                    <button class="tabs__tab" role="tab" aria-selected="false" data-filter="behavior">Behavior</button>
+                    <button class="tabs__tab" role="tab" aria-selected="false" data-filter="trading">Trading</button>
+                    <button class="tabs__tab" role="tab" aria-selected="false" data-filter="transaction">Transaction</button>
+                    <button class="tabs__tab" role="tab" aria-selected="false" data-filter="engagement">Engagement</button>
+                  </div>
+                  <div class="select select--sm" style="width: 150px;">
+                    <select data-c360-source-filter aria-label="Filter by source"></select>
+                    <i class="select__chevron" data-lucide="chevron-down"></i>
+                  </div>
+                </div>
+              </div>
+              <div class="section__body" data-c360-timeline></div>
+            </section>
+
+            <section class="section">
+              <div class="section__header">
+                <div>
+                  <h2 class="section__title">Transactions</h2>
+                  <p class="section__subtitle">Trading and cash activity. Values are shown as bands, not exact amounts.</p>
+                </div>
+              </div>
+              <div class="section__body">
+                <div class="table-wrap">
+                  <table class="table table--dense" data-c360-transactions>
+                    <thead>
+                      <tr>
+                        <th aria-sort="descending"><span class="th-sort">Date <i data-lucide="chevron-down"></i></span></th>
+                        <th>Type</th>
+                        <th>Instrument</th>
+                        <th>Side</th>
+                        <th class="num">Quantity</th>
+                        <th>Value Band</th>
+                        <th>Channel</th>
+                        <th>Status</th>
+                      </tr>
+                    </thead>
+                    <tbody></tbody>
+                  </table>
+                </div>
+              </div>
+            </section>
+
+            <section class="section" style="margin-bottom: 0;">
+              <div class="section__header">
+                <div>
+                  <h2 class="section__title">Consent</h2>
+                  <p class="section__subtitle">Marketing, analytics and personalization preferences.</p>
+                </div>
+                <button class="btn btn--ghost btn--sm" data-modal-open="consent-history-modal" data-consent-history-btn>
+                  <i data-lucide="history"></i>
+                  History
+                </button>
+              </div>
+              <div class="section__body identity-list" data-c360-consent></div>
+            </section>
+          </div>
+
+          <!-- ============================================================ -->
+          <!-- TAB 3 — ENGAGEMENT & FORWARD                                  -->
+          <!-- ============================================================ -->
+          <div class="tabs__panel" id="c360-panel-engagement" role="tabpanel" aria-labelledby="c360-tab-engagement" hidden>
+            <section class="section">
+              <div class="section__header">
+                <div>
+                  <h2 class="section__title">Engagement</h2>
+                  <p class="section__subtitle">Response rates across every messaging channel.</p>
+                </div>
+              </div>
+              <div class="section__body behavior-grid" data-c360-engagement></div>
+            </section>
+
+            <section class="section">
+              <div class="section__header">
+                <div>
+                  <h2 class="section__title">Audience Membership &amp; Campaigns</h2>
+                  <p class="section__subtitle">Segments, campaigns and journeys associated with this customer — kept as two separate views since segment membership does not by itself mean a campaign or journey enrollment exists.</p>
+                </div>
+              </div>
+              <div class="section__body">
+                <div class="tabs tabs--pill" role="tablist" aria-label="Audience and campaign sections" data-c360-engagement-subtabs style="margin-bottom: var(--space-5);">
+                  <button class="tabs__tab" role="tab" aria-selected="true" aria-controls="c360-subpanel-audiences" id="c360-subtab-audiences">Audience Membership</button>
+                  <button class="tabs__tab" role="tab" aria-selected="false" aria-controls="c360-subpanel-campaigns" id="c360-subtab-campaigns">Campaigns &amp; Journeys</button>
+                </div>
+
+                <div class="tabs__panel" id="c360-subpanel-audiences" role="tabpanel" aria-labelledby="c360-subtab-audiences">
+                  <div class="table-wrap">
+                    <table class="table table--dense" data-c360-audiences>
+                      <thead>
+                        <tr>
+                          <th>Audience</th>
+                          <th>Joined</th>
+                          <th>Status</th>
+                          <th>Last Evaluated</th>
+                          <th class="cell-check"></th>
+                        </tr>
+                      </thead>
+                      <tbody></tbody>
+                    </table>
+                  </div>
+                </div>
+
+                <div class="tabs__panel" id="c360-subpanel-campaigns" role="tabpanel" aria-labelledby="c360-subtab-campaigns" hidden>
+                  <div data-c360-campaigns-journeys></div>
+                </div>
+              </div>
+            </section>
+
+            <section class="section">
+              <div class="section__header">
+                <div>
+                  <h2 class="section__title">Forward / Activation</h2>
+                  <p class="section__subtitle">Where this customer's data can be forwarded. Illustrative only — nothing is actually sent.</p>
+                </div>
+              </div>
+              <div class="section__body stack gap-6">
+                <div class="cluster gap-2" style="flex-wrap: wrap;">
+                  <span class="badge badge--neutral">Collect</span>
+                  <i data-lucide="chevron-right" style="width: 13px; height: 13px; color: var(--text-tertiary);"></i>
+                  <span class="badge badge--neutral">Unify</span>
+                  <i data-lucide="chevron-right" style="width: 13px; height: 13px; color: var(--text-tertiary);"></i>
+                  <span class="badge badge--primary">Understand</span>
+                  <i data-lucide="chevron-right" style="width: 13px; height: 13px; color: var(--text-tertiary);"></i>
+                  <span class="badge badge--gold">Activate / Forward</span>
+                </div>
+                <div class="table-wrap">
+                  <table class="table table--dense" data-c360-forward>
+                    <thead>
+                      <tr>
+                        <th>Destination</th>
+                        <th>Type</th>
+                        <th>Status</th>
+                        <th>Last Sync</th>
+                        <th class="num">Records / Events Forwarded</th>
+                        <th class="cell-check"></th>
+                      </tr>
+                    </thead>
+                    <tbody></tbody>
+                  </table>
+                </div>
+              </div>
+            </section>
+
+            <!-- eKYC follow-up history — same partial as Profile        -->
+            <!-- Analytics section 4, rendered via the same helper       -->
+            <!-- function so the row-building logic is never duplicated. -->
+            <section class="section">
+              <div class="section__header">
+                <div>
+                  <h2 class="section__title">eKYC Follow-up History</h2>
+                  <p class="section__subtitle">Customer-care follow-up on eKYC issues for this customer, where documented.</p>
+                </div>
+              </div>
+              <div class="section__body" data-c360-ekyc-history></div>
+            </section>
+
+            <!-- Support tickets — same partial as Profile Analytics      -->
+            <!-- section 5. -->
+            <section class="section" style="margin-bottom: 0;">
+              <div class="section__header">
+                <div>
+                  <h2 class="section__title">Support Tickets</h2>
+                  <p class="section__subtitle">All support tickets linked to this customer.</p>
+                </div>
+              </div>
+              <div class="section__body" data-c360-ticket-history></div>
+            </section>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- Shared event/audience/destination detail drawer -->
+  <div class="drawer-overlay" id="c360-detail-drawer">
+    <aside class="drawer" role="dialog" aria-modal="true" aria-labelledby="c360-detail-drawer-title">
+      <div class="drawer__header">
+        <div>
+          <div class="drawer__eyebrow" data-drawer-eyebrow>Detail</div>
+          <h3 class="drawer__title" id="c360-detail-drawer-title" data-drawer-title>—</h3>
+        </div>
+        <button class="btn btn--ghost btn--icon" data-drawer-close aria-label="Close"><i data-lucide="x"></i></button>
+      </div>
+      <div class="drawer__body" data-drawer-body></div>
+      <div class="drawer__footer">
+        <button class="btn btn--secondary" data-drawer-close>Close</button>
+      </div>
+    </aside>
+  </div>
+
+  <!-- Add to audience modal -->
+  <div class="modal-overlay" id="add-audience-modal">
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="add-audience-title">
+      <div class="modal__header">
+        <div>
+          <h3 class="modal__title" id="add-audience-title">Add to audience</h3>
+          <p class="modal__description">Select audiences to add this customer to. Membership shown here is illustrative only.</p>
+        </div>
+        <button class="btn btn--ghost btn--icon" data-modal-close aria-label="Close"><i data-lucide="x"></i></button>
+      </div>
+      <div class="modal__body">
+        <div class="stack" data-add-audience-body></div>
+      </div>
+      <div class="modal__footer">
+        <button class="btn btn--secondary" data-modal-close>Cancel</button>
+        <button class="btn btn--primary" data-modal-close>Save</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Consent history modal -->
+  <div class="modal-overlay" id="consent-history-modal">
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="consent-history-title">
+      <div class="modal__header">
+        <div>
+          <h3 class="modal__title" id="consent-history-title">Consent history</h3>
+          <p class="modal__description">Every recorded change to this customer's consent preferences.</p>
+        </div>
+        <button class="btn btn--ghost btn--icon" data-modal-close aria-label="Close"><i data-lucide="x"></i></button>
+      </div>
+      <div class="modal__body" data-consent-history-body></div>
+      <div class="modal__footer">
+        <button class="btn btn--secondary" data-modal-close>Close</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://unpkg.com/lucide@1.47.0/dist/umd/lucide.js"></script>
+  <!-- BFF integration: load api client + bridge before the page module -->
+  <script src="./js/api.js"></script>
+  <script src="./js/pages/customer-360-bff.js"></script>
+  <script type="module">
+    import { bootstrapPage } from "./js/main.js";
+    import { initCustomer360 } from "./js/pages/customer-360.js";
+
+    bootstrapPage({
+      currentNavId: "customer-360",
+      breadcrumb: [
+        { label: "PHS CDP", href: "index.html" },
+        { label: "Customers" },
+        { label: "Customer 360" },
+      ],
+    });
+    initCustomer360();
+  </script>
+</body>
+</html>

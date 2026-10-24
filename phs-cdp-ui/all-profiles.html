@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Redirecting… — PHS CDP</title>
+  <!--
+    All Profiles was removed as a standalone browsing page — see
+    Dashboard → Customer Overview → Profile Samples for a small set of
+    demo profile examples, and Customer 360 for profile lookup/detail.
+    This file is kept only as a safe fallback for any direct/bookmarked
+    link to the old route; it holds no page logic of its own.
+  -->
+  <meta http-equiv="refresh" content="0; url=dashboard.html" />
+  <link rel="stylesheet" href="css/main.css" />
+</head>
+<body>
+  <div style="display:flex; align-items:center; justify-content:center; min-height:100vh; padding: var(--space-6);">
+    <div style="text-align:center;">
+      <p style="font-size: var(--text-sm); color: var(--text-secondary); margin-bottom: var(--space-3);">
+        All Profiles has moved. Redirecting to the Dashboard…
+      </p>
+      <a class="btn btn--primary btn--sm" href="dashboard.html">Go to Dashboard</a>
+    </div>
+  </div>
+  <script>
+    location.replace("dashboard.html");
+  </script>
+</body>
+</html>

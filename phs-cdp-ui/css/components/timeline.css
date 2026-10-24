@@ -1,0 +1,130 @@
+/*
+  PHS CDP Design System — Timeline
+  A compact vertical feed for system/platform-level events (data
+  syncs, audience recalculations, sync failures) — distinct from a
+  Table, which is for row-level records. One connecting rail, a
+  status-colored dot per entry, text + relative timestamp.
+*/
+
+.timeline {
+  display: flex;
+  flex-direction: column;
+}
+
+.timeline__item {
+  position: relative;
+  display: flex;
+  gap: var(--space-3);
+  padding-bottom: var(--space-5);
+  padding-left: var(--space-1);
+}
+
+.timeline__item:last-child {
+  padding-bottom: 0;
+}
+
+.timeline__rail {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex-shrink: 0;
+  width: 10px;
+}
+
+.timeline__dot {
+  width: 8px;
+  height: 8px;
+  border-radius: var(--radius-full);
+  background: var(--color-ink-400);
+  margin-top: 5px;
+  flex-shrink: 0;
+}
+.timeline__dot--success { background: var(--color-success-500); }
+.timeline__dot--warning { background: var(--color-warning-500); }
+.timeline__dot--danger { background: var(--color-danger-500); }
+.timeline__dot--info { background: var(--color-info-500); }
+.timeline__dot--gold { background: var(--color-gold-500); }
+
+.timeline__line {
+  width: 1px;
+  flex: 1;
+  background: var(--border-subtle);
+  margin-top: var(--space-1);
+}
+
+.timeline__item:last-child .timeline__line {
+  display: none;
+}
+
+.timeline__content {
+  flex: 1;
+  min-width: 0;
+  padding-top: 1px;
+}
+
+.timeline__text {
+  font-size: var(--text-sm);
+  color: var(--text-primary);
+  line-height: var(--leading-normal);
+}
+
+.timeline__time {
+  margin-top: 2px;
+  font-size: var(--text-xs);
+  color: var(--text-tertiary);
+}
+
+/* Rich variant — for a customer event timeline. Deliberately still
+   just a small neutral dot (not an icon-in-circle): the source badge
+   in the header row is what should draw the eye, not decoration. */
+.timeline--rich .timeline__item {
+  padding-bottom: var(--space-6);
+  cursor: pointer;
+  border-radius: var(--radius-sm);
+  margin: 0 calc(var(--space-2) * -1);
+  padding-left: var(--space-2);
+  padding-right: var(--space-2);
+}
+.timeline--rich .timeline__item:hover {
+  background: var(--color-ink-50);
+}
+
+.timeline__header {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.timeline__status {
+  margin-left: auto;
+}
+
+.timeline__title {
+  font-size: var(--text-sm);
+  font-weight: var(--weight-semibold);
+  color: var(--text-primary);
+}
+
+.timeline__props {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin-top: var(--space-1);
+}
+
+.timeline__prop {
+  font-size: var(--text-xs);
+  font-family: var(--font-mono);
+  color: var(--text-secondary);
+  background: var(--color-ink-100);
+  padding: 1px var(--space-2);
+  border-radius: var(--radius-xs);
+}
+
+.timeline__channel {
+  margin-top: var(--space-1);
+  font-size: var(--text-xs);
+  color: var(--text-tertiary);
+}

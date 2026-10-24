@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>RFM Analysis — PHS CDP</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&display=swap"
+    rel="stylesheet"
+  />
+
+  <link rel="stylesheet" href="css/main.css" />
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="app-shell__sidebar" data-sidebar-mount></aside>
+    <div class="app-shell__topbar" data-topbar-mount></div>
+
+    <main class="app-shell__main">
+      <div class="page">
+        <div class="page-header">
+          <div>
+            <div class="page-header__eyebrow">
+              <i data-lucide="grid-3x3" style="width: 13px; height: 13px;"></i>
+              Audiences · RFM Analysis
+            </div>
+            <h1 class="page-header__title">RFM Analysis</h1>
+            <p class="page-header__description">One shared Recency / Frequency / Monetary scoring engine, configured here and reused as-is by Customer 360's RFM view — nothing here is recalculated separately per module. Synthetic demo data — for UI demonstration and validation only. Not actual PHS customer activity.</p>
+          </div>
+        </div>
+
+        <!-- Configuration -->
+        <section class="section">
+          <div class="section__header">
+            <div>
+              <h2 class="section__title">RFM Configuration</h2>
+              <p class="section__subtitle">Changes apply to the grid, segment list, exports, and Customer 360's RFM view. Stored in this browser only (localStorage) — not a durable server-side or cross-device setting.</p>
+            </div>
+          </div>
+          <div class="section__body">
+            <form data-rfm-config-form>
+              <div class="rfm-config">
+                <div class="rfm-config__field">
+                  <span class="rfm-config__label">Lookback Window</span>
+                  <div data-rfm-lookback-switch></div>
+                </div>
+
+                <div class="rfm-config__field">
+                  <span class="rfm-config__label">Asset Type (empty = all)</span>
+                  <div class="rfm-config__checklist" data-rfm-asset-types></div>
+                </div>
+
+                <div class="rfm-config__field">
+                  <span class="rfm-config__label">Management Channel</span>
+                  <div class="select select--sm">
+                    <select data-rfm-management-channel></select>
+                    <i class="select__chevron" data-lucide="chevron-down"></i>
+                  </div>
+                </div>
+
+                <div class="rfm-config__field">
+                  <span class="rfm-config__label">Branch</span>
+                  <div class="select select--sm">
+                    <select data-rfm-branch></select>
+                    <i class="select__chevron" data-lucide="chevron-down"></i>
+                  </div>
+                </div>
+
+                <div class="rfm-config__field">
+                  <span class="rfm-config__label">Broker</span>
+                  <div class="select select--sm">
+                    <select data-rfm-broker></select>
+                    <i class="select__chevron" data-lucide="chevron-down"></i>
+                  </div>
+                </div>
+
+                <div class="rfm-config__field">
+                  <span class="rfm-config__label">Recency (R) Metric</span>
+                  <div class="select select--sm">
+                    <select data-rfm-r-metric></select>
+                    <i class="select__chevron" data-lucide="chevron-down"></i>
+                  </div>
+                </div>
+
+                <div class="rfm-config__field">
+                  <span class="rfm-config__label">Monetary (M) Metric</span>
+                  <div class="select select--sm">
+                    <select data-rfm-m-metric></select>
+                    <i class="select__chevron" data-lucide="chevron-down"></i>
+                  </div>
+                </div>
+
+                <div class="rfm-config__field rfm-config__actions">
+                  <button type="submit" class="btn btn--primary btn--sm" data-rfm-apply>Apply</button>
+                  <button type="button" class="btn btn--outline btn--sm" data-rfm-reset>Reset to Default</button>
+                </div>
+              </div>
+            </form>
+            <div class="rfm-config__summary" data-rfm-summary></div>
+          </div>
+        </section>
+
+        <!-- Status (loading / error / data-availability) -->
+        <div data-rfm-status></div>
+
+        <!-- Grid -->
+        <section class="section" data-rfm-grid-section>
+          <div class="section__header">
+            <div>
+              <h2 class="section__title">RFM Grid</h2>
+              <p class="section__subtitle">Recency on the horizontal axis, Frequency on the vertical axis. Each cell: customer count, % of the eligible scored population, and aggregate selected Monetary metric. Color reflects the dominant segment in that cell — never the only signal; hover or focus any cell for exact values and segment name(s).</p>
+            </div>
+          </div>
+          <div class="section__body" data-rfm-grid></div>
+        </section>
+
+        <!-- Segment list -->
+        <section class="section" style="margin-bottom: 0;" data-rfm-segments-section>
+          <div class="section__header">
+            <div>
+              <h2 class="section__title">RFM Segments</h2>
+              <p class="section__subtitle">10 demo segment definitions, mapped deterministically from each customer's Recency/Frequency score pair — not an approved PHS taxonomy. Reconciles exactly with the grid above (same scored population).</p>
+            </div>
+          </div>
+          <div class="section__body">
+            <div class="table-wrap">
+              <table class="table table--dense" data-rfm-segments-table>
+                <thead>
+                  <tr><th>Segment</th><th>Description</th><th class="num">Customers</th><th class="num">% of Population</th><th class="num">Aggregate M</th><th class="cell-check"></th></tr>
+                </thead>
+                <tbody></tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+      </div>
+    </main>
+  </div>
+
+  <!-- RFM cell drill-in drawer — same shape/contract as Customer 360's #c360-detail-drawer -->
+  <div class="drawer-overlay" id="rfm-cell-drawer">
+    <aside class="drawer drawer--wide" role="dialog" aria-modal="true" aria-labelledby="rfm-cell-drawer-title">
+      <div class="drawer__header">
+        <div>
+          <div class="drawer__eyebrow" data-drawer-eyebrow>RFM Cell</div>
+          <h3 class="drawer__title" id="rfm-cell-drawer-title" data-drawer-title>—</h3>
+        </div>
+        <button class="btn btn--ghost btn--icon" data-drawer-close aria-label="Close"><i data-lucide="x"></i></button>
+      </div>
+      <div class="drawer__body" data-drawer-body></div>
+      <div class="drawer__footer">
+        <button class="btn btn--secondary" data-drawer-close>Close</button>
+      </div>
+    </aside>
+  </div>
+
+  <script src="https://unpkg.com/lucide@1.47.0/dist/umd/lucide.js"></script>
+  <script type="module">
+    import { bootstrapPage } from "./js/main.js";
+    import { initRfmAnalytics } from "./js/pages/rfm-analytics.js";
+
+    bootstrapPage({
+      currentNavId: "rfm-analysis",
+      breadcrumb: [{"label": "PHS CDP", "href": "index.html"}, {"label": "Audiences"}, {"label": "RFM Analysis"}],
+    });
+    initRfmAnalytics();
+  </script>
+</body>
+</html>

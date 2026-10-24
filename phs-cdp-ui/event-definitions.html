@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Event Definitions — PHS CDP</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&display=swap"
+    rel="stylesheet"
+  />
+
+  <link rel="stylesheet" href="css/main.css" />
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="app-shell__sidebar" data-sidebar-mount></aside>
+    <div class="app-shell__topbar" data-topbar-mount></div>
+
+    <main class="app-shell__main">
+      <div class="page">
+
+        <!-- ============================================================ -->
+        <!-- LIST VIEW                                                     -->
+        <!-- ============================================================ -->
+        <div data-view-list>
+          <div class="page-header">
+            <div>
+              <div class="page-header__eyebrow">
+                <i data-lucide="list-tree" style="width: 13px; height: 13px;"></i>
+                Events · Event Definitions
+              </div>
+              <h1 class="page-header__title">Event Definitions</h1>
+              <p class="page-header__description">Define and govern the events used by Customer 360, Audiences, Journeys and Activation.</p>
+            </div>
+            <div class="page-header__actions">
+              <button class="btn btn--primary" data-create-event>
+                <i data-lucide="plus"></i>
+                Create Event Definition
+              </button>
+            </div>
+          </div>
+
+          <section class="section" style="margin-bottom: 0;">
+            <div class="section__body">
+              <div class="table-wrap">
+                <div class="table__toolbar">
+                  <div class="cluster gap-2" style="flex-wrap: wrap; align-items: center;">
+                    <div class="search-field" style="width: 240px;">
+                      <i data-lucide="search"></i>
+                      <input class="input" type="text" placeholder="Search events…" data-event-search aria-label="Search events" />
+                    </div>
+                  </div>
+                  <div class="cluster gap-2">
+                    <div class="col-manager-anchor">
+                      <button class="btn btn--outline btn--sm" data-event-filter-trigger><i data-lucide="filter"></i> Filter<span class="filter-count-badge" data-event-filter-count hidden>0</span></button>
+                      <div class="col-manager" data-event-filter-panel></div>
+                    </div>
+                  </div>
+                </div>
+                <table class="table" data-event-table>
+                  <thead>
+                    <tr>
+                      <th>Event</th>
+                      <th>Category</th>
+                      <th>Description</th>
+                      <th>Source</th>
+                      <th class="num">Properties</th>
+                      <th>Status</th>
+                      <th>Last Received</th>
+                      <th>Usage</th>
+                    </tr>
+                  </thead>
+                  <tbody></tbody>
+                </table>
+              </div>
+            </div>
+          </section>
+        </div>
+
+        <!-- ============================================================ -->
+        <!-- DETAIL VIEW                                                   -->
+        <!-- ============================================================ -->
+        <div data-view-detail hidden>
+          <button class="btn btn--ghost btn--sm" data-back-to-list style="margin-bottom: var(--space-5);">
+            <i data-lucide="arrow-left"></i>
+            All Event Definitions
+          </button>
+
+          <div class="page-header">
+            <div style="flex: 1; min-width: 0;" data-detail-header></div>
+            <div class="page-header__actions" data-detail-actions></div>
+          </div>
+
+          <div class="tabs" role="tablist" aria-label="Event definition sections" style="margin-bottom: var(--space-8);">
+            <button class="tabs__tab" role="tab" aria-selected="true" aria-controls="event-panel-overview" id="event-tab-overview">
+              <i data-lucide="layout-list"></i>
+              Overview
+            </button>
+            <button class="tabs__tab" role="tab" aria-selected="false" aria-controls="event-panel-properties" id="event-tab-properties">
+              <i data-lucide="list"></i>
+              Properties
+            </button>
+            <button class="tabs__tab" role="tab" aria-selected="false" aria-controls="event-panel-sources" id="event-tab-sources">
+              <i data-lucide="git-branch"></i>
+              Sources
+            </button>
+            <button class="tabs__tab" role="tab" aria-selected="false" aria-controls="event-panel-usage" id="event-tab-usage">
+              <i data-lucide="share-2"></i>
+              Usage
+            </button>
+            <button class="tabs__tab" role="tab" aria-selected="false" aria-controls="event-panel-activity" id="event-tab-activity">
+              <i data-lucide="activity"></i>
+              Activity
+            </button>
+          </div>
+
+          <div class="tabs__panel" id="event-panel-overview" role="tabpanel" aria-labelledby="event-tab-overview" data-tab-overview></div>
+          <div class="tabs__panel" id="event-panel-properties" role="tabpanel" aria-labelledby="event-tab-properties" data-tab-properties hidden></div>
+          <div class="tabs__panel" id="event-panel-sources" role="tabpanel" aria-labelledby="event-tab-sources" data-tab-sources hidden></div>
+          <div class="tabs__panel" id="event-panel-usage" role="tabpanel" aria-labelledby="event-tab-usage" data-tab-usage hidden></div>
+          <div class="tabs__panel" id="event-panel-activity" role="tabpanel" aria-labelledby="event-tab-activity" data-tab-activity hidden></div>
+        </div>
+
+        <!-- ============================================================ -->
+        <!-- CREATE / EDIT VIEW                                            -->
+        <!-- ============================================================ -->
+        <div data-view-form hidden>
+          <button class="btn btn--ghost btn--sm" data-back-from-form style="margin-bottom: var(--space-5);">
+            <i data-lucide="arrow-left"></i>
+            Back to Event Definitions
+          </button>
+
+          <div class="page-header">
+            <div>
+              <h1 class="page-header__title" data-form-title>Create Event Definition</h1>
+              <p class="page-header__description">Prototype event schema — mock only, no live ingestion is affected.</p>
+            </div>
+            <div class="page-header__actions">
+              <button class="btn btn--primary" data-save-definition>
+                <i data-lucide="save"></i>
+                Save Definition
+              </button>
+            </div>
+          </div>
+
+          <section class="section" style="margin-bottom: 0;">
+            <div class="section__body" data-form-body></div>
+          </section>
+        </div>
+
+      </div>
+    </main>
+  </div>
+
+  <script src="https://unpkg.com/lucide@1.47.0/dist/umd/lucide.js"></script>
+  <script type="module">
+    import { bootstrapPage } from "./js/main.js";
+    import { initEventDefinitions } from "./js/pages/event-definitions.js";
+
+    bootstrapPage({
+      currentNavId: "event-definitions",
+      breadcrumb: [{"label": "PHS CDP", "href": "index.html"}, {"label": "Events"}, {"label": "Event Definitions"}],
+    });
+    initEventDefinitions();
+  </script>
+</body>
+</html>

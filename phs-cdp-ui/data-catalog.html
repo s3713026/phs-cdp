@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Data Catalog — PHS CDP</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&display=swap"
+    rel="stylesheet"
+  />
+
+  <link rel="stylesheet" href="css/main.css" />
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="app-shell__sidebar" data-sidebar-mount></aside>
+    <div class="app-shell__topbar" data-topbar-mount></div>
+
+    <main class="app-shell__main">
+      <div class="page">
+        <div class="page-header">
+          <div>
+            <div class="page-header__eyebrow">
+              <i data-lucide="folder-tree" style="width: 13px; height: 13px;"></i>
+              Governance · Data Catalog
+            </div>
+            <h1 class="page-header__title">Data Catalog</h1>
+            <p class="page-header__description">The full inventory of fields the PHS CDP knows about — events, profile attributes and the sources that produce them. Reuses the canonical Event Catalog, Profile Attributes and Data Flows; nothing here is a second copy.</p>
+          </div>
+        </div>
+
+        <section class="section">
+          <div class="section__body event-summary-grid">
+            <div class="metric metric--primary"><span class="metric__label">Cataloged Fields</span><div class="metric__value-row"><span class="metric__value tabular-nums" data-summary-total style="font-size: var(--text-xl);">—</span></div></div>
+            <div class="metric"><span class="metric__label">Events</span><div class="metric__value-row"><span class="metric__value tabular-nums" data-summary-events style="font-size: var(--text-xl);">—</span></div></div>
+            <div class="metric"><span class="metric__label">Profile Attributes</span><div class="metric__value-row"><span class="metric__value tabular-nums" data-summary-attributes style="font-size: var(--text-xl);">—</span></div></div>
+            <div class="metric"><span class="metric__label">Sources</span><div class="metric__value-row"><span class="metric__value tabular-nums" data-summary-sources style="font-size: var(--text-xl);">—</span></div></div>
+          </div>
+        </section>
+
+        <div class="tabs" role="tablist" aria-label="Data Catalog sections" style="margin-bottom: var(--space-6);">
+          <button class="tabs__tab" role="tab" aria-selected="true" aria-controls="catalog-panel-events" id="catalog-tab-events">
+            <i data-lucide="zap"></i>
+            Events
+          </button>
+          <button class="tabs__tab" role="tab" aria-selected="false" aria-controls="catalog-panel-attributes" id="catalog-tab-attributes">
+            <i data-lucide="user-round"></i>
+            Profile Attributes
+          </button>
+          <button class="tabs__tab" role="tab" aria-selected="false" aria-controls="catalog-panel-sources" id="catalog-tab-sources">
+            <i data-lucide="git-branch"></i>
+            Sources
+          </button>
+        </div>
+
+        <div class="tabs__panel" id="catalog-panel-events" role="tabpanel" aria-labelledby="catalog-tab-events" data-tab-events></div>
+        <div class="tabs__panel" id="catalog-panel-attributes" role="tabpanel" aria-labelledby="catalog-tab-attributes" data-tab-attributes hidden></div>
+        <div class="tabs__panel" id="catalog-panel-sources" role="tabpanel" aria-labelledby="catalog-tab-sources" data-tab-sources hidden></div>
+      </div>
+    </main>
+  </div>
+
+  <script src="https://unpkg.com/lucide@1.47.0/dist/umd/lucide.js"></script>
+  <script type="module">
+    import { bootstrapPage } from "./js/main.js";
+    import { initDataCatalog } from "./js/pages/data-catalog.js";
+
+    bootstrapPage({
+      currentNavId: "data-catalog",
+      breadcrumb: [{"label": "PHS CDP", "href": "index.html"}, {"label": "Governance"}, {"label": "Data Catalog"}],
+    });
+    initDataCatalog();
+  </script>
+</body>
+</html>

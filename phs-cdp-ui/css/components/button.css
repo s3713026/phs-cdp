@@ -1,0 +1,150 @@
+/*
+  PHS CDP Design System — Button
+  Variants: primary, secondary, outline, ghost, danger
+  Sizes: sm, md, lg
+  States: hover, active, disabled, icon-only
+*/
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  font-family: var(--font-ui);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-medium);
+  line-height: 1;
+  white-space: nowrap;
+  border-radius: var(--radius-sm);
+  border: 1px solid transparent;
+  cursor: pointer;
+  padding: 0 var(--space-4);
+  height: 36px;
+  transition: background-color var(--duration-fast) var(--ease-standard),
+              border-color var(--duration-fast) var(--ease-standard),
+              color var(--duration-fast) var(--ease-standard);
+}
+
+.btn svg {
+  width: 16px;
+  height: 16px;
+}
+
+.btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.btn.is-loading svg {
+  animation: spin 700ms linear infinite;
+}
+
+/* Sizes */
+.btn--sm { height: 28px; padding: 0 var(--space-3); font-size: var(--text-xs); }
+.btn--lg { height: 44px; padding: 0 var(--space-5); font-size: var(--text-base); }
+
+.btn--icon {
+  padding: 0;
+  width: 36px;
+}
+.btn--icon.btn--sm { width: 28px; }
+.btn--icon.btn--lg { width: 44px; }
+
+/* Primary — brand gold, solid */
+.btn--primary {
+  background: var(--color-primary-500);
+  border-color: var(--color-primary-500);
+  color: var(--color-ink-0);
+}
+.btn--primary:hover:not(:disabled) {
+  background: var(--color-primary-600);
+  border-color: var(--color-primary-600);
+}
+.btn--primary:active:not(:disabled) {
+  background: var(--color-primary-700);
+  border-color: var(--color-primary-700);
+}
+
+/* Secondary — quiet neutral fill */
+.btn--secondary {
+  background: var(--color-ink-100);
+  border-color: var(--color-ink-100);
+  color: var(--text-primary);
+}
+.btn--secondary:hover:not(:disabled) {
+  background: var(--color-ink-200);
+  border-color: var(--color-ink-200);
+}
+.btn--secondary:active:not(:disabled) {
+  background: var(--color-ink-300);
+}
+
+/* Outline — bordered, transparent fill */
+.btn--outline {
+  background: transparent;
+  border-color: var(--border-default);
+  color: var(--text-primary);
+}
+.btn--outline:hover:not(:disabled) {
+  background: var(--color-ink-50);
+  border-color: var(--border-strong);
+}
+.btn--outline:active:not(:disabled) {
+  background: var(--color-ink-100);
+}
+
+/* Ghost — no border, no fill until interaction */
+.btn--ghost {
+  background: transparent;
+  border-color: transparent;
+  color: var(--text-secondary);
+}
+.btn--ghost:hover:not(:disabled) {
+  background: var(--color-ink-100);
+  color: var(--text-primary);
+}
+.btn--ghost:active:not(:disabled) {
+  background: var(--color-ink-200);
+}
+
+/* Danger — destructive actions */
+.btn--danger {
+  background: var(--color-danger-500);
+  border-color: var(--color-danger-500);
+  color: var(--color-ink-0);
+}
+.btn--danger:hover:not(:disabled) {
+  background: var(--color-danger-600);
+  border-color: var(--color-danger-600);
+}
+
+.btn--danger-outline {
+  background: transparent;
+  border-color: var(--color-danger-100);
+  color: var(--color-danger-600);
+}
+.btn--danger-outline:hover:not(:disabled) {
+  background: var(--color-danger-50);
+  border-color: var(--color-danger-100);
+}
+
+.btn-group {
+  display: inline-flex;
+  align-items: center;
+}
+.btn-group .btn {
+  border-radius: 0;
+}
+.btn-group .btn:first-child {
+  border-radius: var(--radius-sm) 0 0 var(--radius-sm);
+}
+.btn-group .btn:last-child {
+  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+}
+.btn-group .btn:not(:first-child) {
+  border-left-width: 0;
+}
+.btn-group .btn--outline:not(:first-child) {
+  border-left: 1px solid var(--border-default);
+  margin-left: -1px;
+}

@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Shell Preview — PHS CDP</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&display=swap"
+    rel="stylesheet"
+  />
+
+  <link rel="stylesheet" href="css/main.css" />
+  <link rel="stylesheet" href="css/showcase.css" />
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="app-shell__sidebar" data-sidebar-mount></aside>
+    <div class="app-shell__topbar" data-topbar-mount></div>
+
+    <main class="app-shell__main">
+      <div class="page">
+        <div class="showcase-note" style="margin-bottom: var(--space-8);">
+          <i data-lucide="info"></i>
+          <span>
+            <strong>Shell Preview</strong> — a temporary QA page for validating the application shell
+            (sidebar, topbar, breadcrumb, page header) against real content. It is not a real CDP page;
+            it borrows the Customer 360 breadcrumb/title as the illustrative example. Remove once Dashboard
+            and the real modules exist.
+          </span>
+        </div>
+
+        <!-- ============================================================ -->
+        <!-- PAGE HEADER — title, description, breadcrumb (in topbar),    -->
+        <!-- primary + secondary actions, filters.                        -->
+        <!-- ============================================================ -->
+        <div class="page-header">
+          <div>
+            <div class="page-header__eyebrow">
+              <i data-lucide="circle-user-round" style="width: 13px; height: 13px;"></i>
+              Customers · Customer 360
+            </div>
+            <h1 class="page-header__title">Customer 360</h1>
+            <p class="page-header__description">Unified customer profile and behavioral intelligence.</p>
+          </div>
+          <div class="page-header__actions">
+            <button class="btn btn--outline">
+              <i data-lucide="download"></i>
+              Export
+            </button>
+            <div class="dropdown">
+              <button class="btn btn--ghost btn--icon" data-dropdown-trigger aria-label="More actions" aria-haspopup="true" aria-expanded="false">
+                <i data-lucide="more-horizontal"></i>
+              </button>
+              <div class="dropdown__menu dropdown__menu--left" role="menu">
+                <button class="dropdown__item" role="menuitem"><i data-lucide="pencil"></i>Edit profile</button>
+                <button class="dropdown__item" role="menuitem"><i data-lucide="share-2"></i>Share</button>
+                <hr class="dropdown__separator" />
+                <button class="dropdown__item dropdown__item--danger" role="menuitem"><i data-lucide="trash-2"></i>Remove</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="page-header__filters">
+          <div class="tabs tabs--pill" role="tablist" aria-label="Time range">
+            <button class="tabs__tab" role="tab" aria-selected="true">7d</button>
+            <button class="tabs__tab" role="tab" aria-selected="false">30d</button>
+            <button class="tabs__tab" role="tab" aria-selected="false">90d</button>
+          </div>
+          <div class="select select--sm" style="width: 160px;">
+            <select>
+              <option>Tier: All</option>
+              <option>Platinum</option>
+              <option>Gold</option>
+              <option>Silver</option>
+            </select>
+            <i class="select__chevron" data-lucide="chevron-down"></i>
+          </div>
+          <div class="search-field" style="width: 220px;">
+            <i data-lucide="search"></i>
+            <input class="input" type="text" placeholder="Filter…" />
+          </div>
+        </div>
+
+        <!-- ============================================================ -->
+        <!-- SAMPLE METRICS                                                -->
+        <!-- ============================================================ -->
+        <section class="section">
+          <div class="section__header">
+            <div>
+              <h2 class="section__title">Overview</h2>
+              <p class="section__subtitle">Sample metrics — content only, no live data.</p>
+            </div>
+          </div>
+          <div class="section__body grid-4">
+            <div class="metric metric--primary">
+              <span class="metric__label">Portfolio value</span>
+              <div class="metric__value-row"><span class="metric__value">₫2.48B</span></div>
+              <span class="metric__delta metric__delta--up"><i data-lucide="arrow-up-right"></i>+4.8% this month</span>
+            </div>
+            <div class="metric metric--success">
+              <span class="metric__label">Trading activity</span>
+              <div class="metric__value-row"><span class="metric__value">142</span></div>
+              <span class="metric__delta metric__delta--up"><i data-lucide="arrow-up-right"></i>+12 orders</span>
+            </div>
+            <div class="metric metric--info">
+              <span class="metric__label">Engagement score</span>
+              <div class="metric__value-row"><span class="metric__value">86<span class="metric__unit">/100</span></span></div>
+              <span class="metric__delta metric__delta--flat">No change</span>
+            </div>
+            <div class="metric metric--warning">
+              <span class="metric__label">Days since last login</span>
+              <div class="metric__value-row"><span class="metric__value">2</span></div>
+              <span class="metric__delta metric__delta--down"><i data-lucide="arrow-down-right"></i>-5d vs. avg</span>
+            </div>
+          </div>
+        </section>
+
+        <!-- ============================================================ -->
+        <!-- SAMPLE TABLE                                                  -->
+        <!-- ============================================================ -->
+        <section class="section">
+          <div class="section__header">
+            <div>
+              <h2 class="section__title">Recent activity</h2>
+              <p class="section__subtitle">Sample table — content only, no live data.</p>
+            </div>
+          </div>
+          <div class="section__body">
+            <div class="table-wrap">
+              <table class="table">
+                <thead>
+                  <tr>
+                    <th aria-sort="descending"><span class="th-sort">Event <i data-lucide="chevron-down"></i></span></th>
+                    <th>Channel</th>
+                    <th>Status</th>
+                    <th class="num" aria-sort="none"><span class="th-sort">Amount <i data-lucide="chevron-down"></i></span></th>
+                    <th>Timestamp</th>
+                    <th class="cell-check"></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td class="cell-primary">Deposit</td>
+                    <td class="cell-muted">Mobile App</td>
+                    <td><span class="status-dot status-dot--success">Completed</span></td>
+                    <td class="num">₫120,000,000</td>
+                    <td class="cell-muted">18 minutes ago</td>
+                    <td>
+                      <div class="dropdown">
+                        <button class="btn btn--ghost btn--icon btn--sm" data-dropdown-trigger aria-label="Row actions"><i data-lucide="more-horizontal"></i></button>
+                        <div class="dropdown__menu" role="menu">
+                          <button class="dropdown__item" role="menuitem"><i data-lucide="eye"></i>View details</button>
+                          <button class="dropdown__item dropdown__item--danger" role="menuitem"><i data-lucide="trash-2"></i>Remove</button>
+                        </div>
+                      </div>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td class="cell-primary">Buy — VNM</td>
+                    <td class="cell-muted">Trading System</td>
+                    <td><span class="status-dot status-dot--success">Completed</span></td>
+                    <td class="num">₫45,600,000</td>
+                    <td class="cell-muted">2 hours ago</td>
+                    <td>
+                      <div class="dropdown">
+                        <button class="btn btn--ghost btn--icon btn--sm" data-dropdown-trigger aria-label="Row actions"><i data-lucide="more-horizontal"></i></button>
+                        <div class="dropdown__menu" role="menu">
+                          <button class="dropdown__item" role="menuitem"><i data-lucide="eye"></i>View details</button>
+                          <button class="dropdown__item dropdown__item--danger" role="menuitem"><i data-lucide="trash-2"></i>Remove</button>
+                        </div>
+                      </div>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td class="cell-primary">Push notification opened</td>
+                    <td class="cell-muted">Push</td>
+                    <td><span class="status-dot status-dot--warning">Pending</span></td>
+                    <td class="num">—</td>
+                    <td class="cell-muted">Yesterday</td>
+                    <td>
+                      <div class="dropdown">
+                        <button class="btn btn--ghost btn--icon btn--sm" data-dropdown-trigger aria-label="Row actions"><i data-lucide="more-horizontal"></i></button>
+                        <div class="dropdown__menu" role="menu">
+                          <button class="dropdown__item" role="menuitem"><i data-lucide="eye"></i>View details</button>
+                          <button class="dropdown__item dropdown__item--danger" role="menuitem"><i data-lucide="trash-2"></i>Remove</button>
+                        </div>
+                      </div>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td class="cell-primary">Withdrawal</td>
+                    <td class="cell-muted">Mobile App</td>
+                    <td><span class="status-dot status-dot--danger">Failed</span></td>
+                    <td class="num">₫20,000,000</td>
+                    <td class="cell-muted">3 days ago</td>
+                    <td>
+                      <div class="dropdown">
+                        <button class="btn btn--ghost btn--icon btn--sm" data-dropdown-trigger aria-label="Row actions"><i data-lucide="more-horizontal"></i></button>
+                        <div class="dropdown__menu" role="menu">
+                          <button class="dropdown__item" role="menuitem"><i data-lucide="eye"></i>View details</button>
+                          <button class="dropdown__item dropdown__item--danger" role="menuitem"><i data-lucide="trash-2"></i>Remove</button>
+                        </div>
+                      </div>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <!-- ============================================================ -->
+        <!-- SAMPLE BUTTONS                                                -->
+        <!-- ============================================================ -->
+        <section class="section">
+          <div class="section__header">
+            <div>
+              <h2 class="section__title">Buttons</h2>
+              <p class="section__subtitle">Shared button styles inherited from the design system — nothing new here.</p>
+            </div>
+          </div>
+          <div class="section__body demo-row">
+            <button class="btn btn--primary">Primary action</button>
+            <button class="btn btn--secondary">Secondary</button>
+            <button class="btn btn--outline">Outline</button>
+            <button class="btn btn--ghost">Ghost</button>
+            <button class="btn btn--danger">Delete</button>
+          </div>
+        </section>
+
+        <!-- ============================================================ -->
+        <!-- SAMPLE BADGES                                                 -->
+        <!-- ============================================================ -->
+        <section class="section">
+          <div class="section__header">
+            <div>
+              <h2 class="section__title">Badges</h2>
+              <p class="section__subtitle">Shared badge styles inherited from the design system — nothing new here.</p>
+            </div>
+          </div>
+          <div class="section__body demo-row">
+            <span class="badge badge--primary">Active Investor</span>
+            <span class="badge badge--gold">Platinum</span>
+            <span class="badge badge--success">Connected</span>
+            <span class="badge badge--warning">Needs review</span>
+            <span class="badge badge--danger">Disconnected</span>
+            <span class="badge badge--info">Beta</span>
+          </div>
+        </section>
+      </div>
+    </main>
+  </div>
+
+  <script src="https://unpkg.com/lucide@1.47.0/dist/umd/lucide.js"></script>
+  <script type="module">
+    import { bootstrapPage } from "./js/main.js";
+    bootstrapPage({
+      currentNavId: "customer-360",
+      breadcrumb: [
+        { label: "PHS CDP", href: "index.html" },
+        { label: "Customers" },
+        { label: "Customer 360" },
+      ],
+    });
+  </script>
+</body>
+</html>

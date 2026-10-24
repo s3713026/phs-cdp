@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Content — PHS CDP</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&display=swap"
+    rel="stylesheet"
+  />
+
+  <link rel="stylesheet" href="css/main.css" />
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="app-shell__sidebar" data-sidebar-mount></aside>
+    <div class="app-shell__topbar" data-topbar-mount></div>
+
+    <main class="app-shell__main">
+      <div class="page">
+
+        <!-- ============================= LIST VIEW ============================= -->
+        <div data-view-list>
+          <div class="page-header">
+            <div>
+              <div class="page-header__eyebrow">
+                <i data-lucide="layout-template" style="width: 13px; height: 13px;"></i>
+                Activation · Content
+              </div>
+              <h1 class="page-header__title">Content</h1>
+              <p class="page-header__description">Create and manage reusable message templates for campaign activation.</p>
+            </div>
+            <div class="page-header__actions">
+              <button class="btn btn--primary btn--sm" data-create-content><i data-lucide="plus"></i> Create Content</button>
+            </div>
+          </div>
+
+          <section class="section" style="margin-bottom: 0;">
+            <div class="section__body">
+              <div class="table-wrap">
+                <div class="table__toolbar">
+                  <div class="cluster gap-2" style="flex-wrap: wrap; align-items: center;">
+                    <div class="search-field" style="width: 240px;">
+                      <i data-lucide="search"></i>
+                      <input class="input" type="text" placeholder="Search content…" data-content-search aria-label="Search content" />
+                    </div>
+                  </div>
+                  <div class="cluster gap-2">
+                    <div class="col-manager-anchor">
+                      <button class="btn btn--outline btn--sm" data-content-filter-trigger><i data-lucide="filter"></i> Filter<span class="filter-count-badge" data-content-filter-count hidden>0</span></button>
+                      <div class="col-manager" data-content-filter-panel></div>
+                    </div>
+                  </div>
+                </div>
+                <table class="table" data-content-table>
+                  <thead><tr><th>Content</th><th>Channel</th><th>Type</th><th>Status</th><th>Updated</th><th>Owner</th></tr></thead>
+                  <tbody></tbody>
+                </table>
+              </div>
+            </div>
+          </section>
+        </div>
+
+        <!-- ============================= EDITOR VIEW (create + edit) ============================= -->
+        <div data-view-editor hidden>
+          <div class="page-header">
+            <div>
+              <button class="btn btn--ghost btn--sm" data-back-to-list style="margin-bottom: var(--space-3);"><i data-lucide="arrow-left"></i> Content</button>
+              <div class="page-header__eyebrow">
+                <i data-lucide="layout-template" style="width: 13px; height: 13px;"></i>
+                Activation · Content
+              </div>
+              <h1 class="page-header__title" data-editor-title>New Content</h1>
+            </div>
+            <div class="page-header__actions">
+              <span data-editor-version-badge></span>
+              <button class="btn btn--outline btn--sm" data-content-duplicate hidden><i data-lucide="copy"></i> Duplicate</button>
+              <button class="btn btn--outline btn--sm" data-content-save-draft>Save Draft</button>
+              <button class="btn btn--primary btn--sm" data-content-publish>Publish</button>
+            </div>
+          </div>
+
+          <div class="grid-main-side">
+            <div>
+              <section class="section">
+                <div class="section__header"><div><h2 class="section__title">Details</h2></div></div>
+                <div class="section__body">
+                  <div class="event-form-grid">
+                    <div class="field field--full">
+                      <label class="field__label">Content Name</label>
+                      <input class="input" type="text" data-field-name placeholder="e.g. First Trade Reminder — Email" />
+                      <div class="event-form-error" data-error-name hidden></div>
+                    </div>
+                    <div class="field">
+                      <label class="field__label">Channel</label>
+                      <div class="select select--sm"><select data-field-channel></select><i class="select__chevron" data-lucide="chevron-down"></i></div>
+                    </div>
+                    <div class="field">
+                      <label class="field__label">Status</label>
+                      <div class="select select--sm"><select data-field-status></select><i class="select__chevron" data-lucide="chevron-down"></i></div>
+                    </div>
+                    <div class="field field--full">
+                      <label class="field__label">Description</label>
+                      <input class="input" type="text" data-field-description placeholder="What this template is for" />
+                    </div>
+                  </div>
+                </div>
+              </section>
+
+              <section class="section" style="margin-bottom: 0;">
+                <div class="section__header"><div><h2 class="section__title" data-channel-editor-title>Email</h2></div></div>
+                <div class="section__body" data-channel-editor-body></div>
+                <div class="section__body" style="padding-top: 0;">
+                  <div class="field">
+                    <label class="field__label">Variables</label>
+                    <div class="cluster gap-2" data-variable-chips style="flex-wrap: wrap;"></div>
+                  </div>
+                </div>
+              </section>
+            </div>
+
+            <div>
+              <section class="section">
+                <div class="section__header"><div><h2 class="section__title">Preview</h2></div></div>
+                <div class="section__body" data-content-preview></div>
+              </section>
+
+              <section class="section" data-version-section hidden>
+                <div class="section__header"><div><h2 class="section__title">Versions</h2></div></div>
+                <div class="section__body">
+                  <div class="table-wrap">
+                    <table class="table table--dense">
+                      <thead><tr><th>Version</th><th>Updated</th><th>Status</th></tr></thead>
+                      <tbody data-version-table></tbody>
+                    </table>
+                  </div>
+                </div>
+              </section>
+
+              <section class="section" data-usage-section hidden style="margin-bottom: 0;">
+                <div class="section__header"><div><h2 class="section__title">Used By</h2></div></div>
+                <div class="section__body" data-usage-body></div>
+              </section>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </main>
+  </div>
+
+  <script src="https://unpkg.com/lucide@1.47.0/dist/umd/lucide.js"></script>
+  <script type="module">
+    import { bootstrapPage } from "./js/main.js";
+    import { initContent } from "./js/pages/content.js";
+
+    bootstrapPage({
+      currentNavId: "content",
+      breadcrumb: [{"label": "PHS CDP", "href": "index.html"}, {"label": "Activation"}, {"label": "Content"}],
+    });
+    initContent();
+  </script>
+</body>
+</html>

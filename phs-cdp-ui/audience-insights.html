@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Audience Insights — PHS CDP</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&display=swap"
+    rel="stylesheet"
+  />
+
+  <link rel="stylesheet" href="css/main.css" />
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="app-shell__sidebar" data-sidebar-mount></aside>
+    <div class="app-shell__topbar" data-topbar-mount></div>
+
+    <main class="app-shell__main">
+      <div class="page">
+        <div class="page-header">
+          <div>
+            <div class="page-header__eyebrow">
+              <i data-lucide="pie-chart" style="width: 13px; height: 13px;"></i>
+              Audiences · Audience Insights
+            </div>
+            <h1 class="page-header__title">Audience Insights</h1>
+            <p class="page-header__description">Understand audience size, reachability, composition and activation performance across customer segments. Prototype analytics — not live production data.</p>
+          </div>
+        </div>
+
+        <!-- Overview -->
+        <section class="section">
+          <div class="section__body event-summary-grid" data-ai-overview></div>
+        </section>
+
+        <!-- Audience Size -->
+        <section class="section">
+          <div class="section__header"><div><h2 class="section__title">Audience Size</h2><p class="section__subtitle">Largest audiences by member count.</p></div></div>
+          <div class="section__body">
+            <div class="chart-hbars" data-ai-size></div>
+          </div>
+        </section>
+
+        <!-- Audience Growth -->
+        <section class="section">
+          <div class="section__header"><div><h2 class="section__title">Audience Growth</h2><p class="section__subtitle">Membership trend — the 3 largest audiences, last 8 weeks.</p></div></div>
+          <div class="section__body" data-ai-growth></div>
+        </section>
+
+        <!-- Audience Composition -->
+        <section class="section">
+          <div class="section__header">
+            <div><h2 class="section__title">Audience Composition</h2><p class="section__subtitle">Breakdown by customer type, engagement, product interest (channel) and consent eligibility.</p></div>
+            <div class="select select--sm" style="width: 240px;">
+              <select data-ai-composition-select></select>
+              <i class="select__chevron" data-lucide="chevron-down"></i>
+            </div>
+          </div>
+          <div class="section__body" data-ai-composition></div>
+        </section>
+
+        <!-- Audience Overlap -->
+        <section class="section" style="margin-bottom: 0;">
+          <div class="section__header"><div><h2 class="section__title">Audience Overlap</h2><p class="section__subtitle">Shared membership between selected audience pairs.</p></div></div>
+          <div class="section__body">
+            <div class="table-wrap">
+              <table class="table" data-ai-overlap-table>
+                <thead><tr><th>Audience A</th><th>Audience B</th><th class="num">Overlap</th><th class="num">Overlap %</th></tr></thead>
+                <tbody></tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+      </div>
+    </main>
+  </div>
+
+  <!-- Audience detail drawer -->
+  <div class="drawer-overlay" id="audience-detail-drawer">
+    <aside class="drawer" role="dialog" aria-modal="true" aria-label="Audience detail">
+      <div class="drawer__header">
+        <div>
+          <div class="drawer__eyebrow">Audience</div>
+          <div class="drawer__title" data-ai-drawer-title>—</div>
+        </div>
+        <button class="btn btn--ghost btn--sm" data-drawer-close aria-label="Close"><i data-lucide="x"></i></button>
+      </div>
+      <div class="drawer__body" data-ai-drawer-body></div>
+    </aside>
+  </div>
+
+  <script src="https://unpkg.com/lucide@1.47.0/dist/umd/lucide.js"></script>
+  <script type="module">
+    import { bootstrapPage } from "./js/main.js";
+    import { initAudienceInsights } from "./js/pages/audience-insights.js";
+
+    bootstrapPage({
+      currentNavId: "audience-insights",
+      breadcrumb: [{"label": "PHS CDP", "href": "index.html"}, {"label": "Audiences"}, {"label": "Audience Insights"}],
+    });
+    initAudienceInsights();
+  </script>
+</body>
+</html>

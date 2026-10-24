@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Destinations — PHS CDP</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&display=swap"
+    rel="stylesheet"
+  />
+
+  <link rel="stylesheet" href="css/main.css" />
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="app-shell__sidebar" data-sidebar-mount></aside>
+    <div class="app-shell__topbar" data-topbar-mount></div>
+
+    <main class="app-shell__main">
+      <div class="page">
+        <div data-view-destinations-list>
+          <div class="page-header">
+            <div style="flex: 1; min-width: 0;">
+              <div class="page-header__eyebrow">
+                <i data-lucide="arrow-up-from-line" style="width: 13px; height: 13px;"></i>
+                Data · Destinations
+              </div>
+              <h1 class="page-header__title">Destinations</h1>
+              <p class="page-header__description">Configure outbound targets that receive activated customer profiles, audiences, events and messages from PHS CDP.</p>
+            </div>
+            <div class="page-header__actions">
+              <button class="btn btn--primary" data-add-destination>
+                <i data-lucide="plus"></i>
+                New destination
+              </button>
+            </div>
+          </div>
+
+          <section class="section">
+            <div class="section__body" data-dest-summary></div>
+          </section>
+
+          <section class="section" style="margin-bottom: 0;">
+            <div class="section__body">
+              <div class="table-wrap">
+                <div class="table__toolbar">
+                  <div class="cluster gap-2" style="flex-wrap: wrap; align-items: center;">
+                    <div class="search-field" style="width: 220px;">
+                      <i data-lucide="search"></i>
+                      <input class="input" type="text" placeholder="Search destinations…" data-dest-search aria-label="Search destinations" />
+                    </div>
+                    <div class="dest-activity-quickrange">
+                      Activity:
+                      <div class="select select--sm" style="width: 140px;">
+                        <select data-dest-quickrange aria-label="Activity date range"></select>
+                        <i class="select__chevron" data-lucide="chevron-down"></i>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="cluster gap-2">
+                    <div class="col-manager-anchor">
+                      <button class="btn btn--outline btn--sm" data-dest-filter-trigger><i data-lucide="filter"></i> Filter<span class="filter-count-badge" data-dest-filter-count hidden>0</span></button>
+                      <div class="col-manager" data-dest-filter-panel></div>
+                    </div>
+                    <div class="col-manager-anchor">
+                      <button class="btn btn--outline btn--sm" data-dest-columns-trigger><i data-lucide="columns-3"></i> Edit columns</button>
+                      <div class="col-manager" data-dest-columns-panel></div>
+                    </div>
+                  </div>
+                </div>
+                <table class="table" data-dest-table>
+                  <thead data-dest-thead></thead>
+                  <tbody></tbody>
+                </table>
+              </div>
+            </div>
+          </section>
+        </div>
+
+        <div data-view-destinations-detail hidden>
+          <button class="btn btn--ghost btn--sm" data-back-to-dest-list style="margin-bottom: var(--space-5);">
+            <i data-lucide="arrow-left"></i>
+            All Destinations
+          </button>
+
+          <div class="page-header">
+            <div style="flex: 1; min-width: 0;" data-dest-detail-header></div>
+            <div class="page-header__actions" data-dest-detail-actions></div>
+          </div>
+
+          <div class="tabs" role="tablist" aria-label="Destination detail sections" style="margin-bottom: var(--space-8);">
+            <button class="tabs__tab" role="tab" aria-selected="true" aria-controls="dest-panel-overview" id="dest-tab-overview">
+              <i data-lucide="layout-list"></i>
+              Overview
+            </button>
+            <button class="tabs__tab" role="tab" aria-selected="false" aria-controls="dest-panel-activity" id="dest-tab-activity">
+              <i data-lucide="activity"></i>
+              Activity
+            </button>
+            <button class="tabs__tab" role="tab" aria-selected="false" aria-controls="dest-panel-mapping" id="dest-tab-mapping">
+              <i data-lucide="git-compare"></i>
+              Data Mapping
+            </button>
+            <button class="tabs__tab" role="tab" aria-selected="false" aria-controls="dest-panel-configuration" id="dest-tab-configuration">
+              <i data-lucide="settings"></i>
+              Configuration
+            </button>
+          </div>
+
+          <div class="tabs__panel" id="dest-panel-overview" role="tabpanel" aria-labelledby="dest-tab-overview" data-tab-overview></div>
+          <div class="tabs__panel" id="dest-panel-activity" role="tabpanel" aria-labelledby="dest-tab-activity" data-tab-activity hidden></div>
+          <div class="tabs__panel" id="dest-panel-mapping" role="tabpanel" aria-labelledby="dest-tab-mapping" data-tab-mapping hidden></div>
+          <div class="tabs__panel" id="dest-panel-configuration" role="tabpanel" aria-labelledby="dest-tab-configuration" data-tab-configuration hidden></div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- ================================================================ -->
+  <!-- FULL-SCREEN SETUP WORKSPACE (Add Destination)                     -->
+  <!-- ================================================================ -->
+  <div class="dest-workspace" data-view-setup hidden>
+    <header class="dest-workspace__header">
+      <button type="button" class="dest-workspace__back" data-setup-back>
+        <i data-lucide="arrow-left"></i>
+        <span data-setup-back-label>Back to Destinations</span>
+      </button>
+      <span class="dest-workspace__title" data-setup-title>Add Destination</span>
+    </header>
+    <div class="dest-workspace__body">
+      <div class="dest-workspace__inner" data-setup-body></div>
+    </div>
+  </div>
+
+  <!-- ================================================================ -->
+  <!-- FULL-PAGE EDIT DESTINATION WORKSPACE                              -->
+  <!-- Renders the SAME configuration form as Add Destination — see     -->
+  <!-- renderDestinationConfigForm() in js/pages/destinations.js.        -->
+  <!-- ================================================================ -->
+  <div class="dest-workspace" data-view-dest-edit hidden>
+    <header class="dest-workspace__header">
+      <button type="button" class="dest-workspace__back" data-dest-edit-back>
+        <i data-lucide="arrow-left"></i>
+        <span>Back to Destination</span>
+      </button>
+      <span class="dest-workspace__title">
+        Edit Destination
+        <span class="dest-workspace__title-sub" data-dest-edit-subtitle></span>
+      </span>
+      <div class="dest-workspace__header-actions">
+        <button type="button" class="btn btn--ghost" data-dest-edit-cancel>Cancel</button>
+        <button type="button" class="btn btn--outline" data-dest-edit-test-connection><i data-lucide="plug-2"></i> Test Connection</button>
+        <button type="button" class="btn btn--primary" data-dest-edit-save><i data-lucide="save"></i> Save Changes</button>
+      </div>
+    </header>
+    <div class="dest-workspace__body">
+      <div class="dest-workspace__inner">
+        <div data-dest-edit-test-result></div>
+        <div data-dest-edit-body></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================================================================ -->
+  <!-- SETUP GUIDE DRAWER                                                -->
+  <!-- ================================================================ -->
+  <div class="drawer-overlay" id="setup-guide-drawer">
+    <aside class="drawer" role="dialog" aria-modal="true" aria-label="Setup guide">
+      <div class="drawer__header">
+        <div>
+          <div class="drawer__eyebrow">Setup Guide</div>
+          <div class="drawer__title" data-setup-guide-title>—</div>
+        </div>
+        <button class="btn btn--ghost btn--sm" data-drawer-close aria-label="Close"><i data-lucide="x"></i></button>
+      </div>
+      <div class="drawer__body" data-setup-guide-body></div>
+    </aside>
+  </div>
+
+  <!-- ================================================================ -->
+  <!-- EDIT CONFIGURATION MODAL                                          -->
+  <!-- ================================================================ -->
+  <div class="modal-overlay" id="edit-config-modal">
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="edit-config-title">
+      <div class="modal__header">
+        <div>
+          <div class="modal__title" id="edit-config-title">Edit Configuration</div>
+          <p class="modal__description">Masked secrets cannot be edited here — this is a prototype, not a live credential store.</p>
+        </div>
+        <button class="btn btn--ghost btn--sm modal__close" data-modal-close aria-label="Close"><i data-lucide="x"></i></button>
+      </div>
+      <div class="modal__body stack gap-3" data-edit-config-fields></div>
+      <div class="modal__footer">
+        <button type="button" class="btn btn--ghost" data-modal-close>Cancel</button>
+        <button type="button" class="btn btn--primary" data-edit-config-save>Save Changes</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================================================================ -->
+  <!-- SYNC NOW CONFIRMATION                                             -->
+  <!-- ================================================================ -->
+  <div class="modal-overlay" id="sync-now-modal">
+    <div class="modal modal--sm" role="dialog" aria-modal="true" aria-labelledby="sync-now-title">
+      <div class="modal__header">
+        <div class="modal__title" id="sync-now-title">Sync this destination?</div>
+      </div>
+      <div class="modal__body stack gap-3" data-sync-now-body></div>
+      <div class="modal__footer">
+        <button type="button" class="btn btn--ghost" data-modal-close>Cancel</button>
+        <button type="button" class="btn btn--primary" data-sync-now-confirm>
+          <i data-lucide="refresh-cw"></i>
+          Sync Now
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================================================================ -->
+  <!-- PAUSE CONFIRMATION                                                -->
+  <!-- ================================================================ -->
+  <div class="modal-overlay" id="pause-modal">
+    <div class="modal modal--sm" role="dialog" aria-modal="true" aria-labelledby="pause-title">
+      <div class="modal__header">
+        <div class="modal__title" id="pause-title" data-pause-title>Pause activation for this destination?</div>
+      </div>
+      <div class="modal__body">
+        <p style="font-size: var(--text-sm); color: var(--text-secondary); margin: 0;">No further syncs will run until this connector is reconnected.</p>
+      </div>
+      <div class="modal__footer">
+        <button type="button" class="btn btn--ghost" data-modal-close>Cancel</button>
+        <button type="button" class="btn btn--danger" data-pause-confirm>Pause</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================================================================ -->
+  <!-- EDIT DESTINATION — UNSAVED CHANGES CONFIRMATION                    -->
+  <!-- ================================================================ -->
+  <div class="modal-overlay" id="dest-edit-unsaved-modal">
+    <div class="modal modal--sm" role="dialog" aria-modal="true" aria-labelledby="dest-edit-unsaved-title">
+      <div class="modal__header">
+        <div class="modal__title" id="dest-edit-unsaved-title">Unsaved changes</div>
+      </div>
+      <div class="modal__body">
+        <p style="font-size: var(--text-sm); color: var(--text-secondary); margin: 0;">You have unsaved changes to this destination's configuration. Leaving now will discard them.</p>
+      </div>
+      <div class="modal__footer">
+        <button type="button" class="btn btn--ghost" data-modal-close>Keep Editing</button>
+        <button type="button" class="btn btn--danger" data-dest-edit-discard>Discard Changes</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================================================================ -->
+  <!-- TEST CONNECTION RESULT MODAL                                      -->
+  <!-- ================================================================ -->
+  <div class="modal-overlay" id="test-connection-modal">
+    <div class="modal modal--sm" role="dialog" aria-modal="true" aria-labelledby="test-connection-title">
+      <div class="modal__header">
+        <div class="modal__title" id="test-connection-title">Test Connection</div>
+        <button class="btn btn--ghost btn--sm modal__close" data-modal-close aria-label="Close"><i data-lucide="x"></i></button>
+      </div>
+      <div class="modal__body" data-test-connection-body></div>
+      <div class="modal__footer">
+        <button type="button" class="btn btn--ghost" data-modal-close>Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- BFF integration -->
+  <script src="js/config.js"></script>
+  <script src="./js/api.js"></script>
+  <script src="https://unpkg.com/lucide@1.47.0/dist/umd/lucide.js"></script>
+  <script type="module">
+    import { bootstrapPage } from "./js/main.js";
+    import { initDestinationsPage } from "./js/pages/destinations.js";
+
+    bootstrapPage({
+      currentNavId: "destinations",
+      breadcrumb: [
+        { label: "PHS CDP", href: "index.html" },
+        { label: "Data" },
+        { label: "Destinations" },
+      ],
+    });
+    initDestinationsPage();
+  </script>
+</body>
+</html>

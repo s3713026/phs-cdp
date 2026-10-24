@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Directory — PHS CDP</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/main.css" />
+  <style>
+    .dir-layout{display:grid;grid-template-columns:220px 1fr;gap:0;min-height:calc(100vh - 120px);}
+    .dir-sidebar{border-right:1px solid var(--border-subtle,#e5e7eb);padding:0 0 32px 0;position:sticky;top:0;max-height:calc(100vh - 120px);overflow-y:auto;}
+    .dir-sidebar__group{padding:16px 0 8px 0;}
+    .dir-sidebar__group-label{font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--text-tertiary,#9ca3af);padding:0 16px;margin-bottom:4px;}
+    .dir-sidebar__item{display:flex;align-items:center;justify-content:space-between;gap:6px;width:100%;padding:6px 16px;font-size:13px;color:var(--text-secondary,#4b5563);background:none;border:none;border-radius:0;cursor:pointer;text-align:left;transition:background .12s,color .12s;}
+    .dir-sidebar__item:hover{background:var(--surface-hover,#f3f4f6);color:var(--text-primary,#111827);}
+    .dir-sidebar__item.is-active{background:var(--brand-subtle,#eef2ff);color:var(--brand,#6366f1);font-weight:600;}
+    .dir-sidebar__count{font-size:11px;color:var(--text-tertiary,#9ca3af);background:var(--surface-raised,#f9fafb);border-radius:99px;padding:1px 7px;min-width:22px;text-align:center;}
+    .dir-sidebar__item.is-active .dir-sidebar__count{background:var(--brand-muted,#c7d2fe);color:var(--brand,#6366f1);}
+    .dir-main{padding:24px 32px;}
+    .dir-main__header{display:flex;align-items:center;gap:12px;margin-bottom:20px;}
+    .dir-main__search{flex:1;max-width:380px;}
+    .dir-main__tabs{display:flex;gap:4px;background:var(--surface-raised,#f9fafb);border:1px solid var(--border-subtle,#e5e7eb);border-radius:8px;padding:3px;}
+    .dir-tab-btn{padding:5px 14px;border:none;background:none;border-radius:6px;font-size:13px;font-weight:500;color:var(--text-secondary,#6b7280);cursor:pointer;transition:all .12s;}
+    .dir-tab-btn.is-active{background:#fff;color:var(--text-primary,#111827);box-shadow:0 1px 3px rgba(0,0,0,.08);}
+    .dir-section{margin-bottom:28px;}
+    .dir-section__title{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text-tertiary,#9ca3af);margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid var(--border-subtle,#f3f4f6);}
+    .dir-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:8px;}
+    .dir-card{display:flex;align-items:center;gap:10px;padding:10px 12px;border:1px solid var(--border-subtle,#e5e7eb);border-radius:8px;color:inherit;background:#fff;transition:border-color .12s,box-shadow .12s;cursor:pointer;text-align:left;width:100%;}
+    .dir-card:hover{border-color:var(--brand,#6366f1);box-shadow:0 2px 8px rgba(99,102,241,.1);}
+    .dir-card__logo{width:32px;height:32px;flex-shrink:0;display:flex;align-items:center;justify-content:center;border-radius:6px;overflow:hidden;background:var(--surface-raised,#f9fafb);}
+    .dir-card__logo img{width:22px;height:22px;object-fit:contain;}
+    .dir-card__logo-fallback{width:32px;height:32px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff;flex-shrink:0;}
+    .dir-card__name{font-size:13px;font-weight:500;color:var(--text-primary,#111827);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+    .dir-card__cat{font-size:11px;color:var(--text-tertiary,#9ca3af);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+    .dir-card.is-active-badge{border-color:var(--success,#10b981);background:var(--success-subtle,#f0fdf4);}
+    .dir-popular-section{margin-bottom:28px;}
+    .dir-popular-row{display:flex;flex-wrap:wrap;gap:8px;}
+    .dir-popular-chip{display:inline-flex;align-items:center;gap:8px;padding:6px 12px 6px 8px;border:1px solid var(--border-subtle,#e5e7eb);border-radius:99px;color:var(--text-primary,#111827);font-size:13px;background:#fff;cursor:pointer;transition:border-color .12s;}
+    .dir-popular-chip:hover{border-color:var(--brand,#6366f1);}
+    .dir-popular-chip img{width:18px;height:18px;object-fit:contain;}
+    .dir-chip-fallback{width:20px;height:20px;border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;color:#fff;}
+    .dir-loading{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:80px 24px;color:var(--text-tertiary);}
+    .dir-loading-spinner{width:28px;height:28px;border:2px solid var(--border,#e5e7eb);border-top-color:var(--brand,#6366f1);border-radius:50%;animation:spin .8s linear infinite;margin-bottom:12px;}
+    @keyframes spin{to{transform:rotate(360deg);}}
+  </style>
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="app-shell__sidebar" data-sidebar-mount></aside>
+    <div class="app-shell__topbar" data-topbar-mount></div>
+    <main class="app-shell__main">
+      <div class="page" style="padding:0">
+        <div class="page-header" style="padding:24px 32px 0">
+          <div>
+            <div class="page-header__eyebrow"><i data-lucide="layout-grid" style="width:13px;height:13px"></i> Data &middot; Directory</div>
+            <h1 class="page-header__title">Directory</h1>
+            <p class="page-header__description">Browse all available connector types. Click a connector to add it to your workspace.</p>
+          </div>
+        </div>
+        <div class="dir-layout" style="margin-top:20px">
+          <nav class="dir-sidebar" id="dir-sidebar">
+            <div style="padding:12px 16px;border-bottom:1px solid var(--border-subtle,#f3f4f6)">
+              <div class="dir-main__tabs">
+                <button class="dir-tab-btn is-active" data-kind-btn="source">Sources</button>
+                <button class="dir-tab-btn" data-kind-btn="destination">Destinations</button>
+              </div>
+            </div>
+            <div id="dir-sidebar-nav"><div style="padding:20px;color:var(--text-tertiary);font-size:13px">Loading&hellip;</div></div>
+          </nav>
+          <div class="dir-main" id="dir-main-content">
+            <div class="dir-loading"><div class="dir-loading-spinner"></div><span style="font-size:13px">Loading connector catalog&hellip;</span></div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script src="https://unpkg.com/lucide@1.47.0/dist/umd/lucide.js"></script>
+  <script src="./js/api.js"></script>
+  <script type="module">
+    import { bootstrapPage } from "./js/main.js";
+    bootstrapPage({ currentNavId:"directory", breadcrumb:[{label:"PHS CDP",href:"index.html"},{label:"Data"},{label:"Directory"}] });
+
+    let catalogData=null,currentKind='source',currentCat='All',searchQuery='';
+    const BFF=(window.PHSAPI&&window.PHSAPI.BASE)||'http://localhost:3001/api';
+    const PALETTE=['#6366f1','#0ea5e9','#10b981','#f59e0b','#ef4444','#8b5cf6','#ec4899','#14b8a6'];
+    const ac=s=>{let h=0;for(let i=0;i<s.length;i++)h=s.charCodeAt(i)+((h<<5)-h);return PALETTE[Math.abs(h)%PALETTE.length];};
+    const ini=n=>(n||'').replace(/[^A-Za-z0-9]/g,' ').trim().split(/\s+/).slice(0,2).map(w=>w[0]?w[0].toUpperCase():'').join('');
+    const esc=s=>(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    const ea=s=>(s||'').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+
+    async function fetchCatalog(){
+      try{const r=await fetch(BFF+'/directory');if(!r.ok)throw new Error('HTTP '+r.status);return await r.json();}
+      catch(e){console.warn('[Dir]',e.message);return null;}
+    }
+
+    function popularItems(items){
+      const tagged=items.filter(i=>(i.tags||[]).includes('Popular'));
+      if(tagged.length>=6)return tagged.slice(0,12);
+      const cm=['javascript','android','ios','node','python','go','google-analytics','amplitude','mixpanel','segment','webhook'];
+      const byId=items.filter(i=>cm.includes((i.folder||i.id||'').toLowerCase()));
+      return[...new Map([...tagged,...byId].map(x=>[x.id,x])).values()].slice(0,12);
+    }
+
+    function go(item){window.location.href=(currentKind==='source'?'sources.html':'destinations.html')+'?setup='+encodeURIComponent(item.id||item.name);}
+
+    function renderSidebar(cat){
+      const nav=document.getElementById('dir-sidebar-nav');
+      const grouped=currentKind==='source'?(cat.grouped&&cat.grouped.sources||[]):(cat.grouped&&cat.grouped.destinations||[]);
+      const total=currentKind==='source'?(cat.data&&cat.data.sources&&cat.data.sources.length||0):(cat.data&&cat.data.destinations&&cat.data.destinations.length||0);
+      nav.innerHTML='<div class="dir-sidebar__group"><div class="dir-sidebar__group-label">Browse</div>'+navBtn('All',total,currentCat==='All')+'</div>'
+        +'<div class="dir-sidebar__group"><div class="dir-sidebar__group-label">Categories</div>'+grouped.map(g=>navBtn(g.category,g.items.length,currentCat===g.category)).join('')+'</div>';
+      nav.querySelectorAll('[data-cat-btn]').forEach(b=>b.addEventListener('click',()=>{currentCat=b.dataset.catBtn;render();}));
+    }
+    function navBtn(label,n,active){return'<button class="dir-sidebar__item'+(active?' is-active':'')+'" data-cat-btn="'+ea(label)+'"><span>'+esc(label)+'</span><span class="dir-sidebar__count">'+n+'</span></button>';}
+
+    function render(){
+      if(!catalogData)return;
+      renderSidebar(catalogData);
+      const main=document.getElementById('dir-main-content');
+      const grouped=currentKind==='source'?(catalogData.grouped&&catalogData.grouped.sources||[]):(catalogData.grouped&&catalogData.grouped.destinations||[]);
+      const allItems=currentKind==='source'?(catalogData.data&&catalogData.data.sources||[]):(catalogData.data&&catalogData.data.destinations||[]);
+      const q=searchQuery.toLowerCase().trim();
+      const items=q?allItems.filter(i=>((i.name||'').toLowerCase().includes(q)||((i.category||'').toLowerCase().includes(q)))):allItems;
+      const bar='<div class="dir-main__header"><div class="dir-main__search"><div class="search-field" style="width:100%"><i data-lucide="search"></i><input class="input" type="search" placeholder="Search '+allItems.length+' '+currentKind+'s\u2026" id="dir-search" value="'+ea(searchQuery)+'" /></div></div><span style="font-size:13px;color:var(--text-tertiary)">'+allItems.length+' '+currentKind+'s</span></div>';
+      let html=bar;
+      if(q){html+=renderSection({category:'Results ('+items.length+')',items});}
+      else if(currentCat==='All'){const pop=popularItems(allItems);if(pop.length)html+=renderPop(pop);html+=grouped.map(renderSection).join('');}
+      else{const s=grouped.filter(g=>g.category===currentCat);html+=s.map(renderSection).join('')||'<p style="color:var(--text-tertiary);font-size:13px;padding:40px 0">No results.</p>';}
+      main.innerHTML=html;
+      wireSearch();
+      if(window.lucide)window.lucide.createIcons();
+      wireCards();
+    }
+
+    function renderPop(pop){
+      const chips=pop.map(item=>{
+        const col=ac(item.name||''),init=ini(item.name||'');
+        const logo=item.logo?'<img src="'+ea(item.logo)+'" style="width:18px;height:18px;object-fit:contain" onerror="this.outerHTML=\'<span class=\\'dir-chip-fallback\\' style=\\'background:'+col+'\\'>'+init+'</span>\'">':'<span class="dir-chip-fallback" style="background:'+col+'">'+init+'</span>';
+        return'<button class="dir-popular-chip" data-item-id="'+ea(item.id||item.name)+'">'+logo+' '+esc(item.name)+'</button>';
+      }).join('');
+      return'<div class="dir-popular-section"><div class="dir-section__title" style="margin-bottom:10px">Popular</div><div class="dir-popular-row">'+chips+'</div></div>';
+    }
+    function renderSection(g){
+      if(!g.items||!g.items.length)return'';
+      return'<div class="dir-section"><div class="dir-section__title">'+esc(g.category)+' <span style="font-weight:400;color:var(--text-tertiary)">('+g.items.length+')</span></div><div class="dir-grid">'+g.items.map(renderCard).join('')+'</div></div>';
+    }
+    function renderCard(item){
+      const name=item.name||item.id||'Unknown';
+      const col=ac(name),init=ini(name);
+      const logo=item.logo?'<div class="dir-card__logo"><img src="'+ea(item.logo)+'" alt="'+ea(name)+'" onerror="this.parentNode.innerHTML=\'<span class=\\'dir-card__logo-fallback\\' style=\\'width:32px;height:32px;background:'+col+'\\'>'+init+'</span>\'"></div>':'<span class="dir-card__logo-fallback" style="background:'+col+'">'+init+'</span>';
+      const badge=item.configured?'<span style="font-size:9px;background:var(--success,#10b981);color:#fff;border-radius:99px;padding:1px 6px;margin-left:4px">Active</span>':'';
+      return'<button class="dir-card'+(item.configured?' is-active-badge':'')+'" data-item-id="'+ea(item.id||name)+'" title="'+ea(name)+'">'+logo+'<div style="min-width:0;flex:1"><div class="dir-card__name">'+esc(name)+badge+'</div><div class="dir-card__cat">'+esc(item.category||'')+'</div></div></button>';
+    }
+
+    function wireCards(){
+      const allItems=currentKind==='source'?(catalogData.data&&catalogData.data.sources||[]):(catalogData.data&&catalogData.data.destinations||[]);
+      document.querySelectorAll('[data-item-id]').forEach(el=>el.addEventListener('click',()=>{
+        const id=el.dataset.itemId;
+        go(allItems.find(i=>(i.id||i.name)===id)||{id:id,name:id});
+      }));
+    }
+    function wireSearch(){
+      const inp=document.getElementById('dir-search');if(!inp)return;
+      inp.addEventListener('input',function(e){searchQuery=e.target.value;if(searchQuery)currentCat='All';render();const f=document.getElementById('dir-search');if(f)f.focus();});
+      inp.focus();
+    }
+    document.querySelectorAll('[data-kind-btn]').forEach(btn=>btn.addEventListener('click',()=>{
+      currentKind=btn.dataset.kindBtn;currentCat='All';searchQuery='';
+      document.querySelectorAll('[data-kind-btn]').forEach(b=>b.classList.toggle('is-active',b===btn));render();
+    }));
+
+    (async function boot(){
+      catalogData=await fetchCatalog();
+      if(!catalogData){
+        document.getElementById('dir-main-content').innerHTML='<div style="text-align:center;padding:60px 24px"><i data-lucide="wifi-off" style="width:32px;height:32px;margin-bottom:12px;color:var(--text-tertiary)"></i><div style="font-weight:600;margin-bottom:6px">Could not load catalog</div><p style="font-size:13px;margin-bottom:16px">Make sure the BFF is running on port 3001.</p><button class="btn btn--primary" onclick="location.reload()">Retry</button></div>';
+        if(window.lucide)window.lucide.createIcons();return;
+      }
+      render();
+    })();
+  </script>
+</body>
+</html>

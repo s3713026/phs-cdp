@@ -1,0 +1,271 @@
+/*
+  PHS CDP Design System — Rule Builder
+  A segmentation condition list: read-only rows for viewing an
+  existing audience's Definition, and editable rows (real form
+  controls) for the Create Audience flow. Deliberately plain —
+  borders and monospace values carry the "logic" feel, not color.
+*/
+
+.rule-logic {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-bottom: var(--space-3);
+  font-size: var(--text-xs);
+  font-weight: var(--weight-semibold);
+  letter-spacing: var(--tracking-wide);
+  text-transform: uppercase;
+  color: var(--text-tertiary);
+}
+.rule-logic strong {
+  color: var(--color-primary-700);
+  background: var(--color-primary-50);
+  padding: 2px var(--space-2);
+  border-radius: var(--radius-xs);
+}
+
+.rule-connector {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-1) 0;
+  font-size: 11px;
+  font-weight: var(--weight-semibold);
+  letter-spacing: var(--tracking-wider);
+  text-transform: uppercase;
+  color: var(--text-tertiary);
+}
+.rule-connector::before,
+.rule-connector::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: var(--border-subtle);
+}
+
+/* Read-only condition row (Definition tab) */
+.rule-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-2) var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  background: var(--color-ink-50);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+}
+
+.rule-row__field {
+  font-size: var(--text-sm);
+  font-weight: var(--weight-medium);
+  color: var(--text-primary);
+}
+
+.rule-row__operator {
+  font-size: var(--text-xs);
+  font-weight: var(--weight-semibold);
+  letter-spacing: var(--tracking-wide);
+  text-transform: uppercase;
+  color: var(--text-tertiary);
+}
+
+.rule-row__value {
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  font-weight: var(--weight-semibold);
+  color: var(--color-primary-700);
+  background: var(--color-primary-50);
+  padding: 2px var(--space-2);
+  border-radius: var(--radius-xs);
+}
+
+/* Nested condition group (ANY of...) */
+.rule-group {
+  padding: var(--space-4);
+  border: 1px dashed var(--border-default);
+  border-radius: var(--radius-md);
+}
+
+.rule-group__label {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-bottom: var(--space-3);
+  font-size: 11px;
+  font-weight: var(--weight-semibold);
+  letter-spacing: var(--tracking-wider);
+  text-transform: uppercase;
+  color: var(--color-gold-700);
+}
+
+/* Editable condition row (Create Audience builder). Flex-wrap, not a
+   fixed grid — the number of value controls varies by type/operator
+   (0 for "is known", 4 for the annual Birthday range), so a rigid
+   column count would either clip or leave gaps. */
+.rule-editor {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.rule-editor-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2) var(--space-3);
+  padding: var(--space-3);
+  background: var(--color-ink-50);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+}
+
+.rule-editor-row__field {
+  min-width: 190px;
+  flex: 1 1 190px;
+}
+
+.rule-editor-row__operator {
+  min-width: 170px;
+  flex: 1 1 170px;
+}
+
+.rule-editor-row__parts {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  flex: 2 1 220px;
+}
+
+.rule-part {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.rule-part__label {
+  font-size: var(--text-xs);
+  color: var(--text-tertiary);
+  white-space: nowrap;
+}
+
+.rule-part .input,
+.rule-part select {
+  min-width: 90px;
+}
+.rule-part .input[type="number"] {
+  width: 90px;
+  font-variant-numeric: tabular-nums;
+}
+.rule-part .input[type="date"] {
+  width: 150px;
+}
+
+.rule-editor-row__remove {
+  flex-shrink: 0;
+  margin-left: auto;
+}
+
+.rule-editor-row--invalid {
+  border-color: var(--color-danger-100);
+  background: var(--color-danger-50);
+}
+
+.rule-error {
+  flex-basis: 100%;
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  font-size: var(--text-xs);
+  color: var(--color-danger-600);
+}
+.rule-error svg {
+  width: 12px;
+  height: 12px;
+}
+
+/* Subtle, non-alarming context note under a condition row (e.g. the
+   Birthday "recurring annual date" explanation). Never a warning
+   color — reuses the same muted tone as a form field's helper text. */
+.rule-editor-note {
+  flex-basis: 100%;
+  font-size: var(--text-xs);
+  color: var(--text-tertiary);
+}
+.rule-editor-note strong {
+  color: var(--text-secondary);
+  font-weight: var(--weight-medium);
+}
+
+/* Compact example templates */
+.rule-examples {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.rule-example {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  max-width: 220px;
+  padding: var(--space-2) var(--space-3);
+  background: var(--surface-panel);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  text-align: left;
+}
+.rule-example:hover {
+  border-color: var(--color-primary-300);
+  background: var(--color-primary-50);
+}
+
+.rule-example__name {
+  font-size: var(--text-sm);
+  font-weight: var(--weight-medium);
+  color: var(--text-primary);
+}
+
+.rule-example__purpose {
+  font-size: 11px;
+  color: var(--text-tertiary);
+}
+
+.rule-builder-actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  margin-top: var(--space-2);
+}
+
+.audience-estimate {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-3);
+  padding: var(--space-4) var(--space-5);
+  background: var(--color-primary-50);
+  border: 1px solid var(--color-primary-100);
+  border-radius: var(--radius-md);
+}
+
+.audience-estimate__value {
+  font-size: var(--text-2xl);
+  font-weight: var(--weight-semibold);
+  font-variant-numeric: tabular-nums;
+  color: var(--color-primary-700);
+}
+
+.audience-estimate__label {
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+}
+
+.audience-estimate__meta {
+  margin-left: auto;
+  font-size: var(--text-xs);
+  color: var(--text-tertiary);
+  text-align: right;
+}

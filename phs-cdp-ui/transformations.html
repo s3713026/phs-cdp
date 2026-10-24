@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Transformations — PHS CDP</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&display=swap"
+    rel="stylesheet"
+  />
+
+  <link rel="stylesheet" href="css/main.css" />
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="app-shell__sidebar" data-sidebar-mount></aside>
+    <div class="app-shell__topbar" data-topbar-mount></div>
+
+    <main class="app-shell__main">
+      <div class="page">
+        <div class="page-header">
+          <div>
+            <div class="page-header__eyebrow">
+              <i data-lucide="shuffle" style="width: 13px; height: 13px;"></i>
+              Data · Transformations
+            </div>
+            <h1 class="page-header__title">Transformations</h1>
+            <p class="page-header__description">Configure data-transformation logic applied before events reach a destination. Illustrative configuration only — no code is executed in this prototype.</p>
+          </div>
+          <div class="page-header__actions">
+            <button class="btn btn--primary" data-trf-create>
+              <i data-lucide="plus"></i>
+              Create transformation
+            </button>
+          </div>
+        </div>
+
+        <div class="tabs" role="tablist" aria-label="Transformations sections" data-trf-tabs style="margin-bottom: var(--space-6);">
+          <button class="tabs__tab" role="tab" aria-selected="true" data-trf-tab="transformations">Transformations</button>
+          <button class="tabs__tab" role="tab" aria-selected="false" data-trf-tab="libraries">Libraries</button>
+        </div>
+
+        <div data-trf-panel-transformations>
+          <section class="section">
+            <div class="section__body" data-trf-summary></div>
+          </section>
+
+          <section class="section" style="margin-bottom: 0;">
+            <div class="section__body">
+              <div class="table-wrap">
+                <div class="table__toolbar">
+                  <div class="search-field" style="width: 260px;">
+                    <i data-lucide="search"></i>
+                    <input class="input" type="text" placeholder="Search transformations…" data-trf-search aria-label="Search transformations" />
+                  </div>
+                  <div class="select select--sm" style="width: 150px;">
+                    <select data-trf-status-filter aria-label="Filter by status"></select>
+                    <i class="select__chevron" data-lucide="chevron-down"></i>
+                  </div>
+                </div>
+                <table class="table" data-trf-table>
+                  <thead>
+                    <tr>
+                      <th>Name</th>
+                      <th>Destinations</th>
+                      <th>Language</th>
+                      <th>Last Modified</th>
+                      <th>Status / Version</th>
+                      <th class="cell-check"></th>
+                    </tr>
+                  </thead>
+                  <tbody></tbody>
+                </table>
+              </div>
+            </div>
+          </section>
+        </div>
+
+        <div data-trf-panel-libraries hidden>
+          <div class="stack gap-4" style="max-width: 480px; padding: var(--space-16) 0; align-items: flex-start;">
+            <span style="display:inline-flex; align-items:center; justify-content:center; width:40px; height:40px; border-radius:var(--radius-md); border:1px solid var(--border-subtle); color: var(--text-tertiary);">
+              <i data-lucide="library" style="width:18px; height:18px;"></i>
+            </span>
+            <div>
+              <h2 class="section__title" style="margin-bottom: var(--space-2);">Libraries</h2>
+              <p style="font-size: var(--text-sm); color: var(--text-secondary); line-height: var(--leading-relaxed);">Shared, reusable transformation code libraries aren't part of this prototype yet — Transformations above are configured individually.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- Transformation detail drawer -->
+  <div class="drawer-overlay" id="transformation-drawer">
+    <aside class="drawer" role="dialog" aria-modal="true" aria-labelledby="transformation-drawer-title">
+      <div class="drawer__header">
+        <div>
+          <div class="drawer__eyebrow" data-drawer-eyebrow>Transformation</div>
+          <h3 class="drawer__title" id="transformation-drawer-title" data-drawer-title>—</h3>
+        </div>
+        <button class="btn btn--ghost btn--icon" data-drawer-close aria-label="Close"><i data-lucide="x"></i></button>
+      </div>
+      <div class="drawer__body" data-drawer-body></div>
+      <div class="drawer__footer">
+        <button class="btn btn--secondary" data-drawer-close>Close</button>
+      </div>
+    </aside>
+  </div>
+
+  <!-- Create transformation — demo-only notice -->
+  <div class="modal-overlay" id="trf-create-modal">
+    <div class="modal modal--sm" role="dialog" aria-modal="true" aria-labelledby="trf-create-title">
+      <div class="modal__header">
+        <div class="modal__title" id="trf-create-title">Create transformation</div>
+        <button class="btn btn--ghost btn--sm modal__close" data-modal-close aria-label="Close"><i data-lucide="x"></i></button>
+      </div>
+      <div class="modal__body">
+        <p style="font-size: var(--text-sm); color: var(--text-secondary); margin: 0;">Creating a transformation needs a code editor and destination picker that aren't implemented in this prototype. This is a demo interaction — try Duplicate on an existing transformation to see a working example instead.</p>
+      </div>
+      <div class="modal__footer">
+        <button type="button" class="btn btn--primary" data-modal-close>Got it</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://unpkg.com/lucide@1.47.0/dist/umd/lucide.js"></script>
+  <script type="module">
+    import { bootstrapPage } from "./js/main.js";
+    import { initTransformations } from "./js/pages/transformations.js";
+
+    bootstrapPage({
+      currentNavId: "transformations",
+      breadcrumb: [
+        { label: "PHS CDP", href: "index.html" },
+        { label: "Data" },
+        { label: "Transformations" },
+      ],
+    });
+    initTransformations();
+  </script>
+</body>
+</html>

@@ -1,0 +1,225 @@
+/*
+  PHS CDP Design System — Tokens
+  Source of truth for color, type, space, radius, shadow and motion.
+
+  Brand: PHS Green (primary, sampled from the logo) + PHS Gold (sparing
+  accent, sampled from the logo mark). This is a financial data
+  platform, not an editorial site — type is the system font stack
+  throughout; mono is reserved for technical/code content only.
+
+  Every other stylesheet in this system must read from these variables.
+  Never hard-code a hex value or a pixel size outside this file.
+*/
+
+:root {
+  /* ---------------------------------------------------------------- */
+  /* Typography                                                       */
+  /* ---------------------------------------------------------------- */
+  --font-ui: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text",
+    "Helvetica Neue", "Segoe UI", Arial, sans-serif;
+  /* Restricted use only: API keys, JSON, technical identifiers, code,
+     event payloads. Never for prose, headings, or financial numbers. */
+  --font-mono: "IBM Plex Mono", "SF Mono", Menlo, monospace;
+
+  /*
+    Hierarchy (matches the brief 1:1):
+      Display Number   --text-2xl / --text-3xl   weight 600  + tabular-nums
+      Page Title        --text-xl                weight 600
+      Section Title      --text-lg                weight 600
+      Body                --text-base              weight 400
+      Data                --text-md / --text-sm    weight 500–600 + tabular-nums
+      Metadata            --text-xs                weight 400
+  */
+  --text-xs: 0.75rem;    /* 12px — metadata */
+  --text-sm: 0.8125rem;  /* 13px — metadata / small data */
+  --text-base: 0.9375rem;/* 15px — body */
+  --text-md: 1rem;       /* 16px — data */
+  --text-lg: 1.25rem;    /* 20px — section title */
+  --text-xl: 1.75rem;    /* 28px — page title */
+  --text-2xl: 2rem;      /* 32px — display number */
+  --text-3xl: 2.5rem;    /* 40px — display number, large */
+
+  --leading-tight: 1.2;
+  --leading-normal: 1.5;
+  --leading-relaxed: 1.65;
+
+  --weight-regular: 400;
+  --weight-medium: 500;
+  --weight-semibold: 600;
+  --weight-bold: 700;
+
+  --tracking-tight: -0.01em;
+  --tracking-normal: 0;
+  --tracking-wide: 0.04em;
+  --tracking-wider: 0.08em;
+
+  /* ---------------------------------------------------------------- */
+  /* Spacing (4px base unit)                                          */
+  /* ---------------------------------------------------------------- */
+  --space-1: 0.25rem;  /* 4px */
+  --space-2: 0.5rem;   /* 8px */
+  --space-3: 0.75rem;  /* 12px */
+  --space-4: 1rem;     /* 16px */
+  --space-5: 1.25rem;  /* 20px */
+  --space-6: 1.5rem;   /* 24px */
+  --space-8: 2rem;     /* 32px */
+  --space-10: 2.5rem;  /* 40px */
+  --space-12: 3rem;    /* 48px */
+  --space-16: 4rem;    /* 64px */
+
+  /* ---------------------------------------------------------------- */
+  /* Radius — deliberately restrained, never "pill everything"        */
+  /* ---------------------------------------------------------------- */
+  --radius-xs: 3px;   /* badges, chips */
+  --radius-sm: 4px;   /* inputs, buttons */
+  --radius-md: 6px;   /* panels, menus */
+  --radius-lg: 8px;   /* modal, drawer edge */
+  --radius-full: 999px; /* dots, avatars */
+
+  /* ---------------------------------------------------------------- */
+  /* Elevation — shadows are reserved for things floating ABOVE       */
+  /* content in z-space (menus, modal, drawer, tooltip, toast).       */
+  /* Regular panels use a border, never a shadow.                     */
+  /* ---------------------------------------------------------------- */
+  --shadow-sm: 0 1px 2px rgba(23, 23, 21, 0.06), 0 1px 1px rgba(23, 23, 21, 0.04);
+  --shadow-md: 0 4px 10px rgba(23, 23, 21, 0.10), 0 1px 3px rgba(23, 23, 21, 0.06);
+  --shadow-lg: 0 12px 28px rgba(23, 23, 21, 0.16), 0 2px 6px rgba(23, 23, 21, 0.08);
+  --shadow-focus: 0 0 0 3px rgba(27, 122, 77, 0.28); /* primary-500 */
+
+  /* ---------------------------------------------------------------- */
+  /* Motion                                                            */
+  /* ---------------------------------------------------------------- */
+  --duration-fast: 120ms;
+  --duration-base: 180ms;
+  --duration-slow: 260ms;
+  --ease-standard: cubic-bezier(0.2, 0, 0, 1);
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+
+  /* ---------------------------------------------------------------- */
+  /* Z-index scale                                                     */
+  /* ---------------------------------------------------------------- */
+  --z-dropdown: 300;
+  --z-sticky: 400;
+  --z-overlay: 500;
+  --z-drawer: 510;
+  --z-modal: 520;
+  --z-tooltip: 600;
+  --z-toast: 700;
+
+  /* ---------------------------------------------------------------- */
+  /* Neutrals — surfaces: White / Warm White / Neutral Gray.          */
+  /* text: Deep / Secondary / Muted neutral.                          */
+  /* ---------------------------------------------------------------- */
+  --color-ink-0: #ffffff;
+  --color-ink-25: #fafaf9;
+  --color-ink-50: #f5f5f3;
+  --color-ink-100: #ececea;
+  --color-ink-200: #dfdedb;
+  --color-ink-300: #c8c6c1;
+  --color-ink-400: #a3a099;
+  --color-ink-500: #7c7972;
+  --color-ink-600: #5c5a54;
+  --color-ink-700: #403e39;
+  --color-ink-800: #29281f;
+  --color-ink-900: #1a1918;
+  --color-ink-950: #121110;
+
+  /* ---------------------------------------------------------------- */
+  /* Primary — Deep PHS Green, sampled from the logo. Drives primary  */
+  /* actions, active navigation, selected states and focus rings.     */
+  /* ---------------------------------------------------------------- */
+  --color-primary-50: #eaf5ef;
+  --color-primary-100: #cfe9dc;
+  --color-primary-200: #a4d5be;
+  --color-primary-300: #75bc9b;
+  --color-primary-400: #479f78;
+  --color-primary-500: #1b7a4d;
+  --color-primary-600: #145d3a;
+  --color-primary-700: #0f4a2e;
+  --color-primary-800: #0a3521;
+  --color-primary-900: #072415;
+
+  /* ---------------------------------------------------------------- */
+  /* Brand accent — PHS Gold, sampled from the logo mark. Used        */
+  /* sparingly: premium/VIP indicators, and the sidebar's selected-    */
+  /* item accent line. Never the default action color.                */
+  /* ---------------------------------------------------------------- */
+  --color-gold-50: #fbf3e1;
+  --color-gold-100: #f3e2b6;
+  --color-gold-200: #e6c884;
+  --color-gold-300: #d9b466;
+  --color-gold-400: #c49f3f;
+  --color-gold-500: #b8892c;
+  --color-gold-600: #9c7423;
+  --color-gold-700: #7c5b1a;
+  --color-gold-800: #5c4414;
+  --color-gold-900: #402f0e;
+
+  /* ---------------------------------------------------------------- */
+  /* Semantic — success / warning / danger / information              */
+  /* Success intentionally shares the PHS green family (green already */
+  /* reads as "positive" and keeps the palette coordinated); the      */
+  /* other three sit in clearly different hues.                       */
+  /* ---------------------------------------------------------------- */
+  --color-success-50: var(--color-primary-50);
+  --color-success-100: var(--color-primary-100);
+  --color-success-500: var(--color-primary-500);
+  --color-success-600: var(--color-primary-600);
+  --color-success-700: var(--color-primary-700);
+
+  --color-warning-50: #fbede1;
+  --color-warning-100: #f2cfa8;
+  --color-warning-500: #b9660f;
+  --color-warning-600: #9b540a;
+  --color-warning-700: #7a4108;
+
+  --color-danger-50: #fbeae8;
+  --color-danger-100: #f3c9c4;
+  --color-danger-500: #b3382a;
+  --color-danger-600: #942e22;
+  --color-danger-700: #75241a;
+
+  --color-info-50: #eaf1fa;
+  --color-info-100: #c9dcf0;
+  --color-info-500: #2b6cb0;
+  --color-info-600: #215a93;
+  --color-info-700: #1a4771;
+
+  /* Supporting teal — data-visualization use only (charts), kept out  */
+  /* of the semantic set so it never gets read as a status color.     */
+  --color-teal-300: #7fc4c2;
+  --color-teal-500: #0e7c86;
+  --color-teal-700: #0a5860;
+
+  /* ---------------------------------------------------------------- */
+  /* Chart palette — coordinated, not rainbow. Green leads, gold and  */
+  /* neutral support, blue/teal extend the range, red is reserved for */
+  /* a genuinely negative series.                                     */
+  /* ---------------------------------------------------------------- */
+  --chart-green: var(--color-primary-500);
+  --chart-gold: var(--color-gold-500);
+  --chart-neutral: var(--color-ink-400);
+  --chart-blue: var(--color-info-500);
+  --chart-teal: var(--color-teal-500);
+  --chart-red: var(--color-danger-500);
+
+  /* ---------------------------------------------------------------- */
+  /* Surfaces & text — semantic aliases consumed by components        */
+  /* ---------------------------------------------------------------- */
+  --surface-app: var(--color-ink-50);
+  --surface-panel: var(--color-ink-0);
+  --surface-sunken: var(--color-ink-100);
+  --surface-inverse: var(--color-ink-950);
+  --surface-overlay: rgba(18, 17, 16, 0.48);
+
+  --border-subtle: var(--color-ink-200);
+  --border-default: var(--color-ink-300);
+  --border-strong: var(--color-ink-400);
+
+  --text-primary: var(--color-ink-900);
+  --text-secondary: var(--color-ink-600);
+  --text-tertiary: var(--color-ink-500);
+  --text-on-dark: var(--color-ink-50);
+  --text-on-dark-muted: var(--color-ink-400);
+  --text-link: var(--color-primary-700);
+}

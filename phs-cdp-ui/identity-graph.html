@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Identity Graph — PHS CDP</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&display=swap"
+    rel="stylesheet"
+  />
+
+  <link rel="stylesheet" href="css/main.css" />
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="app-shell__sidebar" data-sidebar-mount></aside>
+    <div class="app-shell__topbar" data-topbar-mount></div>
+
+    <main class="app-shell__main">
+      <div class="page">
+        <div class="page-header">
+          <div>
+            <div class="page-header__eyebrow">
+              <i data-lucide="network" style="width: 13px; height: 13px;"></i>
+              Customers · Identity Graph
+            </div>
+            <h1 class="page-header__title">Identity Graph</h1>
+            <p class="page-header__description">How identifiers from CRM, mobile, trading and advertising sources resolve into a single canonical identity (rudderId). Synthetic sample data — not a live RudderStack connection.</p>
+          </div>
+        </div>
+
+        <!-- Summary metrics -->
+        <section class="section">
+          <div class="section__body" data-ig-summary></div>
+        </section>
+
+        <!-- Graph + Identity Details -->
+        <section class="section" style="margin-bottom: 0;">
+          <div class="section__header">
+            <div>
+              <h2 class="section__title">Identity Cluster</h2>
+              <p class="section__subtitle">A small, understandable sample cluster — not a live resolution feed.</p>
+            </div>
+            <div class="dropdown" data-ig-switcher>
+              <div class="search-field" style="width: 240px;">
+                <i data-lucide="search"></i>
+                <input class="input" type="text" placeholder="Search by customer or CRM id…" data-ig-switcher-search aria-label="Search identity clusters" autocomplete="off" />
+              </div>
+              <div class="dropdown__menu dropdown__menu--left" role="listbox" aria-label="Cluster results" data-ig-switcher-results style="width: 280px; max-height: 320px; overflow-y: auto;"></div>
+            </div>
+          </div>
+          <div class="section__body">
+            <div class="cluster gap-2" style="margin-bottom: var(--space-4); font-size: var(--text-sm);">
+              <span style="color: var(--text-tertiary);">Viewing cluster for</span>
+              <span data-ig-cluster-label></span>
+            </div>
+            <div class="grid-main-side">
+              <div class="graph-canvas">
+                <div data-ig-graph></div>
+                <div class="graph-legend" data-ig-legend></div>
+              </div>
+              <div data-ig-details></div>
+            </div>
+          </div>
+        </section>
+      </div>
+    </main>
+  </div>
+
+  <script src="https://unpkg.com/lucide@1.47.0/dist/umd/lucide.js"></script>
+  <script type="module">
+    import { bootstrapPage } from "./js/main.js";
+    import { initIdentityGraph } from "./js/pages/identity-graph.js";
+
+    bootstrapPage({
+      currentNavId: "identity-graph",
+      breadcrumb: [{"label": "PHS CDP", "href": "index.html"}, {"label": "Customers"}, {"label": "Identity Graph"}],
+    });
+    initIdentityGraph();
+  </script>
+</body>
+</html>

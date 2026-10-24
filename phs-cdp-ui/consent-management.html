@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Consent Management — PHS CDP</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&display=swap"
+    rel="stylesheet"
+  />
+
+  <link rel="stylesheet" href="css/main.css" />
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="app-shell__sidebar" data-sidebar-mount></aside>
+    <div class="app-shell__topbar" data-topbar-mount></div>
+
+    <main class="app-shell__main">
+      <div class="page">
+        <div class="page-header">
+          <div>
+            <div class="page-header__eyebrow">
+              <i data-lucide="scale" style="width: 13px; height: 13px;"></i>
+              Governance · Consent Management
+            </div>
+            <h1 class="page-header__title">Consent Management</h1>
+            <p class="page-header__description">Consent purposes, legal basis and channel coverage across the PHS CDP. Prototype policy data — does not implement or claim legal compliance.</p>
+          </div>
+        </div>
+
+        <section class="section">
+          <div class="section__body event-summary-grid" data-consent-summary></div>
+        </section>
+
+        <section class="section">
+          <div class="section__header"><div><h2 class="section__title">Consent Purposes</h2><p class="section__subtitle">Each purpose's legal basis and where it applies. Reuses the same purpose/channel taxonomy as Activation's Consent data stream.</p></div></div>
+          <div class="section__body">
+            <div class="table-wrap">
+              <table class="table" data-policy-table>
+                <thead>
+                  <tr>
+                    <th>Purpose</th>
+                    <th>Legal Basis</th>
+                    <th>Channels</th>
+                    <th class="num">Granted</th>
+                    <th class="num">Denied</th>
+                    <th class="num">Pending</th>
+                    <th>Status</th>
+                    <th>Last Reviewed</th>
+                  </tr>
+                </thead>
+                <tbody></tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <section class="section" style="margin-bottom: 0;">
+          <div class="section__header"><div><h2 class="section__title">Recent Consent Activity</h2><p class="section__subtitle">Reuses Consent Updated events from the canonical Event Catalog — not a second consent log.</p></div></div>
+          <div class="section__body">
+            <div class="table-wrap">
+              <table class="table table--dense" data-activity-table>
+                <thead><tr><th>Timestamp</th><th>Customer</th><th>Purpose / Status</th><th>Source</th></tr></thead>
+                <tbody></tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+      </div>
+    </main>
+  </div>
+
+  <!-- BFF integration -->
+  <script src="./js/api.js"></script>
+  <script src="https://unpkg.com/lucide@1.47.0/dist/umd/lucide.js"></script>
+  <script type="module">
+    import { bootstrapPage } from "./js/main.js";
+    import { initConsentManagement } from "./js/pages/consent-management.js";
+
+    bootstrapPage({
+      currentNavId: "consent-management",
+      breadcrumb: [{"label": "PHS CDP", "href": "index.html"}, {"label": "Governance"}, {"label": "Consent Management"}],
+    });
+    initConsentManagement();
+  </script>
+</body>
+</html>

@@ -1,0 +1,9 @@
+.DS_Store
+node_modules/
+.env
+.env.*
+*.log
+
+# Contains real infrastructure credentials (admin password, workspace
+# token, DB password, write keys, server IP) — never commit this.
+rudderstack-setup/

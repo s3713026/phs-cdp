@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sources — PHS CDP</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&display=swap"
+    rel="stylesheet"
+  />
+
+  <link rel="stylesheet" href="css/main.css" />
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="app-shell__sidebar" data-sidebar-mount></aside>
+    <div class="app-shell__topbar" data-topbar-mount></div>
+
+    <main class="app-shell__main">
+      <div class="page">
+        <div data-view-sources-list>
+          <div class="page-header">
+            <div style="flex: 1; min-width: 0;">
+              <div class="page-header__eyebrow">
+                <i data-lucide="arrow-down-to-line" style="width: 13px; height: 13px;"></i>
+                Data · Sources
+              </div>
+              <h1 class="page-header__title">Sources</h1>
+              <p class="page-header__description">Configure inbound systems that send customer profile, behavioral and event data into PHS CDP.</p>
+            </div>
+            <div class="page-header__actions">
+              <button class="btn btn--primary" data-add-source>
+                <i data-lucide="plus"></i>
+                New source
+              </button>
+            </div>
+          </div>
+
+          <section class="section">
+            <div class="section__body" data-source-summary></div>
+          </section>
+
+          <section class="section" style="margin-bottom: 0;">
+            <div class="section__body">
+              <div class="table-wrap">
+                <div class="table__toolbar">
+                  <div class="cluster gap-2" style="flex-wrap: wrap; align-items: center;">
+                    <div class="search-field" style="width: 220px;">
+                      <i data-lucide="search"></i>
+                      <input class="input" type="text" placeholder="Search sources…" data-source-search aria-label="Search sources" />
+                    </div>
+                    <div class="dest-activity-quickrange">
+                      Activity:
+                      <div class="select select--sm" style="width: 140px;">
+                        <select data-source-quickrange aria-label="Activity date range"></select>
+                        <i class="select__chevron" data-lucide="chevron-down"></i>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="cluster gap-2">
+                    <div class="col-manager-anchor">
+                      <button class="btn btn--outline btn--sm" data-source-filter-trigger><i data-lucide="filter"></i> Filter<span class="filter-count-badge" data-source-filter-count hidden>0</span></button>
+                      <div class="col-manager" data-source-filter-panel></div>
+                    </div>
+                    <div class="col-manager-anchor">
+                      <button class="btn btn--outline btn--sm" data-source-columns-trigger><i data-lucide="columns-3"></i> Edit columns</button>
+                      <div class="col-manager" data-source-columns-panel></div>
+                    </div>
+                  </div>
+                </div>
+                <table class="table" data-source-table>
+                  <thead data-source-thead></thead>
+                  <tbody></tbody>
+                </table>
+              </div>
+            </div>
+          </section>
+        </div>
+
+        <div data-view-sources-detail hidden>
+          <button class="btn btn--ghost btn--sm" data-back-to-source-list style="margin-bottom: var(--space-5);">
+            <i data-lucide="arrow-left"></i>
+            All Sources
+          </button>
+
+          <div class="page-header">
+            <div style="flex: 1; min-width: 0;" data-source-detail-header></div>
+            <div class="page-header__actions" data-source-detail-actions></div>
+          </div>
+
+          <div class="tabs" role="tablist" aria-label="Source detail sections" style="margin-bottom: var(--space-8);">
+            <button class="tabs__tab" role="tab" aria-selected="true" aria-controls="source-panel-overview" id="source-tab-overview">
+              <i data-lucide="layout-list"></i>
+              Overview
+            </button>
+            <button class="tabs__tab" role="tab" aria-selected="false" aria-controls="source-panel-activity" id="source-tab-activity">
+              <i data-lucide="activity"></i>
+              Activity
+            </button>
+            <button class="tabs__tab" role="tab" aria-selected="false" aria-controls="source-panel-configuration" id="source-tab-configuration">
+              <i data-lucide="settings"></i>
+              Configuration
+            </button>
+          </div>
+
+          <div class="tabs__panel" id="source-panel-overview" role="tabpanel" aria-labelledby="source-tab-overview" data-source-tab-overview></div>
+          <div class="tabs__panel" id="source-panel-activity" role="tabpanel" aria-labelledby="source-tab-activity" data-source-tab-activity hidden></div>
+          <div class="tabs__panel" id="source-panel-configuration" role="tabpanel" aria-labelledby="source-tab-configuration" data-source-tab-configuration hidden></div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- ================================================================ -->
+  <!-- FULL-SCREEN SETUP WORKSPACE (Add Source)                          -->
+  <!-- ================================================================ -->
+  <div class="dest-workspace" data-view-setup hidden>
+    <header class="dest-workspace__header">
+      <button type="button" class="dest-workspace__back" data-setup-back>
+        <i data-lucide="arrow-left"></i>
+        <span data-setup-back-label>Back to Sources</span>
+      </button>
+      <span class="dest-workspace__title" data-setup-title>Add Source</span>
+    </header>
+    <div class="dest-workspace__body">
+      <div class="dest-workspace__inner" data-setup-body></div>
+    </div>
+  </div>
+
+  <!-- ================================================================ -->
+  <!-- SETUP GUIDE DRAWER                                                -->
+  <!-- ================================================================ -->
+  <div class="drawer-overlay" id="setup-guide-drawer">
+    <aside class="drawer" role="dialog" aria-modal="true" aria-label="Setup guide">
+      <div class="drawer__header">
+        <div>
+          <div class="drawer__eyebrow">Setup Guide</div>
+          <div class="drawer__title" data-setup-guide-title>—</div>
+        </div>
+        <button class="btn btn--ghost btn--sm" data-drawer-close aria-label="Close"><i data-lucide="x"></i></button>
+      </div>
+      <div class="drawer__body" data-setup-guide-body></div>
+    </aside>
+  </div>
+
+  <!-- ================================================================ -->
+  <!-- EDIT CONFIGURATION MODAL                                          -->
+  <!-- ================================================================ -->
+  <div class="modal-overlay" id="edit-config-modal">
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="edit-config-title">
+      <div class="modal__header">
+        <div>
+          <div class="modal__title" id="edit-config-title">Edit Configuration</div>
+          <p class="modal__description">Masked secrets cannot be edited here — this is a prototype, not a live credential store.</p>
+        </div>
+        <button class="btn btn--ghost btn--sm modal__close" data-modal-close aria-label="Close"><i data-lucide="x"></i></button>
+      </div>
+      <div class="modal__body stack gap-3" data-edit-config-fields></div>
+      <div class="modal__footer">
+        <button type="button" class="btn btn--ghost" data-modal-close>Cancel</button>
+        <button type="button" class="btn btn--primary" data-edit-config-save>Save Changes</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================================================================ -->
+  <!-- PAUSE CONFIRMATION                                                -->
+  <!-- ================================================================ -->
+  <div class="modal-overlay" id="pause-modal">
+    <div class="modal modal--sm" role="dialog" aria-modal="true" aria-labelledby="pause-title">
+      <div class="modal__header">
+        <div class="modal__title" id="pause-title" data-pause-title>Pause this source?</div>
+      </div>
+      <div class="modal__body">
+        <p style="font-size: var(--text-sm); color: var(--text-secondary); margin: 0;">No further data will be received until this connector is reconnected.</p>
+      </div>
+      <div class="modal__footer">
+        <button type="button" class="btn btn--ghost" data-modal-close>Cancel</button>
+        <button type="button" class="btn btn--danger" data-pause-confirm>Pause</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================================================================ -->
+  <!-- TEST CONNECTION RESULT MODAL                                      -->
+  <!-- ================================================================ -->
+  <div class="modal-overlay" id="test-connection-modal">
+    <div class="modal modal--sm" role="dialog" aria-modal="true" aria-labelledby="test-connection-title">
+      <div class="modal__header">
+        <div class="modal__title" id="test-connection-title">Test Connection</div>
+        <button class="btn btn--ghost btn--sm modal__close" data-modal-close aria-label="Close"><i data-lucide="x"></i></button>
+      </div>
+      <div class="modal__body" data-test-connection-body></div>
+      <div class="modal__footer">
+        <button type="button" class="btn btn--ghost" data-modal-close>Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- BFF integration -->
+  <script src="js/config.js"></script>
+  <script src="./js/api.js"></script>
+  <script src="https://unpkg.com/lucide@1.47.0/dist/umd/lucide.js"></script>
+  <script type="module">
+    import { bootstrapPage } from "./js/main.js";
+    import { initSourcesPage } from "./js/pages/destinations.js";
+
+    bootstrapPage({
+      currentNavId: "sources",
+      breadcrumb: [
+        { label: "PHS CDP", href: "index.html" },
+        { label: "Data" },
+        { label: "Sources" },
+      ],
+    });
+    initSourcesPage();
+  </script>
+</body>
+</html>

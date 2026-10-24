@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Journey Builder — PHS CDP</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&display=swap"
+    rel="stylesheet"
+  />
+
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/drawflow@0.0.59/dist/drawflow.min.css" />
+  <link rel="stylesheet" href="css/main.css" />
+</head>
+<body>
+  <div class="journey-workspace">
+    <header class="journey-workspace__header">
+      <button type="button" class="journey-workspace__back" data-builder-cancel>
+        <i data-lucide="arrow-left"></i>
+        <span>Back to Journeys</span>
+      </button>
+
+      <div class="journey-workspace__title">
+        <input class="journey-workspace__name" type="text" data-builder-name placeholder="Untitled Journey" aria-label="Journey name" />
+        <div class="select select--sm" style="width: 120px;">
+          <select data-builder-status aria-label="Journey status"></select>
+          <i class="select__chevron" data-lucide="chevron-down"></i>
+        </div>
+      </div>
+
+      <div class="journey-workspace__actions">
+        <button type="button" class="btn btn--outline btn--sm" data-open-test>
+          <i data-lucide="play"></i>
+          Test
+        </button>
+        <button type="button" class="btn btn--primary btn--sm" data-save-journey>
+          <i data-lucide="save"></i>
+          Save
+        </button>
+      </div>
+    </header>
+
+    <div class="journey-workspace__body">
+      <aside class="journey-workspace__palette journey-palette" data-journey-palette></aside>
+
+      <div class="journey-canvas-wrap" data-journey-canvas-wrap>
+        <div id="journey-canvas"></div>
+        <div class="journey-canvas-empty-hint" data-canvas-empty-hint hidden>Drag a step from the library to add it to the canvas.</div>
+        <div class="journey-canvas-controls">
+          <button type="button" class="journey-canvas-controls__btn" data-canvas-zoom-in aria-label="Zoom in"><i data-lucide="plus"></i></button>
+          <button type="button" class="journey-canvas-controls__btn" data-canvas-zoom-out aria-label="Zoom out"><i data-lucide="minus"></i></button>
+          <div class="journey-canvas-controls__divider"></div>
+          <button type="button" class="journey-canvas-controls__btn" data-canvas-fit-view aria-label="Fit view"><i data-lucide="scan"></i></button>
+          <button type="button" class="journey-canvas-controls__btn" data-canvas-reset-view aria-label="Reset view"><i data-lucide="locate-fixed"></i></button>
+        </div>
+      </div>
+
+      <aside class="journey-workspace__config journey-config" data-journey-config></aside>
+    </div>
+
+    <div class="journey-workspace__mobile-toggles">
+      <button type="button" class="journey-workspace__mobile-toggle" data-toggle-palette aria-label="Node library"><i data-lucide="library"></i></button>
+      <button type="button" class="journey-workspace__mobile-toggle" data-toggle-config aria-label="Configuration"><i data-lucide="sliders-horizontal"></i></button>
+    </div>
+    <div class="journey-workspace__scrim" data-workspace-scrim></div>
+  </div>
+
+  <!-- ================================================================ -->
+  <!-- UNSAVED CHANGES CONFIRMATION                                      -->
+  <!-- ================================================================ -->
+  <div class="modal-overlay" id="journey-unsaved-modal">
+    <div class="modal modal--sm" role="dialog" aria-modal="true" aria-labelledby="journey-unsaved-title">
+      <div class="modal__header">
+        <div class="modal__title" id="journey-unsaved-title">Unsaved changes</div>
+      </div>
+      <div class="modal__body">
+        <p style="font-size: var(--text-sm); color: var(--text-secondary); margin: 0;">You have unsaved changes to this journey.</p>
+      </div>
+      <div class="modal__footer">
+        <button type="button" class="btn btn--outline" data-keep-editing>Keep Editing</button>
+        <button type="button" class="btn btn--ghost" data-discard-changes>Discard Changes</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================================================================ -->
+  <!-- TEST JOURNEY MODAL                                                -->
+  <!-- ================================================================ -->
+  <div class="modal-overlay" id="journey-test-modal">
+    <div class="modal modal--lg" role="dialog" aria-modal="true" aria-labelledby="journey-test-title">
+      <div class="modal__header">
+        <div>
+          <div class="modal__title" id="journey-test-title">Test Journey</div>
+          <p class="modal__description">Step through this journey for a single mock customer. No real message, sync or forward is ever executed.</p>
+        </div>
+        <button class="btn btn--ghost btn--sm modal__close" data-modal-close aria-label="Close"><i data-lucide="x"></i></button>
+      </div>
+      <div class="modal__body stack gap-4">
+        <div class="journey-sim-banner">
+          <i data-lucide="info"></i>
+          Simulation — No real actions will be executed.
+        </div>
+        <div class="field">
+          <label class="field__label" for="test-journey-customer">Customer</label>
+          <div class="select">
+            <select id="test-journey-customer" data-test-customer></select>
+            <i class="select__chevron" data-lucide="chevron-down"></i>
+          </div>
+        </div>
+        <div>
+          <button class="btn btn--primary btn--sm" data-test-run>
+            <i data-lucide="play"></i>
+            Run Simulation
+          </button>
+        </div>
+        <div data-test-results hidden></div>
+      </div>
+      <div class="modal__footer">
+        <button class="btn btn--ghost" data-modal-close>Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- BFF integration -->
+  <script src="./js/api.js"></script>
+  <script src="https://unpkg.com/lucide@1.47.0/dist/umd/lucide.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/drawflow@0.0.59/dist/drawflow.min.js"></script>
+  <script type="module">
+    import { bootstrapPage } from "./js/main.js";
+    import { initJourneyBuilder } from "./js/pages/journey-builder.js";
+
+    // No sidebar/topbar mount points exist on this page — bootstrapPage
+    // skips shell rendering automatically and just wires modals, drawers
+    // and icons, which the workspace still needs.
+    bootstrapPage({});
+    initJourneyBuilder();
+  </script>
+</body>
+</html>

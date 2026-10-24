@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Campaigns — PHS CDP</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&display=swap"
+    rel="stylesheet"
+  />
+
+  <link rel="stylesheet" href="css/main.css" />
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="app-shell__sidebar" data-sidebar-mount></aside>
+    <div class="app-shell__topbar" data-topbar-mount></div>
+
+    <main class="app-shell__main">
+      <div class="page">
+
+        <!-- ============================= LIST VIEW ============================= -->
+        <div data-view-list>
+          <div class="page-header">
+            <div>
+              <div class="page-header__eyebrow">
+                <i data-lucide="megaphone" style="width: 13px; height: 13px;"></i>
+                Activation · Campaigns
+              </div>
+              <h1 class="page-header__title">Campaigns</h1>
+              <p class="page-header__description">Create, manage and measure customer activation campaigns across connected audiences and messaging channels.</p>
+            </div>
+            <div class="page-header__actions">
+              <button class="btn btn--primary btn--sm" data-create-campaign><i data-lucide="plus"></i> Create Campaign</button>
+            </div>
+          </div>
+
+          <section class="section">
+            <div class="section__body event-summary-grid" data-campaign-summary></div>
+          </section>
+
+          <section class="section" style="margin-bottom: 0;">
+            <div class="section__body">
+              <div class="table-wrap">
+                <div class="table__toolbar">
+                  <div class="cluster gap-2" style="flex-wrap: wrap; align-items: center;">
+                    <div class="search-field" style="width: 260px;">
+                      <i data-lucide="search"></i>
+                      <input class="input" type="text" placeholder="Search campaigns…" data-campaign-search aria-label="Search campaigns" />
+                    </div>
+                  </div>
+                  <div class="cluster gap-2">
+                    <div class="col-manager-anchor">
+                      <button class="btn btn--outline btn--sm" data-campaign-filter-trigger><i data-lucide="filter"></i> Filter<span class="filter-count-badge" data-campaign-filter-count hidden>0</span></button>
+                      <div class="col-manager" data-campaign-filter-panel></div>
+                    </div>
+                  </div>
+                </div>
+                <table class="table" data-campaign-table>
+                  <thead><tr><th>Campaign</th><th>Target Segment</th><th>Goal</th><th>Channel</th><th>Status</th><th>Schedule</th><th>Updated</th><th>Owner</th><th></th></tr></thead>
+                  <tbody></tbody>
+                </table>
+              </div>
+            </div>
+          </section>
+        </div>
+
+        <!-- ============================= DETAIL VIEW ============================= -->
+        <div data-view-detail hidden>
+          <button class="btn btn--ghost btn--sm" data-back-to-list style="margin-bottom: var(--space-3);"><i data-lucide="arrow-left"></i> Campaigns</button>
+          <div class="page-header">
+            <div>
+              <div class="page-header__eyebrow">
+                <i data-lucide="megaphone" style="width: 13px; height: 13px;"></i>
+                Activation · Campaigns
+              </div>
+              <h1 class="page-header__title" data-detail-title>—</h1>
+              <p class="page-header__description" data-detail-description></p>
+            </div>
+            <div class="page-header__actions" data-detail-status-actions></div>
+          </div>
+
+          <section class="section">
+            <div class="section__header"><div><h2 class="section__title">Campaign Overview</h2></div></div>
+            <div class="section__body event-summary-grid" data-detail-overview></div>
+          </section>
+
+          <section class="section">
+            <div class="section__header"><div><h2 class="section__title">WHO</h2><p class="section__subtitle">Who receives this campaign.</p></div></div>
+            <div class="section__body" data-detail-who></div>
+          </section>
+
+          <section class="section">
+            <div class="section__header"><div><h2 class="section__title">WHAT</h2><p class="section__subtitle">Message type and template(s) delivered.</p></div></div>
+            <div class="section__body" data-detail-what></div>
+          </section>
+
+          <section class="section">
+            <div class="section__header"><div><h2 class="section__title">WHEN</h2><p class="section__subtitle">Timing and delivery preferences.</p></div></div>
+            <div class="section__body" data-detail-when></div>
+          </section>
+
+          <section class="section">
+            <div class="section__header"><div><h2 class="section__title">Performance</h2><p class="section__subtitle">Prototype performance data — not real PHS results.</p></div></div>
+            <div class="section__body" data-detail-performance></div>
+          </section>
+
+          <section class="section" style="margin-bottom: 0;">
+            <div class="section__body">
+              <div class="event-empty-note" style="display:flex; align-items:center; gap: var(--space-2);">
+                <i data-lucide="workflow" style="width: 14px; height: 14px;"></i>
+                Need multi-step orchestration, branching or wait conditions? <a href="journey-builder.html">Use Journey Builder for multi-step orchestration.</a>
+              </div>
+            </div>
+          </section>
+        </div>
+
+        <!-- ============================= CREATE / EDIT FLOW ============================= -->
+        <div data-view-create hidden>
+          <button class="btn btn--ghost btn--sm" data-back-to-list style="margin-bottom: var(--space-3);"><i data-lucide="arrow-left"></i> Campaigns</button>
+          <div class="page-header">
+            <div>
+              <div class="page-header__eyebrow">
+                <i data-lucide="megaphone" style="width: 13px; height: 13px;"></i>
+                Activation · Campaigns · Create
+              </div>
+              <h1 class="page-header__title" data-wizard-title>Create Campaign</h1>
+            </div>
+          </div>
+
+          <div class="cluster gap-2" data-wizard-steps style="flex-wrap: wrap; margin-bottom: var(--space-6); border-bottom: 1px solid var(--border-subtle); padding-bottom: var(--space-4);"></div>
+
+          <section class="section" style="margin-bottom: var(--space-4);">
+            <div class="section__body" data-wizard-step-body></div>
+          </section>
+
+          <div class="cluster gap-2" style="justify-content: space-between;">
+            <button class="btn btn--ghost btn--sm" data-wizard-back>Back</button>
+            <div class="cluster gap-2" data-wizard-forward-actions>
+              <button class="btn btn--primary btn--sm" data-wizard-next>Next</button>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </main>
+  </div>
+
+  <!-- Status transition confirmation -->
+  <div class="modal-overlay" id="status-confirm-modal">
+    <div class="modal" role="dialog" aria-modal="true" aria-label="Confirm status change">
+      <div class="modal__header">
+        <h2 class="modal__title" data-status-confirm-title>Change status?</h2>
+        <button class="btn btn--ghost btn--sm modal__close" data-modal-close aria-label="Close"><i data-lucide="x"></i></button>
+      </div>
+      <div class="modal__body">
+        <p data-status-confirm-body></p>
+      </div>
+      <div class="modal__footer">
+        <button class="btn btn--ghost btn--sm" data-modal-close>Cancel</button>
+        <button class="btn btn--primary btn--sm" data-status-confirm-apply>Confirm</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://unpkg.com/lucide@1.47.0/dist/umd/lucide.js"></script>
+  <script type="module">
+    import { bootstrapPage } from "./js/main.js";
+    import { initCampaigns } from "./js/pages/campaigns.js";
+
+    bootstrapPage({
+      currentNavId: "campaigns",
+      breadcrumb: [{"label": "PHS CDP", "href": "index.html"}, {"label": "Activation"}, {"label": "Campaigns"}],
+    });
+    initCampaigns();
+  </script>
+</body>
+</html>

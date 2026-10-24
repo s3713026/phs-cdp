@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Tracking Plans — PHS CDP</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&display=swap"
+    rel="stylesheet"
+  />
+
+  <link rel="stylesheet" href="css/main.css" />
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="app-shell__sidebar" data-sidebar-mount></aside>
+    <div class="app-shell__topbar" data-topbar-mount></div>
+
+    <main class="app-shell__main">
+      <div class="page">
+
+        <div data-view-list>
+          <div class="page-header">
+            <div>
+              <div class="page-header__eyebrow">
+                <i data-lucide="clipboard-check" style="width: 13px; height: 13px;"></i>
+                Governance · Tracking Plans
+              </div>
+              <h1 class="page-header__title">Tracking Plans</h1>
+              <p class="page-header__description">Which events each source is contractually expected to send, and whether the canonical Event Catalog actually implements them.</p>
+            </div>
+            <div class="page-header__actions">
+              <button class="btn btn--primary" data-new-plan>
+                <i data-lucide="plus"></i>
+                New Tracking Plan
+              </button>
+            </div>
+          </div>
+
+          <section class="section" style="margin-bottom: 0;">
+            <div class="section__body">
+              <div class="table-wrap">
+                <table class="table" data-plan-table>
+                  <thead>
+                    <tr>
+                      <th>Tracking Plan</th>
+                      <th>Sources</th>
+                      <th class="num">Events Governed</th>
+                      <th class="num">Coverage</th>
+                      <th>Status</th>
+                      <th>Owner</th>
+                      <th>Last Audit</th>
+                    </tr>
+                  </thead>
+                  <tbody></tbody>
+                </table>
+              </div>
+            </div>
+          </section>
+        </div>
+
+        <div data-view-detail hidden>
+          <button class="btn btn--ghost btn--sm" data-back-to-list style="margin-bottom: var(--space-5);">
+            <i data-lucide="arrow-left"></i>
+            All Tracking Plans
+          </button>
+          <div class="page-header">
+            <div style="flex:1; min-width:0;" data-detail-header></div>
+          </div>
+          <section class="section" style="margin-bottom: var(--space-6);">
+            <div class="section__body event-summary-grid" data-detail-summary></div>
+          </section>
+          <section class="section" style="margin-bottom: 0;">
+            <div class="section__header"><div><h2 class="section__title">Governed Events</h2><p class="section__subtitle">Compares this plan's expectations against the canonical Event Catalog.</p></div></div>
+            <div class="section__body">
+              <div class="table-wrap">
+                <table class="table" data-plan-events-table>
+                  <thead>
+                    <tr>
+                      <th>Event</th>
+                      <th>Category</th>
+                      <th>Enforcement</th>
+                      <th>Catalog Status</th>
+                    </tr>
+                  </thead>
+                  <tbody></tbody>
+                </table>
+              </div>
+            </div>
+          </section>
+        </div>
+
+      </div>
+    </main>
+  </div>
+
+  <div class="modal-overlay" id="new-plan-modal">
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="new-plan-title">
+      <div class="modal__header">
+        <div>
+          <div class="modal__title" id="new-plan-title">New Tracking Plan</div>
+          <p class="modal__description">Prototype only — no events are governed until you add them from the plan detail.</p>
+        </div>
+        <button class="btn btn--ghost btn--sm modal__close" data-modal-close aria-label="Close"><i data-lucide="x"></i></button>
+      </div>
+      <div class="modal__body stack gap-3">
+        <div class="field">
+          <label class="field__label">Plan Name</label>
+          <div class="field__control"><input class="input" id="new-plan-name" placeholder="e.g. Partner API Tracking Plan" /></div>
+        </div>
+        <div class="field">
+          <label class="field__label">Primary Source</label>
+          <div class="select select--sm"><select id="new-plan-source"></select><i class="select__chevron" data-lucide="chevron-down"></i></div>
+        </div>
+      </div>
+      <div class="modal__footer">
+        <button type="button" class="btn btn--ghost" data-modal-close>Cancel</button>
+        <button type="button" class="btn btn--primary" data-create-plan-confirm>Create Plan</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- BFF integration -->
+  <script src="./js/api.js"></script>
+  <script src="https://unpkg.com/lucide@1.47.0/dist/umd/lucide.js"></script>
+  <script type="module">
+    import { bootstrapPage } from "./js/main.js";
+    import { initTrackingPlans } from "./js/pages/tracking-plans.js";
+
+    bootstrapPage({
+      currentNavId: "tracking-plans",
+      breadcrumb: [{"label": "PHS CDP", "href": "index.html"}, {"label": "Governance"}, {"label": "Tracking Plans"}],
+    });
+    initTrackingPlans();
+  </script>
+</body>
+</html>

@@ -1,0 +1,542 @@
+/*
+  PHS CDP Design System — Destination
+  Activation/Destinations module: a compact icon+name cell for tables,
+  a capability matrix, a data-mapping list and an Add Destination
+  picker grid. Reuses .table/.badge/.status-dot/.tabs/.modal wherever
+  possible rather than inventing parallel components.
+*/
+
+.dest-cell {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.dest-cell__icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border-radius: var(--radius-xs);
+  background: var(--color-ink-100);
+  color: var(--text-secondary);
+  flex-shrink: 0;
+}
+.dest-cell__icon svg { width: 15px; height: 15px; }
+
+.dest-cell__name { font-size: var(--text-sm); font-weight: var(--weight-medium); color: var(--text-primary); }
+.dest-cell__type { font-size: 11px; color: var(--text-tertiary); }
+
+/* Small icon+text tag used for data-type / delivery-mode badges,
+   consistent with Data Flows' badge--flow-type pattern. */
+.badge--dest-tag svg { width: 11px; height: 11px; }
+
+/* ---- Detail page ---- */
+.dest-detail__header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+}
+.dest-detail__icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border-radius: var(--radius-md);
+  background: var(--color-ink-100);
+  color: var(--text-secondary);
+  flex-shrink: 0;
+}
+.dest-detail__icon svg { width: 22px; height: 22px; }
+
+.dest-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-5) var(--space-6);
+}
+@media (max-width: 900px) {
+  .dest-summary-grid { grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 560px) {
+  .dest-summary-grid { grid-template-columns: 1fr; }
+}
+
+/* Capability matrix — Supported / Not Supported rows. */
+.dest-capability-list {
+  display: flex;
+  flex-direction: column;
+}
+.dest-capability-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-3) 0;
+  border-bottom: 1px solid var(--border-subtle);
+  font-size: var(--text-sm);
+}
+.dest-capability-row:last-child { border-bottom: none; }
+.dest-capability-row__status {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--text-xs);
+  font-weight: var(--weight-medium);
+}
+.dest-capability-row__status svg { width: 14px; height: 14px; }
+.dest-capability-row__status--yes { color: var(--color-primary-700); }
+.dest-capability-row__status--no { color: var(--text-tertiary); }
+
+/* Configuration rows — label/value, secrets always masked. */
+.dest-config-list {
+  display: flex;
+  flex-direction: column;
+}
+.dest-config-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+  padding: var(--space-3) 0;
+  border-bottom: 1px solid var(--border-subtle);
+}
+.dest-config-row:last-child { border-bottom: none; }
+.dest-config-row__label { font-size: var(--text-xs); color: var(--text-tertiary); flex-shrink: 0; }
+.dest-config-row__value { font-family: var(--font-mono); font-size: var(--text-sm); color: var(--text-primary); text-align: right; word-break: break-all; }
+.dest-config-row__value--masked { letter-spacing: 2px; }
+
+/* Consent note — restrained, not a big alert block. */
+.dest-consent-note {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  background: var(--color-ink-50);
+  font-size: var(--text-xs);
+  color: var(--text-secondary);
+}
+.dest-consent-note svg { width: 14px; height: 14px; flex-shrink: 0; margin-top: 1px; color: var(--text-tertiary); }
+
+/* Related-entity lists (Active Audiences / Used by Journeys). */
+.dest-related-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: var(--space-3) 0;
+  border-bottom: 1px solid var(--border-subtle);
+}
+.dest-related-row:last-child { border-bottom: none; }
+.dest-related-row__name { font-size: var(--text-sm); font-weight: var(--weight-medium); color: var(--text-primary); }
+.dest-related-row__meta { display: flex; align-items: center; gap: var(--space-4); font-size: var(--text-xs); color: var(--text-tertiary); }
+
+.dest-empty-note {
+  font-size: var(--text-xs);
+  color: var(--text-tertiary);
+  padding: var(--space-2) 0;
+}
+
+/* Data Flow reference block. */
+.dest-flow-ref {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  font-size: var(--text-sm);
+}
+.dest-flow-ref__arrow { color: var(--text-tertiary); display: flex; }
+.dest-flow-ref__arrow svg { width: 14px; height: 14px; }
+
+/* ---- Add Destination wizard ---- */
+.dest-picker-group + .dest-picker-group { margin-top: var(--space-5); }
+.dest-picker-group__title {
+  font-size: 11px;
+  font-weight: var(--weight-semibold);
+  letter-spacing: var(--tracking-wide);
+  text-transform: uppercase;
+  color: var(--text-tertiary);
+  margin-bottom: var(--space-2);
+}
+.dest-picker-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-2);
+}
+@media (max-width: 560px) {
+  .dest-picker-grid { grid-template-columns: repeat(2, 1fr); }
+}
+.dest-picker-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-3);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  background: var(--surface-panel);
+  cursor: pointer;
+  font-size: var(--text-sm);
+  color: var(--text-primary);
+  text-align: left;
+}
+.dest-picker-item:hover { border-color: var(--color-primary-300); background: var(--color-primary-50); }
+.dest-picker-item.is-selected { border-color: var(--color-primary-400); background: var(--color-primary-50); box-shadow: 0 0 0 1px var(--color-primary-300); }
+.dest-picker-item svg { width: 15px; height: 15px; color: var(--text-secondary); flex-shrink: 0; }
+
+.dest-setup-summary {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  padding: var(--space-4);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  background: var(--color-ink-50);
+}
+
+.dest-wizard-steps {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-bottom: var(--space-5);
+}
+.dest-wizard-step {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--text-xs);
+  color: var(--text-tertiary);
+  font-weight: var(--weight-medium);
+}
+.dest-wizard-step__dot {
+  width: 18px;
+  height: 18px;
+  border-radius: var(--radius-full);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--border-default);
+  font-size: 10px;
+}
+.dest-wizard-step.is-active { color: var(--text-primary); }
+.dest-wizard-step.is-active .dest-wizard-step__dot { border-color: var(--color-primary-500); color: var(--color-primary-700); background: var(--color-primary-50); }
+.dest-wizard-step.is-done .dest-wizard-step__dot { border-color: var(--color-primary-500); background: var(--color-primary-500); color: #fff; }
+.dest-wizard-step__sep { width: 16px; height: 1px; background: var(--border-default); }
+
+.dest-test-result {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-4);
+  border: 1px solid var(--color-primary-100);
+  border-radius: var(--radius-sm);
+  background: var(--color-primary-50);
+}
+.dest-test-result__title { display: flex; align-items: center; gap: var(--space-2); font-size: var(--text-sm); font-weight: var(--weight-semibold); color: var(--color-primary-700); }
+.dest-test-result__title svg { width: 15px; height: 15px; }
+
+/* ================================================================ */
+/* Directory — top-level Sources / Destinations tabs                  */
+/* ================================================================ */
+.directory-tabs-wrap { margin-bottom: var(--space-6); }
+
+/* ---- Reusable popover shell — Column Manager + Filter Panel ---- */
+.col-manager-anchor { position: relative; }
+.col-manager {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  z-index: 30;
+  width: 300px;
+  max-height: 70vh;
+  overflow-y: auto;
+  background: var(--surface-panel);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-lg);
+  padding: var(--space-4);
+  display: none;
+}
+.col-manager.is-open { display: block; }
+.col-manager__header { margin-bottom: var(--space-3); }
+.col-manager__title { font-size: var(--text-sm); font-weight: var(--weight-semibold); color: var(--text-primary); }
+.col-manager__desc { font-size: var(--text-xs); color: var(--text-tertiary); margin-top: 2px; }
+.col-manager__list { display: flex; flex-direction: column; gap: 2px; margin-bottom: var(--space-4); }
+.col-manager__item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2);
+  border-radius: var(--radius-xs);
+  font-size: var(--text-sm);
+  color: var(--text-primary);
+  cursor: pointer;
+}
+.col-manager__item:hover { background: var(--color-ink-50); }
+.col-manager__item.is-required { color: var(--text-tertiary); cursor: default; }
+.col-manager__item.is-required:hover { background: transparent; }
+.col-manager__footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  padding-top: var(--space-3);
+  border-top: 1px solid var(--border-subtle);
+  flex-wrap: wrap;
+}
+
+.filter-fields { display: flex; flex-direction: column; gap: var(--space-4); margin-bottom: var(--space-4); }
+.filter-field { display: flex; flex-direction: column; gap: var(--space-2); }
+.filter-field__label { font-size: 11px; font-weight: var(--weight-semibold); letter-spacing: var(--tracking-wide); text-transform: uppercase; color: var(--text-tertiary); }
+.filter-checklist { display: flex; flex-direction: column; gap: 4px; }
+.filter-checklist__item { display: flex; align-items: center; gap: var(--space-2); font-size: var(--text-sm); color: var(--text-primary); cursor: pointer; }
+
+.filter-count-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 16px;
+  height: 16px;
+  padding: 0 4px;
+  border-radius: var(--radius-full);
+  background: var(--color-primary-500);
+  color: #fff;
+  font-size: 10px;
+  font-weight: var(--weight-semibold);
+  margin-left: 4px;
+}
+
+/* ---- Toolbar quick date-range control ---- */
+.dest-activity-quickrange { display: flex; align-items: center; gap: var(--space-2); font-size: var(--text-xs); color: var(--text-tertiary); white-space: nowrap; }
+
+/* ---- Table: users-through-connector column + overflow trigger ---- */
+.dest-users-cell { display: flex; flex-direction: column; }
+.dest-users-cell__period { font-size: 11px; color: var(--text-tertiary); }
+
+.table-row-menu-trigger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border-radius: var(--radius-xs);
+  border: none;
+  background: transparent;
+  color: var(--text-tertiary);
+  cursor: pointer;
+}
+.table-row-menu-trigger:hover { background: var(--color-ink-100); color: var(--text-primary); }
+
+/* ---- Detail: Activity tab ---- */
+.dest-activity-summary {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--space-5);
+}
+@media (max-width: 720px) {
+  .dest-activity-summary { grid-template-columns: repeat(2, 1fr); }
+}
+
+/* ---- Direction indicator — Source into CDP vs CDP out to Destination ---- */
+.dest-direction {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  background: var(--color-ink-50);
+}
+.dest-direction__node { display: flex; align-items: center; gap: var(--space-2); font-size: var(--text-sm); font-weight: var(--weight-medium); color: var(--text-primary); }
+.dest-direction__node svg { width: 15px; height: 15px; color: var(--text-secondary); }
+.dest-direction__arrow { display: flex; align-items: center; color: var(--color-primary-500); }
+.dest-direction__arrow svg { width: 16px; height: 16px; }
+
+/* ================================================================ */
+/* Full-screen Add Destination / Add Source setup workspace           */
+/* Same architectural pattern as the Journey Builder workspace (fixed */
+/* full-viewport, compact header) — reimplemented here with its own   */
+/* class names so this module has no coupling to the frozen Journey   */
+/* Builder files.                                                     */
+/* ================================================================ */
+.dest-workspace {
+  position: fixed;
+  inset: 0;
+  /* Must outrank .topbar (z-index: 400) — as a full-screen overlay its
+     header sits directly over the topbar's footprint, and interactive
+     header controls on the right (Save Changes, Test Connection) fall
+     exactly where the topbar's own content is. */
+  z-index: 500;
+  display: flex;
+  flex-direction: column;
+  background: var(--surface-app);
+}
+.dest-workspace__header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  padding: var(--space-3) var(--space-5);
+  border-bottom: 1px solid var(--border-subtle);
+  background: var(--surface-panel);
+  flex-shrink: 0;
+}
+.dest-workspace__back {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  border: none;
+  background: transparent;
+  border-radius: var(--radius-xs);
+  color: var(--text-secondary);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-medium);
+  cursor: pointer;
+  flex-shrink: 0;
+}
+.dest-workspace__back:hover { background: var(--color-ink-100); color: var(--text-primary); }
+.dest-workspace__back svg { width: 15px; height: 15px; }
+.dest-workspace__title { font-size: var(--text-md); font-weight: var(--weight-semibold); color: var(--text-primary); }
+.dest-workspace__title-sub { font-weight: var(--weight-regular); color: var(--text-tertiary); margin-left: var(--space-2); }
+.dest-workspace__header-actions { margin-left: auto; display: flex; gap: var(--space-3); flex-shrink: 0; }
+.dest-workspace__body { flex: 1; min-height: 0; overflow-y: auto; }
+.dest-workspace__inner { max-width: 900px; margin: 0 auto; padding: var(--space-8) var(--space-6); }
+
+/* ---- Shared Destination Configuration form (Add + Edit) ---- */
+.dest-form-section { padding: var(--space-6) 0; border-bottom: 1px solid var(--border-subtle); }
+.dest-form-section:first-child { padding-top: 0; }
+.dest-form-section:last-child { border-bottom: none; padding-bottom: 0; }
+.dest-form-section__title { font-size: var(--text-sm); font-weight: var(--weight-semibold); color: var(--text-primary); margin: 0 0 var(--space-1); }
+.dest-form-section__hint { font-size: var(--text-xs); color: var(--text-tertiary); margin: 0 0 var(--space-4); }
+.dest-form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-4); }
+.dest-form-grid .field--full { grid-column: 1 / -1; }
+.dest-form-readonly { display: flex; align-items: center; gap: var(--space-2); padding: var(--space-2) var(--space-3); background: var(--color-ink-50); border: 1px solid var(--border-subtle); border-radius: var(--radius-xs); font-size: var(--text-sm); color: var(--text-secondary); }
+.dest-form-error { font-size: 11px; color: var(--color-danger-600); margin-top: var(--space-1); }
+.dest-form-check-grid { display: flex; flex-direction: column; gap: var(--space-2); }
+.dest-form-check-grid label { display: flex; align-items: center; gap: var(--space-2); font-size: var(--text-sm); color: var(--text-primary); }
+.dest-form-check-grid label.is-disabled { color: var(--text-tertiary); cursor: not-allowed; }
+.dest-form-subgroup { margin-top: var(--space-3); padding: var(--space-3); border: 1px solid var(--border-subtle); border-radius: var(--radius-sm); background: var(--surface-panel); }
+.dest-form-advanced summary { cursor: pointer; font-size: var(--text-sm); font-weight: var(--weight-medium); color: var(--text-secondary); }
+.dest-form-footer { display: flex; justify-content: flex-end; gap: var(--space-3); margin-top: var(--space-6); padding-top: var(--space-5); border-top: 1px solid var(--border-subtle); }
+
+/* ---- Data Stream picker (Provider -> Connection Account -> ONE Data */
+/* Stream -> Data Selection -> Delivery hierarchy, Phase 12.4) ---- */
+.dest-stream-picker { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: var(--space-3); }
+.dest-stream-card { position: relative; display: flex; flex-direction: column; gap: var(--space-1); padding: var(--space-4); border: 1px solid var(--border-subtle); border-radius: var(--radius-sm); cursor: pointer; background: var(--surface-panel); }
+.dest-stream-card input { position: absolute; top: var(--space-3); right: var(--space-3); }
+.dest-stream-card.is-selected { border-color: var(--color-primary-500); background: var(--color-primary-50); box-shadow: 0 0 0 1px var(--color-primary-500); }
+.dest-stream-card.is-disabled { opacity: 0.5; cursor: not-allowed; }
+.dest-stream-card__icon { color: var(--color-primary-600); }
+.dest-stream-card__icon svg { width: 18px; height: 18px; }
+.dest-stream-card__name { font-size: var(--text-sm); font-weight: var(--weight-semibold); color: var(--text-primary); }
+.dest-stream-card__desc { font-size: 11px; color: var(--text-tertiary); line-height: 1.4; }
+.dest-stream-card__note { font-size: 10px; color: var(--color-danger-600); font-weight: var(--weight-medium); }
+label.dest-attr--sensitive { color: var(--text-primary); }
+
+/* ---- Directory (browse) step ---- */
+.dest-directory-search { margin-bottom: var(--space-6); }
+.dest-directory-nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin-bottom: var(--space-8);
+}
+.dest-directory-nav__item {
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-full);
+  border: 1px solid var(--border-subtle);
+  background: var(--surface-panel);
+  font-size: var(--text-xs);
+  font-weight: var(--weight-medium);
+  color: var(--text-secondary);
+  cursor: pointer;
+}
+.dest-directory-nav__item:hover { border-color: var(--color-primary-300); }
+.dest-directory-nav__item.is-active { background: var(--color-primary-50); border-color: var(--color-primary-400); color: var(--color-primary-700); }
+
+.dest-directory-section { margin-bottom: var(--space-8); }
+.dest-directory-section__title { font-size: var(--text-lg); font-weight: var(--weight-semibold); color: var(--text-primary); margin-bottom: var(--space-4); }
+
+.dest-directory-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-3);
+}
+@media (max-width: 760px) {
+  .dest-directory-grid { grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 480px) {
+  .dest-directory-grid { grid-template-columns: 1fr; }
+}
+
+.dest-directory-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  background: var(--surface-panel);
+  cursor: pointer;
+  text-align: left;
+}
+.dest-directory-card:hover { border-color: var(--color-primary-300); box-shadow: var(--shadow-sm); }
+.dest-directory-card__icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border-radius: var(--radius-sm);
+  background: var(--color-ink-100);
+  color: var(--text-secondary);
+}
+.dest-directory-card__icon svg { width: 20px; height: 20px; }
+.dest-directory-card__logo-img {
+  width: 24px;
+  height: 24px;
+  object-fit: contain;
+  display: block;
+}
+/* When logo loads, remove the background box look */
+.dest-directory-card__icon:has(img) { background: transparent; border: none; }
+.dest-directory-card__name { font-size: var(--text-sm); font-weight: var(--weight-semibold); color: var(--text-primary); }
+.dest-directory-card__desc { font-size: var(--text-xs); color: var(--text-tertiary); margin-top: 2px; }
+.dest-directory-card__meta { display: flex; gap: var(--space-2); flex-wrap: wrap; margin-top: auto; padding-top: var(--space-2); }
+
+/* ---- Wizard steps 2/3 shared bits ---- */
+.dest-payload-preview {
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  line-height: 1.6;
+  padding: var(--space-4);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  background: var(--color-ink-50);
+  color: var(--text-primary);
+  white-space: pre;
+  overflow-x: auto;
+}
+.dest-setup-guide-link {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  font-size: var(--text-xs);
+  color: var(--color-primary-700);
+  cursor: pointer;
+  background: none;
+  border: none;
+  padding: 0;
+}
+.dest-setup-guide-link svg { width: 12px; height: 12px; }
+
+.dest-checklist { display: flex; flex-direction: column; gap: var(--space-2); }
+.dest-checklist label { display: flex; align-items: center; gap: var(--space-2); font-size: var(--text-sm); color: var(--text-primary); cursor: pointer; }
+
+@media (max-width: 640px) {
+  .col-manager { width: min(300px, 88vw); }
+}

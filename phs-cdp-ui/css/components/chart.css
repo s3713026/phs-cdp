@@ -1,0 +1,312 @@
+/*
+  PHS CDP Design System — Chart
+  Lightweight, dependency-free chart primitives built from the
+  --chart-* tokens: a segmented proportion bar (for composition, e.g.
+  audience mix) and a horizontal comparison bar chart (for magnitude,
+  e.g. deposits vs. withdrawals). No charting library — real chart
+  components can wrap a library later per module, but the COLOR
+  system is established here.
+*/
+
+.chart-swatches {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-5);
+}
+
+.chart-swatch {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+}
+
+.chart-swatch__dot {
+  width: 10px;
+  height: 10px;
+  border-radius: var(--radius-full);
+  flex-shrink: 0;
+}
+
+/* Segmented proportion bar */
+.chart-bar-segmented {
+  display: flex;
+  width: 100%;
+  height: 10px;
+  border-radius: var(--radius-full);
+  overflow: hidden;
+  background: var(--color-ink-100);
+}
+
+.chart-bar-segmented__seg {
+  height: 100%;
+}
+
+.chart-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2) var(--space-6);
+  margin-top: var(--space-4);
+}
+
+.chart-legend__item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--text-sm);
+}
+
+.chart-legend__dot {
+  width: 9px;
+  height: 9px;
+  border-radius: var(--radius-full);
+  flex-shrink: 0;
+}
+
+.chart-legend__label {
+  color: var(--text-secondary);
+}
+
+.chart-legend__value {
+  font-weight: var(--weight-semibold);
+  font-variant-numeric: tabular-nums;
+  color: var(--text-primary);
+}
+
+/* Horizontal comparison bars */
+.chart-hbars {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.chart-hbar {
+  display: grid;
+  grid-template-columns: 168px 1fr auto;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.chart-hbar__label {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  font-size: var(--text-sm);
+  font-weight: var(--weight-medium);
+  color: var(--text-primary);
+}
+
+.chart-hbar__sublabel {
+  font-size: var(--text-xs);
+  font-weight: var(--weight-regular);
+  color: var(--text-tertiary);
+}
+
+.chart-hbar__delta {
+  font-weight: var(--weight-semibold);
+}
+.chart-hbar__delta--up { color: var(--color-success-600); }
+.chart-hbar__delta--down { color: var(--color-danger-600); }
+/* For metrics where a decrease is the desired outcome (e.g. fewer
+   dormant customers) — direction stays "down", color reads positive. */
+.chart-hbar__delta--down-good { color: var(--color-success-600); }
+
+.chart-hbar__track {
+  height: 10px;
+  border-radius: var(--radius-xs);
+  background: var(--color-ink-100);
+  overflow: hidden;
+}
+
+.chart-hbar__fill {
+  height: 100%;
+  border-radius: var(--radius-xs);
+}
+
+.chart-hbar__value {
+  font-size: var(--text-sm);
+  font-weight: var(--weight-semibold);
+  font-variant-numeric: tabular-nums;
+  color: var(--text-primary);
+  min-width: 96px;
+  text-align: right;
+}
+
+/* Inline mini progress bar — for a table cell or tight row context
+   where a full chart-hbar would be too heavy (e.g. an engagement %
+   next to its numeric value). */
+.mini-bar {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+.mini-bar__track {
+  display: block;
+  width: 56px;
+  height: 5px;
+  border-radius: var(--radius-full);
+  background: var(--color-ink-100);
+  overflow: hidden;
+  flex-shrink: 0;
+}
+.mini-bar__fill {
+  display: block;
+  height: 100%;
+  border-radius: var(--radius-full);
+  background: var(--chart-green);
+}
+
+/* Full-width variant — for a bar that fills its own row instead of
+   sitting inline next to a number (e.g. a behavior-item indicator). */
+.mini-bar--full {
+  display: flex;
+  width: 100%;
+}
+.mini-bar--full .mini-bar__track {
+  width: 100%;
+}
+
+/* Vertical column chart — for comparing a handful of categories at   */
+/* a glance (e.g. engagement rate by channel). Deliberately different */
+/* from the horizontal bars above so sections don't all look alike.  */
+.chart-vbars {
+  display: flex;
+  align-items: flex-end;
+  gap: var(--space-6);
+  height: 180px;
+  padding-top: var(--space-6);
+}
+
+.chart-vbar {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-2);
+  flex: 1;
+  height: 100%;
+  justify-content: flex-end;
+}
+
+.chart-vbar__value {
+  font-size: var(--text-sm);
+  font-weight: var(--weight-semibold);
+  font-variant-numeric: tabular-nums;
+  color: var(--text-primary);
+}
+
+.chart-vbar__col {
+  width: 100%;
+  max-width: 44px;
+  border-radius: var(--radius-xs) var(--radius-xs) 0 0;
+  background: var(--color-ink-100);
+  position: relative;
+  overflow: hidden;
+}
+
+.chart-vbar__fill {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  border-radius: var(--radius-xs) var(--radius-xs) 0 0;
+}
+
+.chart-vbar__label {
+  font-size: var(--text-xs);
+  color: var(--text-tertiary);
+  text-align: center;
+}
+
+/* Line / area chart — multi-series SVG rendered by js/components/chart.js */
+.chart-line {
+  width: 100%;
+  position: relative;
+}
+.chart-line svg {
+  width: 100%;
+  height: auto;
+  display: block;
+  overflow: visible;
+}
+.chart-line__grid line {
+  stroke: var(--color-ink-200);
+  stroke-width: 1;
+}
+.chart-line__grid text,
+.chart-line__axis text {
+  fill: var(--text-tertiary);
+  font-family: var(--font-ui);
+  font-variant-numeric: tabular-nums;
+  font-size: 10px;
+}
+.chart-line__area {
+  opacity: 0.12;
+}
+.chart-line__line {
+  fill: none;
+  stroke-width: 2;
+}
+.chart-line__dot {
+  stroke: var(--color-ink-0);
+  stroke-width: 1.5;
+  transition: r 0.1s ease;
+}
+.chart-line__dot.is-active {
+  r: 5;
+  stroke-width: 2;
+}
+.chart-line__hit {
+  cursor: crosshair;
+}
+.chart-line__guide {
+  stroke: var(--color-ink-300);
+  stroke-width: 1;
+  stroke-dasharray: 3 3;
+  pointer-events: none;
+}
+
+/* Shared point-level tooltip — compact, follows the hovered column. */
+.chart-line__tooltip {
+  position: absolute;
+  z-index: 5;
+  min-width: 150px;
+  background: var(--surface-panel);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+  padding: var(--space-2) var(--space-3);
+  pointer-events: none;
+}
+.chart-line__tooltip-title {
+  font-size: 11px;
+  font-weight: var(--weight-semibold);
+  color: var(--text-primary);
+  margin-bottom: var(--space-1);
+  padding-bottom: var(--space-1);
+  border-bottom: 1px solid var(--border-subtle);
+}
+.chart-line__tooltip-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: 11px;
+  padding: 1px 0;
+  white-space: nowrap;
+}
+.chart-line__tooltip-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: var(--radius-full);
+  flex-shrink: 0;
+}
+.chart-line__tooltip-label {
+  color: var(--text-secondary);
+  flex: 1;
+}
+.chart-line__tooltip-value {
+  font-weight: var(--weight-semibold);
+  font-variant-numeric: tabular-nums;
+  color: var(--text-primary);
+  margin-left: var(--space-3);
+}

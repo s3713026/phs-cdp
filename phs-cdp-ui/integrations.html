@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Integrations — PHS CDP</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&display=swap"
+    rel="stylesheet"
+  />
+
+  <link rel="stylesheet" href="css/main.css" />
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="app-shell__sidebar" data-sidebar-mount></aside>
+    <div class="app-shell__topbar" data-topbar-mount></div>
+
+    <main class="app-shell__main">
+      <div class="page">
+        <div class="page-header">
+          <div>
+            <div class="page-header__eyebrow">
+              <i data-lucide="plug-zap" style="width: 13px; height: 13px;"></i>
+              Settings · Integrations
+            </div>
+            <h1 class="page-header__title">Integrations</h1>
+            <p class="page-header__description">Platform-level integration health — whether PHS CDP can reach an external platform at all. For data-stream configuration, see Sources and Destinations.</p>
+          </div>
+        </div>
+
+        <section class="section">
+          <div class="section__body" data-int-summary></div>
+        </section>
+
+        <section class="section" style="margin-bottom: 0;">
+          <div class="section__header">
+            <div>
+              <h2 class="section__title">All Integrations</h2>
+              <p class="section__subtitle">Click a row for details and to run a mock connection check. All statuses here are demo data.</p>
+            </div>
+          </div>
+          <div class="section__body">
+            <div class="table-wrap">
+              <table class="table" data-int-table>
+                <thead>
+                  <tr>
+                    <th>Integration</th>
+                    <th>Type</th>
+                    <th>Environment</th>
+                    <th>Configuration Status</th>
+                    <th>Last Connection Check</th>
+                    <th>Owner</th>
+                    <th class="cell-check"></th>
+                  </tr>
+                </thead>
+                <tbody></tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+      </div>
+    </main>
+  </div>
+
+  <!-- Integration detail drawer -->
+  <div class="drawer-overlay" id="integration-drawer">
+    <aside class="drawer" role="dialog" aria-modal="true" aria-labelledby="integration-drawer-title">
+      <div class="drawer__header">
+        <div>
+          <div class="drawer__eyebrow" data-drawer-eyebrow>Integration</div>
+          <h3 class="drawer__title" id="integration-drawer-title" data-drawer-title>—</h3>
+        </div>
+        <button class="btn btn--ghost btn--icon" data-drawer-close aria-label="Close"><i data-lucide="x"></i></button>
+      </div>
+      <div class="drawer__body" data-drawer-body></div>
+      <div class="drawer__footer">
+        <button class="btn btn--secondary" data-drawer-close>Close</button>
+      </div>
+    </aside>
+  </div>
+
+  <script src="https://unpkg.com/lucide@1.47.0/dist/umd/lucide.js"></script>
+  <script type="module">
+    import { bootstrapPage } from "./js/main.js";
+    import { initIntegrations } from "./js/pages/integrations.js";
+
+    bootstrapPage({
+      currentNavId: "integrations",
+      breadcrumb: [
+        { label: "PHS CDP", href: "index.html" },
+        { label: "Settings" },
+        { label: "Integrations" },
+      ],
+    });
+    initIntegrations();
+  </script>
+</body>
+</html>

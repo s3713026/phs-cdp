@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Pipelines — PHS CDP</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&display=swap"
+    rel="stylesheet"
+  />
+
+  <link rel="stylesheet" href="css/main.css" />
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="app-shell__sidebar" data-sidebar-mount></aside>
+    <div class="app-shell__topbar" data-topbar-mount></div>
+
+    <main class="app-shell__main">
+      <div class="page">
+        <div class="page-header">
+          <div>
+            <div class="page-header__eyebrow">
+              <i data-lucide="git-branch" style="width: 13px; height: 13px;"></i>
+              Data · Pipelines
+            </div>
+            <h1 class="page-header__title">Pipelines</h1>
+            <p class="page-header__description">The configured processing stages data passes through inside PHS CDP, from ingestion to activation. A structural view, not a live execution monitor — for flow-level status, volume and health, see Data Flows.</p>
+          </div>
+        </div>
+
+        <section class="section">
+          <div class="section__body" data-pl-summary></div>
+        </section>
+
+        <section class="section">
+          <div class="section__header">
+            <div>
+              <h2 class="section__title">Processing Pipeline</h2>
+              <p class="section__subtitle">Every inbound record moves through these stages in order before reaching a destination.</p>
+            </div>
+          </div>
+          <div class="section__body">
+            <div class="panel">
+              <div class="stream-pipeline" style="flex-direction: row; flex-wrap: wrap;" data-pl-flow></div>
+            </div>
+          </div>
+        </section>
+
+        <section class="section" style="margin-bottom: 0;">
+          <div class="section__header">
+            <div>
+              <h2 class="section__title">Stage Reference</h2>
+              <p class="section__subtitle">Each stage is owned and enforced by an existing module — not a separate processing engine.</p>
+            </div>
+          </div>
+          <div class="section__body">
+            <div class="table-wrap">
+              <table class="table table--dense" data-pl-table>
+                <thead>
+                  <tr>
+                    <th class="num">#</th>
+                    <th>Stage</th>
+                    <th>What happens here</th>
+                    <th>Owning Module</th>
+                  </tr>
+                </thead>
+                <tbody></tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+      </div>
+    </main>
+  </div>
+
+  <script src="https://unpkg.com/lucide@1.47.0/dist/umd/lucide.js"></script>
+  <script type="module">
+    import { bootstrapPage } from "./js/main.js";
+    import { initPipelines } from "./js/pages/pipelines.js";
+
+    bootstrapPage({
+      currentNavId: "pipelines",
+      breadcrumb: [
+        { label: "PHS CDP", href: "index.html" },
+        { label: "Data" },
+        { label: "Pipelines" },
+      ],
+    });
+    initPipelines();
+  </script>
+</body>
+</html>

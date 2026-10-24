@@ -1,0 +1,99 @@
+# ============================================================
+# RudderStack Self-Hosted - PHS CDP
+# Data Plane: http://100.117.24.87:8082
+# ============================================================
+
+networks:
+  rudderstack:
+    name: rudderstack_network
+
+volumes:
+  pg_data:
+
+services:
+
+  postgres:
+    image: postgres:15-alpine
+    container_name: rs_postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: rudder
+      POSTGRES_PASSWORD: rudderpassword
+      POSTGRES_DB: jobsdb
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+    networks:
+      - rudderstack
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U rudder -d jobsdb"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    mem_limit: 512m
+    mem_reservation: 256m
+
+  transformer:
+    image: rudderstack/rudder-transformer:latest
+    container_name: rs_transformer
+    restart: unless-stopped
+    environment:
+      TRANSFORMER_WORKER_CONCURRENCY: "2"
+    networks:
+      - rudderstack
+    mem_limit: 512m
+    mem_reservation: 256m
+
+  backend:
+    image: rudderlabs/rudder-server:latest
+    container_name: rs_backend
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    ports:
+      - "8082:8080"
+    volumes:
+      - ./workspaceConfig.json:/etc/rudderstack/workspaceConfig.json:ro
+    environment:
+      # === JOBS DB ===
+      JOBS_DB_HOST: postgres
+      JOBS_DB_PORT: "5432"
+      JOBS_DB_NAME: jobsdb
+      JOBS_DB_USER: rudder
+      JOBS_DB_PASSWORD: rudderpassword
+      RSERVER_JOBS_DB_HOST: postgres
+      RSERVER_JOBS_DB_PORT: "5432"
+      RSERVER_JOBS_DB_DB_NAME: jobsdb
+      RSERVER_JOBS_DB_USER: rudder
+      RSERVER_JOBS_DB_PASSWORD: rudderpassword
+
+      # === BACKEND CONFIG CACHE DB (fix lỗi "ubuntu" database) ===
+      RSERVER_BACKEND_CONFIG_CACHE_DB_HOST: postgres
+      RSERVER_BACKEND_CONFIG_CACHE_DB_PORT: "5432"
+      RSERVER_BACKEND_CONFIG_CACHE_DB_NAME: jobsdb
+      RSERVER_BACKEND_CONFIG_CACHE_DB_USER: rudder
+      RSERVER_BACKEND_CONFIG_CACHE_DB_PASSWORD: rudderpassword
+      # Override connection string trực tiếp
+      RSERVER_BACKEND_CONFIG_CACHE_DSN: "postgres://rudder:rudderpassword@postgres:5432/jobsdb?sslmode=disable"
+
+      # === Config from file — thay thế Control Plane ===
+      RSERVER_BACKEND_CONFIG_CONFIG_FROM_FILE: "true"
+      RSERVER_BACKEND_CONFIG_CONFIG_JSONPATH: /etc/rudderstack/workspaceConfig.json
+
+      # === Transformer ===
+      DEST_TRANSFORM_URL: http://transformer:9090
+      RSERVER_DEST_TRANSFORM_URL: http://transformer:9090
+
+      # === Admin ===
+      RUDDER_ADMIN_PASSWORD: "PHS@Rudder2024!"
+
+      # === Tối ưu RAM ===
+      RSERVER_JOBS_DB_MAX_OPEN_CONNECTIONS: "4"
+      ROUTER_CONFIG_MAX_WORKERS: "4"
+      BATCH_ROUTER_MAX_WORKERS: "4"
+      RSERVER_WAREHOUSE_MODE: "off"
+
+    networks:
+      - rudderstack
+    mem_limit: 768m
+    mem_reservation: 512m

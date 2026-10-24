@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Event Stream — PHS CDP</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&display=swap"
+    rel="stylesheet"
+  />
+
+  <link rel="stylesheet" href="css/main.css" />
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="app-shell__sidebar" data-sidebar-mount></aside>
+    <div class="app-shell__topbar" data-topbar-mount></div>
+
+    <main class="app-shell__main">
+      <div class="page">
+        <div class="page-header">
+          <div>
+            <div class="page-header__eyebrow">
+              <i data-lucide="rss" style="width: 13px; height: 13px;"></i>
+              Events · Event Stream
+            </div>
+            <h1 class="page-header__title">Event Stream</h1>
+            <p class="page-header__description">Ingestion health by source, as events flow into the PHS CDP. Mock event activity — not live production volume.</p>
+          </div>
+        </div>
+
+        <section class="section" style="margin-bottom: 0;">
+          <div class="section__body">
+            <div class="event-stream-grid" data-stream-grid></div>
+          </div>
+        </section>
+      </div>
+    </main>
+  </div>
+
+  <script src="https://unpkg.com/lucide@1.47.0/dist/umd/lucide.js"></script>
+  <script type="module">
+    import { bootstrapPage } from "./js/main.js";
+    import { initEventStream } from "./js/pages/event-stream.js";
+
+    bootstrapPage({
+      currentNavId: "event-stream",
+      breadcrumb: [{"label": "PHS CDP", "href": "index.html"}, {"label": "Events"}, {"label": "Event Stream"}],
+    });
+    initEventStream();
+  </script>
+</body>
+</html>

@@ -1,0 +1,31 @@
+/*
+  PHS CDP Design System — Entry stylesheet
+  Every page links only this file. Layering is deliberate:
+  tokens -> base -> layout -> components.
+*/
+
+@import url("tokens.css");
+@import url("base.css");
+@import url("layout.css");
+
+@import url("components/button.css");
+@import url("components/input.css");
+@import url("components/select.css");
+@import url("components/badge.css");
+@import url("components/table.css");
+@import url("components/tabs.css");
+@import url("components/dropdown.css");
+@import url("components/modal.css");
+@import url("components/drawer.css");
+@import url("components/tooltip.css");
+@import url("components/metric.css");
+@import url("components/navigation.css");
+@import url("components/chart.css");
+@import url("components/timeline.css");
+@import url("components/profile.css");
+@import url("components/rule-builder.css");
+@import url("components/dataflow.css");
+@import url("components/journey.css");
+@import url("components/destination.css");
+@import url("components/events.css");
+@import url("components/rfm.css");

@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Event Streams — PHS CDP</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&display=swap"
+    rel="stylesheet"
+  />
+
+  <link rel="stylesheet" href="css/main.css" />
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="app-shell__sidebar" data-sidebar-mount></aside>
+    <div class="app-shell__topbar" data-topbar-mount></div>
+
+    <main class="app-shell__main">
+      <div class="page">
+
+        <!-- ============================================================ -->
+        <!-- LIST VIEW                                                     -->
+        <!-- ============================================================ -->
+        <div data-view-list>
+          <div class="page-header">
+            <div>
+              <div class="page-header__eyebrow">
+                <i data-lucide="cable" style="width: 13px; height: 13px;"></i>
+                Monitor · Event Streams
+              </div>
+              <h1 class="page-header__title">Event Streams</h1>
+              <p class="page-header__description">Monitor event ingestion streams, validation health and downstream delivery. Prototype stream telemetry — not real production throughput.</p>
+            </div>
+            <div class="page-header__actions">
+              <button class="btn btn--primary" data-create-stream>
+                <i data-lucide="plus"></i>
+                Create Event Stream
+              </button>
+            </div>
+          </div>
+
+          <section class="section">
+            <div class="section__body event-summary-grid">
+              <div class="metric metric--primary"><span class="metric__label">Active Streams</span><div class="metric__value-row"><span class="metric__value tabular-nums" data-summary-active style="font-size: var(--text-xl);">—</span></div></div>
+              <div class="metric"><span class="metric__label">Events / min</span><div class="metric__value-row"><span class="metric__value tabular-nums" data-summary-epm style="font-size: var(--text-xl);">—</span></div></div>
+              <div class="metric metric--success"><span class="metric__label">Healthy</span><div class="metric__value-row"><span class="metric__value tabular-nums" data-summary-healthy style="font-size: var(--text-xl);">—</span></div></div>
+              <div class="metric metric--danger"><span class="metric__label">Issues</span><div class="metric__value-row"><span class="metric__value tabular-nums" data-summary-issues style="font-size: var(--text-xl);">—</span></div></div>
+            </div>
+          </section>
+
+          <section class="section" style="margin-bottom: 0;">
+            <div class="section__body">
+              <div class="table-wrap">
+                <div class="table__toolbar">
+                  <div class="cluster gap-2" style="flex-wrap: wrap; align-items: center;">
+                    <div class="search-field" style="width: 220px;">
+                      <i data-lucide="search"></i>
+                      <input class="input" type="text" placeholder="Search streams…" data-stream-search aria-label="Search streams" />
+                    </div>
+                    <div class="select select--sm" style="width: 160px;">
+                      <select data-stream-timerange aria-label="Time range"></select>
+                      <i class="select__chevron" data-lucide="chevron-down"></i>
+                    </div>
+                  </div>
+                  <div class="cluster gap-2">
+                    <div class="col-manager-anchor">
+                      <button class="btn btn--outline btn--sm" data-stream-filter-trigger><i data-lucide="filter"></i> Filter<span class="filter-count-badge" data-stream-filter-count hidden>0</span></button>
+                      <div class="col-manager" data-stream-filter-panel></div>
+                    </div>
+                    <div class="col-manager-anchor">
+                      <button class="btn btn--outline btn--sm" data-stream-columns-trigger><i data-lucide="columns-3"></i> Edit columns</button>
+                      <div class="col-manager" data-stream-columns-panel></div>
+                    </div>
+                  </div>
+                </div>
+                <table class="table" data-stream-table>
+                  <thead data-stream-thead></thead>
+                  <tbody></tbody>
+                </table>
+              </div>
+            </div>
+          </section>
+        </div>
+
+        <!-- ============================================================ -->
+        <!-- DETAIL VIEW                                                   -->
+        <!-- ============================================================ -->
+        <div data-view-detail hidden>
+          <button class="btn btn--ghost btn--sm" data-back-to-list style="margin-bottom: var(--space-5);">
+            <i data-lucide="arrow-left"></i>
+            All Event Streams
+          </button>
+
+          <div class="page-header">
+            <div style="flex: 1; min-width: 0;" data-detail-header></div>
+            <div class="page-header__actions" data-detail-actions></div>
+          </div>
+
+          <div class="tabs" role="tablist" aria-label="Event stream sections" style="margin-bottom: var(--space-8);">
+            <button class="tabs__tab" role="tab" aria-selected="true" aria-controls="stream-panel-overview" id="stream-tab-overview">
+              <i data-lucide="layout-list"></i>
+              Overview
+            </button>
+            <button class="tabs__tab" role="tab" aria-selected="false" aria-controls="stream-panel-events" id="stream-tab-events">
+              <i data-lucide="zap"></i>
+              Events
+            </button>
+            <button class="tabs__tab" role="tab" aria-selected="false" aria-controls="stream-panel-plan" id="stream-tab-plan">
+              <i data-lucide="clipboard-check"></i>
+              Tracking Plan
+            </button>
+            <button class="tabs__tab" role="tab" aria-selected="false" aria-controls="stream-panel-destinations" id="stream-tab-destinations">
+              <i data-lucide="share-2"></i>
+              Destinations
+            </button>
+            <button class="tabs__tab" role="tab" aria-selected="false" aria-controls="stream-panel-activity" id="stream-tab-activity">
+              <i data-lucide="activity"></i>
+              Activity
+            </button>
+          </div>
+
+          <div class="tabs__panel" id="stream-panel-overview" role="tabpanel" aria-labelledby="stream-tab-overview" data-tab-overview></div>
+          <div class="tabs__panel" id="stream-panel-events" role="tabpanel" aria-labelledby="stream-tab-events" data-tab-events hidden></div>
+          <div class="tabs__panel" id="stream-panel-plan" role="tabpanel" aria-labelledby="stream-tab-plan" data-tab-plan hidden></div>
+          <div class="tabs__panel" id="stream-panel-destinations" role="tabpanel" aria-labelledby="stream-tab-destinations" data-tab-destinations hidden></div>
+          <div class="tabs__panel" id="stream-panel-activity" role="tabpanel" aria-labelledby="stream-tab-activity" data-tab-activity hidden></div>
+        </div>
+
+      </div>
+    </main>
+  </div>
+
+  <!-- ================================================================ -->
+  <!-- FULL-SCREEN CREATE EVENT STREAM WORKSPACE                         -->
+  <!-- ================================================================ -->
+  <div class="dest-workspace" data-view-setup hidden>
+    <header class="dest-workspace__header">
+      <button type="button" class="dest-workspace__back" data-setup-back>
+        <i data-lucide="arrow-left"></i>
+        <span>Back to Event Streams</span>
+      </button>
+      <span class="dest-workspace__title">Create Event Stream</span>
+    </header>
+    <div class="dest-workspace__body">
+      <div class="dest-workspace__inner" data-setup-body></div>
+    </div>
+  </div>
+
+  <!-- Pause / Resume confirmation -->
+  <div class="modal-overlay" id="stream-pause-modal">
+    <div class="modal modal--sm" role="dialog" aria-modal="true" aria-labelledby="stream-pause-title">
+      <div class="modal__header">
+        <div class="modal__title" id="stream-pause-title" data-stream-pause-title>Pause Event Stream?</div>
+      </div>
+      <div class="modal__body">
+        <p style="font-size: var(--text-sm); color: var(--text-secondary); margin: 0;" data-stream-pause-body>This will stop event processing for this stream in the prototype.</p>
+      </div>
+      <div class="modal__footer">
+        <button type="button" class="btn btn--ghost" data-modal-close>Cancel</button>
+        <button type="button" class="btn btn--danger" data-stream-pause-confirm>Pause</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://unpkg.com/lucide@1.47.0/dist/umd/lucide.js"></script>
+  <script src="js/api.js"></script>
+  <script type="module">
+    import { bootstrapPage } from "./js/main.js";
+    import { initEventStreams } from "./js/pages/event-streams.js";
+
+    bootstrapPage({
+      currentNavId: "event-streams",
+      breadcrumb: [{"label": "PHS CDP", "href": "index.html"}, {"label": "Monitor"}, {"label": "Event Streams"}],
+    });
+    initEventStreams();
+  </script>
+</body>
+</html>

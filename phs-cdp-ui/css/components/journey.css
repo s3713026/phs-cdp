@@ -1,0 +1,721 @@
+/*
+  PHS CDP Design System — Journey
+  Structured lifecycle-orchestration builder: a node library, a
+  vertical flow (not an infinite canvas), and a configuration panel.
+  Category is communicated with a left-border accent (the same
+  device as .metric) plus an icon — never color alone.
+*/
+
+.journey-builder {
+  display: grid;
+  grid-template-columns: 220px 1fr 320px;
+  gap: var(--space-5);
+  align-items: start;
+}
+
+/* ---- Node library (left) ---- */
+.journey-palette {
+  position: sticky;
+  top: 88px;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.journey-palette__group-title {
+  font-size: 11px;
+  font-weight: var(--weight-semibold);
+  letter-spacing: var(--tracking-wide);
+  text-transform: uppercase;
+  color: var(--text-tertiary);
+  margin-bottom: var(--space-2);
+}
+
+.journey-palette__items {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.journey-palette__item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2);
+  border-radius: var(--radius-xs);
+  font-size: var(--text-xs);
+  color: var(--text-secondary);
+  cursor: grab;
+  border: 1px solid transparent;
+  user-select: none;
+}
+.journey-palette__item:active { cursor: grabbing; }
+.journey-palette__item:hover {
+  background: var(--color-ink-50);
+  border-color: var(--border-subtle);
+}
+.journey-palette__item svg { width: 13px; height: 13px; flex-shrink: 0; color: var(--text-tertiary); }
+
+/* ---- Flow (center) ---- */
+.journey-flow {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0;
+  max-width: 720px;
+  margin: 0 auto;
+}
+
+.journey-connector {
+  display: flex;
+  justify-content: center;
+  padding: var(--space-1) 0;
+  color: var(--text-tertiary);
+}
+.journey-connector svg { width: 14px; height: 14px; }
+
+.journey-branch {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-4);
+  align-items: start;
+}
+
+.journey-branch__col {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.journey-branch__label {
+  align-self: center;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-bottom: var(--space-2);
+  padding: 2px var(--space-2);
+  border-radius: var(--radius-full);
+  font-size: 10px;
+  font-weight: var(--weight-semibold);
+  letter-spacing: var(--tracking-wide);
+  text-transform: uppercase;
+}
+.journey-branch__label--yes { background: var(--color-primary-50); color: var(--color-primary-700); }
+.journey-branch__label--no { background: var(--color-ink-100); color: var(--text-secondary); }
+
+@media (max-width: 640px) {
+  .journey-branch {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Node card. Category communicated by left border + icon, never
+   color alone — label text always states the node type too. */
+.journey-node {
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid var(--border-subtle);
+  border-left: 3px solid var(--color-ink-300);
+  border-radius: var(--radius-sm);
+  background: var(--surface-panel);
+  cursor: pointer;
+  margin-bottom: var(--space-1);
+}
+.journey-node:hover { border-color: var(--color-primary-200); }
+.journey-node.is-selected {
+  border-color: var(--color-primary-400);
+  box-shadow: 0 0 0 1px var(--color-primary-300);
+  background: var(--color-primary-50);
+}
+
+/* Entry is the one node every journey is guaranteed to have exactly
+   one of — give it a subtle fill (not just the shared left-border
+   accent) so it unmistakably reads as the start of the flow. */
+.journey-node--entry {
+  border-left-color: var(--chart-green);
+  background: var(--color-primary-50);
+  border-color: var(--color-primary-100);
+}
+.journey-node--logic { border-left-color: var(--chart-neutral); }
+.journey-node--communication { border-left-color: var(--chart-blue); }
+.journey-node--audienceActivation { border-left-color: var(--chart-teal); }
+.journey-node--dataSystem { border-left-color: var(--color-ink-600); }
+.journey-node--goal { border-left-color: var(--chart-gold); }
+.journey-node--exit { border-left-color: var(--chart-red); }
+
+.journey-node__icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border-radius: var(--radius-xs);
+  background: var(--color-ink-100);
+  color: var(--text-secondary);
+  flex-shrink: 0;
+}
+.journey-node__icon svg { width: 14px; height: 14px; }
+
+.journey-node__body { min-width: 0; flex: 1; }
+
+.journey-node__type {
+  font-size: 10px;
+  font-weight: var(--weight-semibold);
+  letter-spacing: var(--tracking-wide);
+  text-transform: uppercase;
+  color: var(--text-tertiary);
+}
+
+.journey-node__title {
+  font-size: var(--text-sm);
+  font-weight: var(--weight-semibold);
+  color: var(--text-primary);
+  margin-top: 1px;
+}
+
+.journey-node__detail {
+  font-size: var(--text-xs);
+  color: var(--text-secondary);
+  margin-top: 2px;
+}
+
+.journey-node__remove {
+  flex-shrink: 0;
+  color: var(--text-tertiary);
+}
+.journey-node__remove:hover { color: var(--color-danger-600); }
+
+/* Insertion point between nodes — "+ Add Step" */
+.journey-insert {
+  display: flex;
+  justify-content: center;
+  padding: 2px 0;
+}
+.journey-insert__btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px var(--space-2);
+  border-radius: var(--radius-full);
+  border: 1px dashed var(--border-default);
+  background: var(--surface-panel);
+  color: var(--text-tertiary);
+  font-size: 11px;
+  cursor: pointer;
+}
+.journey-insert__btn:hover { border-color: var(--color-primary-300); color: var(--color-primary-700); }
+.journey-insert__btn svg { width: 11px; height: 11px; }
+
+/* ---- Configuration (right) ---- */
+.journey-config {
+  position: sticky;
+  top: 88px;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  background: var(--surface-panel);
+  padding: var(--space-4);
+  min-height: 200px;
+}
+
+.journey-config__empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  padding: var(--space-6) var(--space-3);
+  color: var(--text-tertiary);
+  font-size: var(--text-sm);
+  text-align: center;
+}
+.journey-config__empty svg { width: 22px; height: 22px; }
+
+.journey-config__header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding-bottom: var(--space-3);
+  margin-bottom: var(--space-3);
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.journey-config__row {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: var(--space-3);
+}
+
+.journey-config__label {
+  font-size: 11px;
+  font-weight: var(--weight-semibold);
+  letter-spacing: var(--tracking-wide);
+  text-transform: uppercase;
+  color: var(--text-tertiary);
+}
+
+.journey-config__value {
+  font-size: var(--text-sm);
+  color: var(--text-primary);
+}
+
+@media (max-width: 1180px) {
+  .journey-builder {
+    grid-template-columns: 1fr;
+  }
+  .journey-palette,
+  .journey-config {
+    position: static;
+  }
+}
+
+/* ---- Simulation ---- */
+.journey-sim-step {
+  display: flex;
+  gap: var(--space-3);
+  padding: var(--space-3) 0;
+  border-bottom: 1px solid var(--border-subtle);
+}
+.journey-sim-step:last-child { border-bottom: none; }
+
+.journey-sim-step__dot {
+  flex-shrink: 0;
+  width: 22px;
+  height: 22px;
+  border-radius: var(--radius-full);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--color-primary-50);
+  color: var(--color-primary-700);
+  margin-top: 2px;
+}
+.journey-sim-step__dot svg { width: 12px; height: 12px; }
+
+.journey-sim-step__label {
+  font-size: 10px;
+  font-weight: var(--weight-semibold);
+  letter-spacing: var(--tracking-wide);
+  text-transform: uppercase;
+  color: var(--text-tertiary);
+}
+.journey-sim-step__title { font-size: var(--text-sm); font-weight: var(--weight-semibold); color: var(--text-primary); margin-top: 1px; }
+.journey-sim-step__result { font-size: var(--text-xs); color: var(--color-primary-700); font-weight: var(--weight-medium); margin-top: 2px; }
+.journey-sim-step__detail { font-size: var(--text-xs); color: var(--text-tertiary); margin-top: 2px; }
+
+.journey-sim-banner {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid var(--color-warning-100);
+  background: var(--color-warning-50);
+  border-radius: var(--radius-sm);
+  color: var(--color-warning-700);
+  font-size: var(--text-xs);
+  font-weight: var(--weight-medium);
+}
+.journey-sim-banner svg { width: 14px; height: 14px; flex-shrink: 0; }
+
+/* ================================================================ */
+/* Journey Canvas (Drawflow-backed node graph)                       */
+/* Drawflow supplies the mechanics (drag, connect, zoom, pan); every */
+/* visual is overridden here so it reads as PHS CDP, not a generic   */
+/* workflow-tool default (cyan boxes, yellow dots, thick blue wires).*/
+/* ================================================================ */
+.journey-canvas-wrap {
+  position: relative;
+  height: 720px;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  background-color: var(--color-ink-50);
+  background-image: radial-gradient(circle, var(--color-ink-300) 1px, transparent 1px);
+  background-size: 22px 22px;
+  overflow: hidden;
+}
+
+#journey-canvas {
+  width: 100%;
+  height: 100%;
+}
+
+.journey-canvas-wrap.is-drop-target {
+  border-color: var(--color-primary-300);
+  background-color: var(--color-primary-50);
+}
+
+.journey-canvas-empty-hint {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+  color: var(--text-tertiary);
+  font-size: var(--text-sm);
+  text-align: center;
+  padding: var(--space-6);
+  z-index: 0;
+}
+
+/* Node wrapper — strip Drawflow's default box entirely; the inner
+   .journey-node div (same component used in the read-only Flow tab)
+   carries the actual visual design, so both views stay consistent.
+
+   Drawflow's default is a left-to-right node editor (input on the
+   left edge, output on the right). This builder's mental model is
+   top-to-bottom (ENTRY -> LOGIC -> ACTION -> ... per the spec's own
+   diagrams), so the node is flipped to a column flex: input docks to
+   the top edge, output(s) to the bottom edge. Branch outputs (Consent
+   / Condition) then sit side by side along the bottom, matching a
+   literal "YES / NO" fork rather than two dots stacked on one edge. */
+.drawflow .drawflow-node {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 236px;
+  min-height: 0;
+  padding: 0;
+  background: transparent;
+  border: none;
+  border-radius: 0;
+  z-index: 2;
+}
+.drawflow .drawflow-node:hover { cursor: grab; }
+.drawflow .drawflow-node.selected { background: transparent; }
+.drawflow .drawflow-node .journey-node { cursor: grab; margin-bottom: 0; }
+.drawflow .drawflow-node .journey-node:active { cursor: grabbing; }
+.drawflow .drawflow-node.selected .journey-node {
+  border-color: var(--color-primary-400);
+  box-shadow: 0 0 0 1px var(--color-primary-300);
+  background: var(--color-primary-50);
+}
+
+/* .inputs / .outputs collapse to 0 height (not 0 width — this axis is
+   now vertical) and lay their handle(s) out in a horizontal row so
+   two outputs land side by side. */
+.drawflow .drawflow-node .inputs,
+.drawflow .drawflow-node .outputs {
+  width: auto !important;
+  height: 0;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  gap: 48px;
+}
+
+/* Connection handles — small and restrained, not Drawflow's default
+   20px cyan/yellow circles, docked to the node's top/bottom edge. */
+.drawflow .drawflow-node .input,
+.drawflow .drawflow-node .output {
+  position: relative;
+  width: 10px;
+  height: 10px;
+  margin: 0;
+  background: var(--surface-panel);
+  border: 2px solid var(--color-ink-400);
+  left: auto;
+  right: auto;
+}
+.drawflow .drawflow-node .input { top: -5px; }
+.drawflow .drawflow-node .output { top: auto; bottom: -5px; }
+.drawflow .drawflow-node .input:hover,
+.drawflow .drawflow-node .output:hover { border-color: var(--color-primary-500); }
+
+/* Branch labels — anchored to the output handle itself, so they sit
+   correctly regardless of node width. Only Consent/Condition nodes
+   carry two outputs (journey-type--consent-check / --condition). */
+.drawflow-node.journey-type--consent-check .outputs .output_1::after,
+.drawflow-node.journey-type--condition .outputs .output_1::after,
+.drawflow-node.journey-type--consent-check .outputs .output_2::after,
+.drawflow-node.journey-type--condition .outputs .output_2::after {
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  margin-top: 3px;
+  font-size: 9px;
+  font-weight: var(--weight-semibold);
+  letter-spacing: var(--tracking-wide);
+  white-space: nowrap;
+  pointer-events: none;
+}
+.drawflow-node.journey-type--consent-check .outputs .output_1::after,
+.drawflow-node.journey-type--condition .outputs .output_1::after {
+  content: "YES";
+  color: var(--color-primary-600);
+}
+.drawflow-node.journey-type--consent-check .outputs .output_2::after,
+.drawflow-node.journey-type--condition .outputs .output_2::after {
+  content: "NO";
+  color: var(--text-tertiary);
+}
+
+/* Connections — thin and neutral, never Drawflow's default 5px steel-blue. */
+.drawflow svg { overflow: visible !important; }
+.drawflow .connection .main-path {
+  stroke: var(--color-ink-400);
+  stroke-width: 1.75px;
+  fill: none;
+}
+.drawflow .connection .main-path:hover { stroke: var(--color-primary-400); cursor: pointer; }
+.drawflow .connection .main-path.selected { stroke: var(--color-primary-500); stroke-width: 2px; }
+
+.drawflow-delete {
+  width: 20px;
+  height: 20px;
+  line-height: 17px;
+  background: var(--surface-panel);
+  border: 1px solid var(--color-danger-200);
+  color: var(--color-danger-600);
+  font-family: var(--font-ui);
+  font-size: 12px;
+  box-shadow: var(--shadow-sm);
+}
+
+/* ---- Canvas controls — zoom/pan, bottom-right, minimal ---- */
+.journey-canvas-controls {
+  position: absolute;
+  right: var(--space-3);
+  bottom: var(--space-3);
+  z-index: 5;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  background: var(--surface-panel);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  padding: 2px;
+  box-shadow: var(--shadow-sm);
+}
+.journey-canvas-controls__btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: var(--radius-xs);
+  border: none;
+  background: transparent;
+  color: var(--text-secondary);
+  cursor: pointer;
+}
+.journey-canvas-controls__btn:hover { background: var(--color-ink-100); color: var(--text-primary); }
+.journey-canvas-controls__btn svg { width: 15px; height: 15px; }
+.journey-canvas-controls__divider { height: 1px; background: var(--border-subtle); margin: 2px 4px; }
+
+@media (max-width: 640px) {
+  .journey-canvas-wrap { height: 480px; }
+}
+
+/* Entry-choice buttons — the config panel's "pick your entry trigger"
+   state for a fresh entry-placeholder node. */
+.journey-entry-choices {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+.journey-entry-choice {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+  padding: var(--space-3);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  background: var(--surface-panel);
+  text-align: left;
+  cursor: pointer;
+}
+.journey-entry-choice:hover {
+  border-color: var(--color-primary-300);
+  background: var(--color-primary-50);
+}
+.journey-entry-choice svg { width: 16px; height: 16px; color: var(--color-primary-600); flex-shrink: 0; margin-top: 1px; }
+.journey-entry-choice__label { display: block; font-size: var(--text-sm); font-weight: var(--weight-semibold); color: var(--text-primary); }
+.journey-entry-choice__desc { display: block; font-size: var(--text-xs); color: var(--text-tertiary); margin-top: 1px; }
+
+/* Palette entry-section helper text + disabled state, once the
+   journey's one entry trigger already exists. */
+.journey-palette__hint {
+  margin: var(--space-1) 0 0;
+  font-size: 11px;
+  color: var(--text-tertiary);
+  line-height: 1.4;
+}
+.journey-palette__item.is-disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+.journey-palette__item.is-disabled:hover {
+  background: transparent;
+  border-color: transparent;
+}
+
+/* ================================================================ */
+/* Journey Workspace — full-screen immersive builder                 */
+/* Create/Edit Journey replaces the normal CDP shell entirely (no     */
+/* sidebar/topbar) — a visual canvas needs the full viewport.         */
+/* ================================================================ */
+.journey-workspace {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  display: flex;
+  flex-direction: column;
+  background: var(--surface-app);
+}
+
+.journey-workspace__header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  padding: var(--space-3) var(--space-5);
+  border-bottom: 1px solid var(--border-subtle);
+  background: var(--surface-panel);
+  flex-shrink: 0;
+}
+
+.journey-workspace__back {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  border: none;
+  background: transparent;
+  border-radius: var(--radius-xs);
+  color: var(--text-secondary);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-medium);
+  cursor: pointer;
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+.journey-workspace__back:hover { background: var(--color-ink-100); color: var(--text-primary); }
+.journey-workspace__back svg { width: 15px; height: 15px; }
+
+.journey-workspace__title {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  flex: 1;
+  min-width: 0;
+}
+
+.journey-workspace__name {
+  border: 1px solid transparent;
+  background: transparent;
+  font-size: var(--text-md);
+  font-weight: var(--weight-semibold);
+  color: var(--text-primary);
+  padding: var(--space-1) var(--space-2);
+  border-radius: var(--radius-xs);
+  min-width: 140px;
+  max-width: 480px;
+  font-family: var(--font-ui);
+}
+.journey-workspace__name:hover { background: var(--color-ink-50); }
+.journey-workspace__name:focus { outline: none; background: var(--surface-panel); border-color: var(--border-default); }
+.journey-workspace__name::placeholder { color: var(--text-tertiary); font-weight: var(--weight-regular); }
+
+.journey-workspace__actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex-shrink: 0;
+}
+
+.journey-workspace__body {
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: 240px 1fr 320px;
+}
+
+.journey-workspace__palette {
+  border-right: 1px solid var(--border-subtle);
+  background: var(--surface-panel);
+  padding: var(--space-4);
+  overflow-y: auto;
+}
+
+.journey-workspace__config {
+  position: static;
+  border: none;
+  border-left: 1px solid var(--border-subtle);
+  border-radius: 0;
+  background: var(--surface-panel);
+  padding: var(--space-4);
+  overflow-y: auto;
+  min-height: 0;
+}
+
+.journey-workspace__body .journey-canvas-wrap {
+  height: 100%;
+  border: none;
+  border-radius: 0;
+}
+
+/* Mobile/tablet floating drawer toggles — hidden on desktop */
+.journey-workspace__mobile-toggles {
+  display: none;
+}
+.journey-workspace__mobile-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border-radius: var(--radius-xs);
+  border: 1px solid var(--border-subtle);
+  background: var(--surface-panel);
+  color: var(--text-secondary);
+  cursor: pointer;
+}
+.journey-workspace__mobile-toggle svg { width: 16px; height: 16px; }
+
+.journey-workspace__scrim {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 44;
+  background: rgba(0, 0, 0, 0.32);
+}
+
+@media (max-width: 1180px) {
+  .journey-workspace__body {
+    grid-template-columns: 1fr;
+  }
+  .journey-workspace__palette,
+  .journey-workspace__config {
+    position: fixed;
+    top: 0;
+    bottom: 0;
+    width: min(300px, 84vw);
+    z-index: 45;
+    box-shadow: var(--shadow-lg);
+    transform: translateX(-100%);
+    transition: transform var(--duration-base) var(--ease-out);
+  }
+  .journey-workspace__palette { left: 0; }
+  .journey-workspace__config { right: 0; left: auto; transform: translateX(100%); }
+  .journey-workspace__palette.is-open,
+  .journey-workspace__config.is-open {
+    transform: translateX(0);
+  }
+  .journey-workspace__mobile-toggles {
+    display: flex;
+    gap: var(--space-2);
+  }
+  .journey-workspace__scrim.is-open {
+    display: block;
+  }
+}
+
+@media (max-width: 640px) {
+  .journey-workspace__name { min-width: 90px; }
+  .journey-workspace__back span { display: none; }
+}

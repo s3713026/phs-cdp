@@ -1,0 +1,30 @@
+# ── Environment (NEVER commit real credentials) ───────────────
+.env
+*.env
+!.env.example
+
+# ── Node ─────────────────────────────────────────────────────
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+
+# ── Logs ─────────────────────────────────────────────────────
+*.log
+logs/
+
+# ── Docker volumes / data ────────────────────────────────────
+data/
+pg_data/
+mysql_data/
+
+# ── OS ───────────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+
+# ── Editor ───────────────────────────────────────────────────
+.vscode/
+.idea/
+*.swp
+
+# ── Secrets / config with real credentials ────────────────────
+workspaceConfig.json

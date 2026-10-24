@@ -1,0 +1,219 @@
+# ============================================================
+# PHS CDP — Unified Docker Compose
+# All services on one network: cdp_network
+#
+# Setup:
+#   1. cp .env.example .env
+#   2. Fill in real passwords in .env
+#   3. docker compose up -d
+# ============================================================
+
+networks:
+  cdp_network:
+    name: cdp_network
+
+volumes:
+  rs_pg_data:
+  cdp_pg_data:
+  mautic_mysql_data:
+
+services:
+
+  # ── RudderStack PostgreSQL (jobs DB) ──────────────────────
+  rudder-postgres:
+    image: postgres:15-alpine
+    container_name: rs_postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${RS_DB_USER:-rudder}
+      POSTGRES_PASSWORD: ${RS_DB_PASSWORD:-rudderpassword}
+      POSTGRES_DB: ${RS_DB_NAME:-jobsdb}
+    volumes:
+      - rs_pg_data:/var/lib/postgresql/data
+    networks:
+      - cdp_network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${RS_DB_USER:-rudder} -d ${RS_DB_NAME:-jobsdb}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    mem_limit: 512m
+    mem_reservation: 256m
+
+  # ── RudderStack Transformer ───────────────────────────────
+  rudder-transformer:
+    image: rudderstack/rudder-transformer:latest
+    container_name: rs_transformer
+    restart: unless-stopped
+    environment:
+      TRANSFORMER_WORKER_CONCURRENCY: "2"
+    networks:
+      - cdp_network
+    mem_limit: 512m
+    mem_reservation: 256m
+
+  # ── RudderStack Server (Data Plane) ───────────────────────
+  rudder-server:
+    image: rudderlabs/rudder-server:latest
+    container_name: rs_backend
+    restart: unless-stopped
+    depends_on:
+      rudder-postgres:
+        condition: service_healthy
+    ports:
+      - "${RS_PORT:-8082}:8080"
+    volumes:
+      - ./phs-cdp-bff/workspaceConfig.json:/etc/rudderstack/workspaceConfig.json:ro
+    environment:
+      JOBS_DB_HOST: rudder-postgres
+      JOBS_DB_PORT: "5432"
+      JOBS_DB_NAME: ${RS_DB_NAME:-jobsdb}
+      JOBS_DB_USER: ${RS_DB_USER:-rudder}
+      JOBS_DB_PASSWORD: ${RS_DB_PASSWORD:-rudderpassword}
+      RSERVER_JOBS_DB_HOST: rudder-postgres
+      RSERVER_JOBS_DB_PORT: "5432"
+      RSERVER_JOBS_DB_DB_NAME: ${RS_DB_NAME:-jobsdb}
+      RSERVER_JOBS_DB_USER: ${RS_DB_USER:-rudder}
+      RSERVER_JOBS_DB_PASSWORD: ${RS_DB_PASSWORD:-rudderpassword}
+      RSERVER_BACKEND_CONFIG_CACHE_DB_HOST: rudder-postgres
+      RSERVER_BACKEND_CONFIG_CACHE_DB_PORT: "5432"
+      RSERVER_BACKEND_CONFIG_CACHE_DB_NAME: ${RS_DB_NAME:-jobsdb}
+      RSERVER_BACKEND_CONFIG_CACHE_DB_USER: ${RS_DB_USER:-rudder}
+      RSERVER_BACKEND_CONFIG_CACHE_DB_PASSWORD: ${RS_DB_PASSWORD:-rudderpassword}
+      RSERVER_BACKEND_CONFIG_CACHE_DSN: "postgres://${RS_DB_USER:-rudder}:${RS_DB_PASSWORD:-rudderpassword}@rudder-postgres:5432/${RS_DB_NAME:-jobsdb}?sslmode=disable"
+      RSERVER_BACKEND_CONFIG_CONFIG_FROM_FILE: "true"
+      RSERVER_BACKEND_CONFIG_CONFIG_JSONPATH: /etc/rudderstack/workspaceConfig.json
+      DEST_TRANSFORM_URL: http://rudder-transformer:9090
+      RSERVER_DEST_TRANSFORM_URL: http://rudder-transformer:9090
+      RUDDER_ADMIN_PASSWORD: ${RS_ADMIN_PASSWORD:-PHS@Rudder2024!}
+      RSERVER_JOBS_DB_MAX_OPEN_CONNECTIONS: "4"
+      ROUTER_CONFIG_MAX_WORKERS: "4"
+      BATCH_ROUTER_MAX_WORKERS: "4"
+      RSERVER_WAREHOUSE_MODE: "off"
+    networks:
+      - cdp_network
+    mem_limit: 768m
+    mem_reservation: 512m
+
+  # ── Mautic MySQL ──────────────────────────────────────────
+  mautic-mysql:
+    image: mysql:8.0
+    container_name: mautic_mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-mauticroot}
+      MYSQL_DATABASE: ${MYSQL_DB:-mautic}
+      MYSQL_USER: ${MYSQL_USER:-mautic}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-mauticpassword}
+    volumes:
+      - mautic_mysql_data:/var/lib/mysql
+    networks:
+      - cdp_network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "${MYSQL_USER:-mautic}", "-p${MYSQL_PASSWORD:-mauticpassword}"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+    mem_limit: 512m
+    mem_reservation: 256m
+
+  # ── Mautic ────────────────────────────────────────────────
+  mautic:
+    image: mautic/mautic:5-apache
+    container_name: mautic
+    restart: unless-stopped
+    depends_on:
+      mautic-mysql:
+        condition: service_healthy
+    ports:
+      - "${MAUTIC_PORT:-8081}:80"
+    environment:
+      MAUTIC_DB_HOST: mautic-mysql
+      MAUTIC_DB_PORT: "3306"
+      MAUTIC_DB_DATABASE: ${MYSQL_DB:-mautic}
+      MAUTIC_DB_USER: ${MYSQL_USER:-mautic}
+      MAUTIC_DB_PASSWORD: ${MYSQL_PASSWORD:-mauticpassword}
+      MAUTIC_RUN_CRON_JOBS: "true"
+      MAUTIC_TRUSTED_PROXIES: "[]"
+    networks:
+      - cdp_network
+    mem_limit: 768m
+    mem_reservation: 512m
+
+  # ── CDP Profile Store (PostgreSQL) ────────────────────────
+  # NOTE: NO external port — only accessible within cdp_network
+  cdp-postgres:
+    image: postgres:15-alpine
+    container_name: cdp_postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${CDP_DB_USER:-cdp}
+      POSTGRES_PASSWORD: ${CDP_DB_PASSWORD:?CDP_DB_PASSWORD is required in .env}
+      POSTGRES_DB: ${CDP_DB_NAME:-cdp_profiles}
+    volumes:
+      - cdp_pg_data:/var/lib/postgresql/data
+      - ./phs-cdp-bff/src/db/init:/docker-entrypoint-initdb.d:ro
+    networks:
+      - cdp_network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${CDP_DB_USER:-cdp} -d ${CDP_DB_NAME:-cdp_profiles}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    mem_limit: 512m
+    mem_reservation: 256m
+    # SECURITY: No ports exposed — cdp-postgres is internal only
+
+  # ── PHS CDP BFF (Node.js API) ─────────────────────────────
+  phs-cdp-bff:
+    build:
+      context: ./phs-cdp-bff
+      dockerfile: Dockerfile
+    container_name: phs_cdp_bff
+    restart: unless-stopped
+    depends_on:
+      cdp-postgres:
+        condition: service_healthy
+    ports:
+      - "${BFF_PORT:-3001}:3001"
+    environment:
+      NODE_ENV: ${NODE_ENV:-production}
+      PORT: 3001
+      # CDP Profile Store
+      CDP_DB_HOST: cdp-postgres
+      CDP_DB_PORT: 5432
+      CDP_DB_NAME: ${CDP_DB_NAME:-cdp_profiles}
+      CDP_DB_USER: ${CDP_DB_USER:-cdp}
+      CDP_DB_PASSWORD: ${CDP_DB_PASSWORD}
+      # Mautic (use Docker service name, not host IP)
+      MAUTIC_BASE_URL: http://mautic:80
+      MAUTIC_USERNAME: ${MAUTIC_USERNAME:-phs_admin}
+      MAUTIC_PASSWORD: ${MAUTIC_PASSWORD}
+      # RudderStack
+      RUDDERSTACK_DATA_PLANE_URL: http://rudder-server:8080
+      RUDDERSTACK_WEBHOOK_SECRET: ${RUDDERSTACK_WEBHOOK_SECRET}
+      # App
+      USE_MOCK: ${USE_MOCK:-false}
+      CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:8811,http://100.117.24.87:8811}
+      JWT_SECRET: ${JWT_SECRET}
+      RATE_LIMIT_MAX_REQUESTS: ${RATE_LIMIT_MAX_REQUESTS:-500}
+    networks:
+      - cdp_network
+    mem_limit: 512m
+    mem_reservation: 256m
+
+  # ── PHS CDP UI (nginx) ────────────────────────────────────
+  phs-cdp-ui:
+    build:
+      context: ./phs-cdp-ui
+      dockerfile: Dockerfile
+    container_name: phs_cdp_ui
+    restart: unless-stopped
+    depends_on:
+      - phs-cdp-bff
+    ports:
+      - "${UI_PORT:-8811}:80"
+    networks:
+      - cdp_network
+    mem_limit: 256m
+    mem_reservation: 128m

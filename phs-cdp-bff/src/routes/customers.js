@@ -168,4 +168,58 @@ router.get('/:id/events', requireRole('viewer'), async (req, res) => {
   res.json({ data: events, total: events.length, source: 'mock' });
 });
 
+// ── POST /api/customers/identify ──────────────────────────────────────────────
+// Direct identity resolution endpoint — called by frontend/app SDK
+// Bypasses RudderStack webhook limitation in self-hosted mode
+router.post('/identify', async (req, res) => {
+  try {
+    const { userId, anonymousId, traits = {} } = req.body;
+    if (!userId && !anonymousId) {
+      return res.status(400).json({ error: 'userId or anonymousId required' });
+    }
+
+    const CustomerService = require('../services/CustomerService');
+
+    if (userId) {
+      const customer = await CustomerService.upsertProfile(userId, traits, anonymousId);
+      return res.json({ status: 'ok', customer });
+    }
+
+    // Anonymous only — record but don't create full profile
+    return res.json({ status: 'ok', anonymousId, action: 'anonymous_tracked' });
+  } catch (err) {
+    console.error('[customers/identify] Error:', err.message);
+    res.status(500).json({ error: 'Identity resolution failed' });
+  }
+});
+
+// ── POST /api/customers/track ──────────────────────────────────────────────
+// Direct event tracking endpoint
+router.post('/track', async (req, res) => {
+  try {
+    const { userId, anonymousId, event, properties = {} } = req.body;
+    if (!event) return res.status(400).json({ error: 'event name required' });
+
+    const CustomerService = require('../services/CustomerService');
+    let customer = null;
+    if (userId) {
+      customer = await CustomerService.findByUserId(userId);
+      if (!customer) customer = await CustomerService.upsertProfile(userId, {}, anonymousId);
+    }
+
+    const result = await CustomerService.recordEvent(
+      customer?.id || null,
+      anonymousId || null,
+      event,
+      properties,
+      'web',
+      null
+    );
+    return res.json({ status: 'ok', result });
+  } catch (err) {
+    console.error('[customers/track] Error:', err.message);
+    res.status(500).json({ error: 'Event tracking failed' });
+  }
+});
+
 module.exports = router;

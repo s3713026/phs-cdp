@@ -63,7 +63,7 @@ services:
     ports:
       - "${RS_PORT:-8082}:8080"
     volumes:
-      - ./phs-cdp-bff/workspaceConfig.json:/etc/rudderstack/workspaceConfig.json:ro
+      - ./rudderstack/workspaceConfig.json:/etc/rudderstack/workspaceConfig.json:ro
     environment:
       JOBS_DB_HOST: rudder-postgres
       JOBS_DB_PORT: "5432"
@@ -75,14 +75,9 @@ services:
       RSERVER_JOBS_DB_DB_NAME: ${RS_DB_NAME:-jobsdb}
       RSERVER_JOBS_DB_USER: ${RS_DB_USER:-rudder}
       RSERVER_JOBS_DB_PASSWORD: ${RS_DB_PASSWORD:-rudderpassword}
-      RSERVER_BACKEND_CONFIG_CACHE_DB_HOST: rudder-postgres
-      RSERVER_BACKEND_CONFIG_CACHE_DB_PORT: "5432"
-      RSERVER_BACKEND_CONFIG_CACHE_DB_NAME: ${RS_DB_NAME:-jobsdb}
-      RSERVER_BACKEND_CONFIG_CACHE_DB_USER: ${RS_DB_USER:-rudder}
-      RSERVER_BACKEND_CONFIG_CACHE_DB_PASSWORD: ${RS_DB_PASSWORD:-rudderpassword}
-      RSERVER_BACKEND_CONFIG_CACHE_DSN: "postgres://${RS_DB_USER:-rudder}:${RS_DB_PASSWORD:-rudderpassword}@rudder-postgres:5432/${RS_DB_NAME:-jobsdb}?sslmode=disable"
       RSERVER_BACKEND_CONFIG_CONFIG_FROM_FILE: "true"
       RSERVER_BACKEND_CONFIG_CONFIG_JSONPATH: /etc/rudderstack/workspaceConfig.json
+      RSERVER_BACKEND_CONFIG_DB_CACHE_ENABLED: "false"
       DEST_TRANSFORM_URL: http://rudder-transformer:9090
       RSERVER_DEST_TRANSFORM_URL: http://rudder-transformer:9090
       RUDDER_ADMIN_PASSWORD: ${RS_ADMIN_PASSWORD:-PHS@Rudder2024!}
@@ -90,6 +85,8 @@ services:
       ROUTER_CONFIG_MAX_WORKERS: "4"
       BATCH_ROUTER_MAX_WORKERS: "4"
       RSERVER_WAREHOUSE_MODE: "off"
+      RSERVER_PROCESSOR_ISOLATION_MODE: "none"
+      RSERVER_ARCHIVAL_ENABLED: "false"
     networks:
       - cdp_network
     mem_limit: 768m

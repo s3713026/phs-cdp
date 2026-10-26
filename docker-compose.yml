@@ -87,6 +87,14 @@ services:
       RSERVER_WAREHOUSE_MODE: "off"
       RSERVER_PROCESSOR_ISOLATION_MODE: "none"
       RSERVER_ARCHIVAL_ENABLED: "false"
+            # Dataset control - prevent runaway dataset creation
+      RSERVER_JOBS_DB_MAX_DS_SIZE: "10000"
+      RSERVER_JOBS_DB_GW_DB_MAX_DS_SIZE: "10000"
+      RSERVER_JOBS_DB_MIGRATION_MODE: "normal"
+      RSERVER_JOBS_DB_SKIP_MIGRATIONS: "false"
+      RSERVER_PROCESSOR_READ_SIZE_IN_MB: "10"
+      RSERVER_PROCESSOR_MAX_LOOP_SLEEP: "5s"
+      RSERVER_ROUTER_MAX_SLEEP_IN_S: "5"
     networks:
       - cdp_network
     mem_limit: 768m

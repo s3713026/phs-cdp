@@ -526,6 +526,46 @@
   padding: var(--space-1) var(--space-3);
 }
 
+.c360-risk-momentum-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 7px 12px;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  font-size: var(--text-xs);
+  font-weight: var(--weight-semibold);
+  line-height: 1.4;
+  white-space: nowrap;
+}
+
+.c360-risk-momentum-tag i {
+  width: 15px;
+  height: 15px;
+  flex-shrink: 0;
+}
+
+/* Mức điểm hiện tại: vùng xanh của gauge */
+.c360-risk-momentum-tag[data-risk-level="low"] {
+  color: #18794e;
+  background: #e8f5ec;
+  border-color: #b7e1c3;
+}
+
+/* Mức điểm hiện tại: vùng vàng/cam của gauge */
+.c360-risk-momentum-tag[data-risk-level="medium"] {
+  color: #956000;
+  background: #fff4d6;
+  border-color: #f0d58a;
+}
+
+/* Mức điểm hiện tại: vùng đỏ của gauge */
+.c360-risk-momentum-tag[data-risk-level="high"] {
+  color: #b42318;
+  background: #fdebea;
+  border-color: #f3b8b4;
+}
+
 /* ---- Population Context section wrapper (native <details>) ---- */
 .c360-population-section > summary {
   cursor: pointer;

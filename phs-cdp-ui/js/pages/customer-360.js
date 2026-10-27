@@ -290,6 +290,37 @@ function dnaTrendBadgeHTML(profile) {
   return `${dnaTrendLabel(profile.dna_trend)} <span class="badge ${profile.dna_trend_confirmed ? "badge--neutral" : "badge--warning"}" style="font-size: 10px;">${profile.dna_trend_confirmed ? "Confirmed" : "Pending confirmation"}</span>`;
 }
 
+function getDnaMomentum(history, sessionCount = 20) {
+  const points = history.slice(-sessionCount);
+
+  if (points.length < 2) {
+    return {
+      direction: "flat",
+      label: "Chưa đủ dữ liệu",
+      delta: 0,
+      sessions: points.length,
+    };
+  }
+
+  const delta = points[points.length - 1].score - points[0].score;
+
+  // Giảm nhiễu: chênh lệch từ -1 đến +1 được xem là đi ngang.
+  const direction =
+    delta > 1 ? "increasing" :
+      delta < -1 ? "decreasing" :
+        "flat";
+
+  return {
+    direction,
+    label:
+      direction === "increasing" ? "Đà tăng khẩu vị rủi ro" :
+        direction === "decreasing" ? "Đà giảm khẩu vị rủi ro" :
+          "Khẩu vị rủi ro đi ngang",
+    delta,
+    sessions: points.length,
+  };
+}
+
 function dnaTrendMarkersHTML(reviews, rangePoints) {
   if (!reviews.length) return "";
   const rangeDates = new Set(rangePoints.map((p) => p.date));
@@ -408,9 +439,11 @@ function dnaCampaignTestingHTML(readiness) {
     </div>`;
 }
 
+
 function renderDnaRiskAppetite(c) {
   const mount = document.querySelector("[data-c360-dna]");
   if (!mount) return;
+
   const profile = getDnaProfile(c.id);
 
   if (!profile.available) {
@@ -419,58 +452,219 @@ function renderDnaRiskAppetite(c) {
     return;
   }
 
+  // Tính momentum dựa trên 20 phiên gần nhất.
+  const momentum = getDnaMomentum(profile.history, 20);
+
+  // Render nội dung DNA Profile và biểu đồ.
   mount.innerHTML = `
     <div class="c360-dna-top">
       <div>
-        ${renderDnaGaugeHTML({ score: profile.dna_score, band: profile.dna_band })}
-        <p style="font-size: var(--text-xs); color: var(--text-tertiary); margin-top: var(--space-3); text-align: center;" data-tooltip="Reflects the model's risk-seeking profile only — not a guarantee of investment suitability or loss tolerance." data-tooltip-pos="bottom">
-          <i data-lucide="info" style="width: 11px; height: 11px; vertical-align: -1px;"></i>
+        ${renderDnaGaugeHTML({
+          score: profile.dna_score,
+          band: profile.dna_band
+        })}
+
+        <p
+          style="font-size: var(--text-xs); color: var(--text-tertiary); margin-top: var(--space-3); text-align: center;"
+          data-tooltip="Reflects the model's risk-seeking profile only — not a guarantee of investment suitability or loss tolerance."
+          data-tooltip-pos="bottom"
+        >
+          <i
+            data-lucide="info"
+            style="width: 11px; height: 11px; vertical-align: -1px;"
+          ></i>
           Risk-seeking profile only — not a suitability guarantee.
         </p>
       </div>
+
       <div>
-        <p class="subhead" style="margin-bottom: var(--space-3);">Current DNA Profile</p>
+        <p class="subhead" style="margin-bottom: var(--space-3);">
+          Current DNA Profile
+        </p>
+
         <div class="c360-relative-summary" style="margin-bottom: 0;">
           <div class="c360-relative-summary__item">
-            <span class="c360-relative-summary__label">Current DNA Score <span style="font-weight: var(--weight-regular);">(as of ${profile.dna_last_scored})</span></span>
-            <span class="c360-relative-summary__value">${profile.dna_score} / 100</span>
+            <span class="c360-relative-summary__label">
+              Current DNA Score
+              <span style="font-weight: var(--weight-regular);">
+                (as of ${profile.dna_last_scored})
+              </span>
+            </span>
+            <span class="c360-relative-summary__value">
+              ${profile.dna_score} / 100
+            </span>
           </div>
-          <div class="c360-relative-summary__item"><span class="c360-relative-summary__label">DNA Band</span><span class="c360-relative-summary__value">${profile.dna_band.label}</span></div>
+
           <div class="c360-relative-summary__item">
-            <span class="c360-relative-summary__label" data-tooltip="The model-level trend, confirmed only after two consecutive monthly reviews agree — distinct from short-term movement in the chart below." data-tooltip-pos="bottom">Model DNA Trend</span>
-            <span class="c360-relative-summary__value">${dnaTrendBadgeHTML(profile)}</span>
+            <span class="c360-relative-summary__label">DNA Band</span>
+            <span class="c360-relative-summary__value">
+              ${profile.dna_band.label}
+            </span>
           </div>
-          <div class="c360-relative-summary__item"><span class="c360-relative-summary__label">Last Scoring Date</span><span class="c360-relative-summary__value">${profile.dna_last_scored}</span></div>
-          <div class="c360-relative-summary__item"><span class="c360-relative-summary__label">Last Monthly Review</span><span class="c360-relative-summary__value">${profile.dna_last_reviewed || "Not available in demo data"}</span></div>
-          <div class="c360-relative-summary__item"><span class="c360-relative-summary__label">DNA Lifecycle</span><span class="c360-relative-summary__value">${profile.dna_lifecycle_stage}</span></div>
+
+          <div class="c360-relative-summary__item">
+            <span
+              class="c360-relative-summary__label"
+              data-tooltip="The model-level trend, confirmed only after two consecutive monthly reviews agree — distinct from short-term movement in the chart below."
+              data-tooltip-pos="bottom"
+            >
+              Model DNA Trend
+            </span>
+            <span class="c360-relative-summary__value">
+              ${dnaTrendBadgeHTML(profile)}
+            </span>
+          </div>
+
+          <div class="c360-relative-summary__item">
+            <span class="c360-relative-summary__label">Last Scoring Date</span>
+            <span class="c360-relative-summary__value">
+              ${profile.dna_last_scored}
+            </span>
+          </div>
+
+          <div class="c360-relative-summary__item">
+            <span class="c360-relative-summary__label">Last Monthly Review</span>
+            <span class="c360-relative-summary__value">
+              ${profile.dna_last_reviewed || "Not available in demo data"}
+            </span>
+          </div>
+
+          <div class="c360-relative-summary__item">
+            <span class="c360-relative-summary__label">DNA Lifecycle</span>
+            <span class="c360-relative-summary__value">
+              ${profile.dna_lifecycle_stage}
+            </span>
+          </div>
         </div>
       </div>
     </div>
-    <div data-dna-block="trend" style="margin-bottom: var(--space-6);">
-      <div class="cluster" style="justify-content: space-between; align-items: center; flex-wrap: wrap; gap: var(--space-3); margin-bottom: var(--space-3);">
-        <p class="subhead" style="margin-bottom: 0;">DNA Score Trend <span style="font-weight: var(--weight-regular); color: var(--text-tertiary);">— 0–100 scale</span></p>
-        ${chartSwitchHTML("dna-trend-range", [{ id: "7d", label: "7D" }, { id: "30d", label: "30D" }, { id: "60s", label: "60 Sessions" }, { id: "90d", label: "90D" }], "30d")}
+
+    <div
+      data-dna-block="trend"
+      style="margin-bottom: var(--space-6);"
+    >
+      <div
+        class="cluster"
+        style="justify-content: space-between; align-items: center; flex-wrap: wrap; gap: var(--space-3); margin-bottom: var(--space-3);"
+      >
+        <p class="subhead" style="margin-bottom: 0;">
+          DNA Score Trend
+          <span style="font-weight: var(--weight-regular); color: var(--text-tertiary);">
+            — 0–100 scale
+          </span>
+        </p>
+
+        ${chartSwitchHTML(
+          "dna-trend-range",
+          [
+            { id: "7d", label: "7D" },
+            { id: "30d", label: "30D" },
+            { id: "60s", label: "60 Sessions" },
+            { id: "90d", label: "90D" }
+          ],
+          "30d"
+        )}
       </div>
+
       <div data-chart-content="dna-trend"></div>
-      <p style="font-size: var(--text-xs); color: var(--text-tertiary); margin-top: var(--space-3);">Chart shows raw scoring-session history for the selected range only, on the full documented 0–100 scale — a separate measure from the Model DNA Trend above, which only updates after two consecutive monthly reviews agree on direction.</p>
+
+      <p style="font-size: var(--text-xs); color: var(--text-tertiary); margin-top: var(--space-3);">
+        Chart shows raw scoring-session history for the selected range only,
+        on the full documented 0–100 scale — a separate measure from the
+        Model DNA Trend above, which only updates after two consecutive
+        monthly reviews agree on direction.
+      </p>
     </div>`
-     /*`<div style="margin-bottom: var(--space-6);">
+
+    /*
+    <div style="margin-bottom: var(--space-6);">
       ${dnaScoringBreakdownHTML(profile)}
     </div>
 
     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: var(--space-5);">
       ${dnaCampaignReadinessHTML(getCampaignReadiness(profile, c.consent))}
       ${dnaCampaignTestingHTML(getCampaignReadiness(profile, c.consent))}
-    </div>`*/
+    </div>
+    */
   ;
 
+  // Cập nhật tag sau khi đã render xong nội dung.
+  // Tag này nằm ngoài mount nên không bị mount.innerHTML ghi đè.
+  const momentumTag = document.querySelector("[data-dna-momentum-tag]");
+
+  if (momentumTag) {
+    const score = Number(profile.dna_score);
+
+    // Màu tag theo mức điểm hiện tại.
+    const riskLevel =
+      score <= 34 ? "low" :
+      score <= 69 ? "medium" :
+      "high";
+
+    // Map trạng thái sang icon Lucide.
+    const iconMap = {
+      increasing: "trending-up",
+      decreasing: "trending-down",
+      flat: "minus"
+    };
+
+    const icon = iconMap[momentum.direction] || "minus";
+
+    momentumTag.dataset.direction = momentum.direction;
+    momentumTag.dataset.riskLevel = riskLevel;
+
+    // Thay toàn bộ icon cũ, kể cả khi Lucide đã chuyển i thành svg.
+    const iconEl = momentumTag.querySelector("i, svg");
+
+    if (iconEl) {
+      iconEl.outerHTML = `
+        <i data-lucide="${icon}" aria-hidden="true"></i>
+      `;
+    } else {
+      // Nếu tag chưa có icon, thêm icon mới vào đầu tag.
+      momentumTag.insertAdjacentHTML(
+        "afterbegin",
+        `<i data-lucide="${icon}" aria-hidden="true"></i>`
+      );
+    }
+
+    const labelEl = momentumTag.querySelector(
+      "[data-dna-momentum-label]"
+    );
+
+    if (labelEl) {
+      const delta = Number(momentum.delta) || 0;
+      const deltaText = delta > 0 ? `+${delta}` : `${delta}`;
+
+      labelEl.textContent =
+        `${momentum.label} (${deltaText} điểm / ${momentum.sessions} phiên)`;
+    }
+  }
+
+  // Khởi tạo lại icon Lucide sau khi thay icon trong DOM.
   const trendBlock = mount.querySelector('[data-dna-block="trend"]');
-  const trendContent = trendBlock.querySelector('[data-chart-content="dna-trend"]');
-  renderDnaTrendInto(trendContent, profile, "30d");
-  wireChartSwitch(trendBlock, "dna-trend-range", (windowKey) => renderDnaTrendInto(trendContent, profile, windowKey));
+
+  if (trendBlock) {
+    const trendContent = trendBlock.querySelector(
+      '[data-chart-content="dna-trend"]'
+    );
+
+    if (trendContent) {
+      renderDnaTrendInto(trendContent, profile, "30d");
+
+      wireChartSwitch(
+        trendBlock,
+        "dna-trend-range",
+        (windowKey) => {
+          renderDnaTrendInto(trendContent, profile, windowKey);
+        }
+      );
+    }
+  }
 
   refreshIcons();
 }
+
 
 /* ---------------------------------------------------------------- */
 /* Tab 1 — Identity Resolution + Attributes                          */
@@ -590,8 +784,8 @@ function renderTimeline(c) {
   mount.innerHTML = `
     <div class="timeline timeline--rich">
       ${events
-        .map(
-          (ev, i) => `
+      .map(
+        (ev, i) => `
         <div class="timeline__item" data-event-index="${i}">
           <div class="timeline__rail">
             <span class="timeline__dot ${CATEGORY_DOT_CLASS[ev.category]}"></span>
@@ -604,15 +798,14 @@ function renderTimeline(c) {
               ${ev.status ? `<span class="badge badge--success timeline__status">${ev.status}</span>` : ""}
             </div>
             <p class="timeline__time">${ev.date} · ${ev.time}</p>
-            ${
-              ev.props.length
-                ? `<div class="timeline__props">${ev.props.map((p) => `<span class="timeline__prop">${p}</span>`).join("")}</div>`
-                : ""
-            }
+            ${ev.props.length
+            ? `<div class="timeline__props">${ev.props.map((p) => `<span class="timeline__prop">${p}</span>`).join("")}</div>`
+            : ""
+          }
           </div>
         </div>`
-        )
-        .join("")}
+      )
+      .join("")}
     </div>
   `;
 
@@ -821,8 +1014,8 @@ function renderCampaignsJourneys(c) {
 
   const notEnrolledBlock = notEnrolled.length
     ? `<div class="panel" style="background: var(--surface-sunken); margin-bottom: var(--space-6);">${notEnrolled
-        .map((n) => `<p style="font-size: var(--text-xs); color: var(--text-secondary); margin: 0;"><strong>${n.name}</strong> — ${n.reason}</p>`)
-        .join("")}</div>`
+      .map((n) => `<p style="font-size: var(--text-xs); color: var(--text-secondary); margin: 0;"><strong>${n.name}</strong> — ${n.reason}</p>`)
+      .join("")}</div>`
     : "";
 
   mount.innerHTML =
@@ -1282,8 +1475,8 @@ function ekycTableHTML(records, c) {
         </thead>
         <tbody>
           ${records
-            .map(
-              (r) => `
+      .map(
+        (r) => `
           <tr data-ekyc-row="${r.id}" tabindex="0" role="button" style="cursor:pointer;">
             <td class="cell-primary">${r.step}</td>
             <td class="cell-muted">${r.error || "—"}</td>
@@ -1294,8 +1487,8 @@ function ekycTableHTML(records, c) {
             <td class="cell-muted">${r.callOutcome || "—"}</td>
             <td><i class="row-affordance" data-lucide="chevron-right"></i></td>
           </tr>`
-            )
-            .join("")}
+      )
+      .join("")}
         </tbody>
       </table>
     </div>`;
@@ -1369,8 +1562,8 @@ function ticketTableHTML(tickets, c) {
         </thead>
         <tbody>
           ${tickets
-            .map(
-              (t) => `
+      .map(
+        (t) => `
           <tr data-ticket-row="${t.id}" tabindex="0" role="button" style="cursor:pointer;">
             <td class="cell-primary font-mono">${t.code}</td>
             <td class="cell-muted">${t.createdDate}</td>
@@ -1381,8 +1574,8 @@ function ticketTableHTML(tickets, c) {
             <td class="cell-muted">${t.assignedTo || "—"}</td>
             <td><i class="row-affordance" data-lucide="chevron-right"></i></td>
           </tr>`
-            )
-            .join("")}
+      )
+      .join("")}
         </tbody>
       </table>
     </div>`;
@@ -1619,11 +1812,10 @@ function renderDeviceBreakdown(c) {
       <p class="subhead" style="margin-bottom: var(--space-3);">Device Breakdown</p>
       ${chartSwitchHTML("devicebreakdown", [{ id: "donut", label: "Donut" }, { id: "bar", label: "Horizontal Bar" }], "donut")}
       <div data-chart-content="devicebreakdown">${deviceContentHTML(c, "donut")}</div>
-      <p style="font-size: var(--text-xs); color: var(--text-tertiary); margin-top: var(--space-3);">${
-        anyKnownDevice
-          ? "Derived from this customer's own recorded events. API/Email/In-App events are not a customer device signal and are counted as Unknown rather than guessed."
-          : "Device OS is not tracked in this customer's underlying record — every event is correctly shown as Unknown Device rather than a guessed OS."
-      }</p>
+      <p style="font-size: var(--text-xs); color: var(--text-tertiary); margin-top: var(--space-3);">${anyKnownDevice
+      ? "Derived from this customer's own recorded events. API/Email/In-App events are not a customer device signal and are counted as Unknown rather than guessed."
+      : "Device OS is not tracked in this customer's underlying record — every event is correctly shown as Unknown Device rather than a guessed OS."
+    }</p>
     </div>`;
 }
 
@@ -1993,10 +2185,10 @@ function renderOutcomeHistory(c) {
     `
     <div class="timeline">
       ${rows
-        .map((r) => {
-          const when = new Date(r.at);
-          const whenLabel = Number.isNaN(when.getTime()) ? r.at : when.toLocaleString("en-US", { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" });
-          return `
+      .map((r) => {
+        const when = new Date(r.at);
+        const whenLabel = Number.isNaN(when.getTime()) ? r.at : when.toLocaleString("en-US", { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" });
+        return `
         <div class="timeline__item">
           <div class="timeline__rail"><span class="timeline__dot ${OUTCOME_DOT_CLASS[r.status] || ""}"></span><span class="timeline__line"></span></div>
           <div class="timeline__content">
@@ -2004,8 +2196,8 @@ function renderOutcomeHistory(c) {
             <p class="timeline__time">${whenLabel} · stored in this browser only</p>
           </div>
         </div>`;
-        })
-        .join("")}
+      })
+      .join("")}
     </div>`;
 }
 
@@ -2032,8 +2224,8 @@ function initConsentHistory() {
     body.innerHTML = `
       <div class="timeline">
         ${currentCustomer.consentHistory
-          .map(
-            (h) => `
+        .map(
+          (h) => `
           <div class="timeline__item">
             <div class="timeline__rail"><span class="timeline__dot timeline__dot--info"></span><span class="timeline__line"></span></div>
             <div class="timeline__content">
@@ -2041,8 +2233,8 @@ function initConsentHistory() {
               <p class="timeline__time">${h.date} · ${h.source}</p>
             </div>
           </div>`
-          )
-          .join("")}
+        )
+        .join("")}
       </div>`;
   });
 }
@@ -2157,8 +2349,8 @@ function renderResultsView(query, field, results) {
         </thead>
         <tbody>
           ${results
-            .map(
-              (c) => `
+      .map(
+        (c) => `
           <tr data-detail-row data-result-id="${c.id}">
             <td class="cell-primary font-mono">${c.id}</td>
             <td class="font-mono cell-muted">${maskCrmId(c.crmId)}</td>
@@ -2167,8 +2359,8 @@ function renderResultsView(query, field, results) {
             <td class="cell-muted">${c.lastActive}</td>
             <td><i class="row-affordance" data-lucide="chevron-right"></i></td>
           </tr>`
-            )
-            .join("")}
+      )
+      .join("")}
         </tbody>
       </table>
     </div>`;
@@ -2286,14 +2478,14 @@ function initCustomerSwitcher() {
   function showResults(list) {
     results.innerHTML = list.length
       ? list
-          .map(
-            (c) => `
+        .map(
+          (c) => `
         <button class="dropdown__item" role="menuitem" data-result-id="${c.id}" style="flex-direction: column; align-items: flex-start; gap: 0;">
           <span style="font-weight: var(--weight-medium); color: var(--text-primary);">${c.name}</span>
           <span class="font-mono" style="font-size: 11px; color: var(--text-tertiary);">${c.crmId}${c.accessLevel === "restricted" ? " · Restricted" : ""}</span>
         </button>`
-          )
-          .join("")
+        )
+        .join("")
       : `<div class="dropdown__label">No customers found</div>`;
     results.querySelectorAll("[data-result-id]").forEach((btn) => {
       btn.addEventListener("click", () => {

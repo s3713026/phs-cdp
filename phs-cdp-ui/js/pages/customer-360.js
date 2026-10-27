@@ -36,7 +36,8 @@ import {
   getNotEnrolledNotesForCustomer,
 } from "../data/customer-360-engagement.js";
 import { renderLineChart } from "../components/chart.js";
-import { chartSwitchHTML, wireChartSwitch, renderHeatmapHTML, renderDonutHTML } from "./customer-360-charts.js";
+import { chartSwitchHTML, wireChartSwitch, renderHeatmapHTML, renderDonutHTML, renderDnaGaugeHTML } from "./customer-360-charts.js";
+import { getDnaProfile, filterHistoryByWindow, DNA_WEIGHTS, factorLabel, getCampaignReadiness, trendLabel as dnaTrendLabel } from "../data/customer-360-dna.js";
 // Shared RFM engine (js/data/rfm/) — the SAME module the RFM Analysis
 // page uses. Customer 360 never computes its own RFM score.
 import { loadRfmConfig } from "../data/rfm/config.js";
@@ -275,6 +276,200 @@ function renderJourney(c) {
       <div class="attr-item"><span class="attr-item__label">Next Likely Stage</span><span class="attr-item__value">${c.journey.nextLikelyStage}</span></div>
     </div>
   `;
+}
+
+/* ==================================================================== */
+/* Investment Risk Appetite — Customer DNA. Data/scoring/anti-flip      */
+/* logic lives entirely in js/data/customer-360-dna.js; this section    */
+/* only renders it and wires the trend-chart range control. See that    */
+/* file's header for the consistency-by-construction rationale.         */
+/* ==================================================================== */
+
+function dnaTrendBadgeHTML(profile) {
+  if (!profile.dna_trend) return `<span class="badge badge--neutral">Not available</span>`;
+  return `${dnaTrendLabel(profile.dna_trend)} <span class="badge ${profile.dna_trend_confirmed ? "badge--neutral" : "badge--warning"}" style="font-size: 10px;">${profile.dna_trend_confirmed ? "Confirmed" : "Pending confirmation"}</span>`;
+}
+
+function dnaTrendMarkersHTML(reviews, rangePoints) {
+  if (!reviews.length) return "";
+  const rangeDates = new Set(rangePoints.map((p) => p.date));
+  const visible = reviews.filter((r) => rangeDates.has(r.date));
+  if (!visible.length) return `<p style="font-size: var(--text-xs); color: var(--text-tertiary); margin-top: var(--space-2);">No monthly review falls within the selected range.</p>`;
+  return `<div class="c360-dna-reviews">${visible
+    .map((r) => `<span class="c360-dna-review-chip"><i data-lucide="calendar-check-2" style="width: 11px; height: 11px;"></i>${r.date} — ${r.band} (${r.score})</span>`)
+    .join("")}</div>`;
+}
+
+function renderDnaTrendInto(contentEl, profile, windowKey) {
+  const points = filterHistoryByWindow(profile.history, windowKey);
+  if (!points.length) {
+    contentEl.innerHTML = insufficientDataNote(`No scoring sessions recorded in this range for this customer (last scored ${profile.dna_last_scored}). Try "60 Sessions".`);
+    return;
+  }
+  const start = points[0];
+  const end = points[points.length - 1];
+  const change = end.score - start.score;
+  contentEl.innerHTML = `
+    <div class="attr-grid" style="margin-bottom: var(--space-4); grid-template-columns: repeat(4, 1fr);">
+      <div class="attr-item"><span class="attr-item__label">Starting Score</span><span class="attr-item__value tabular-nums">${start.score} <span style="color: var(--text-tertiary); font-weight: var(--weight-regular);">(${start.date})</span></span></div>
+      <div class="attr-item"><span class="attr-item__label">Latest Score</span><span class="attr-item__value tabular-nums">${end.score} <span style="color: var(--text-tertiary); font-weight: var(--weight-regular);">(${end.date})</span></span></div>
+      <div class="attr-item"><span class="attr-item__label">Change, Selected Range</span><span class="attr-item__value tabular-nums">${change > 0 ? "+" : ""}${change}</span></div>
+      <div class="attr-item">
+        <span class="attr-item__label" data-tooltip="Calculated only from the points shown in this selected range — NOT the confirmed Model DNA Trend shown above, and never implies two-consecutive-review confirmation." data-tooltip-pos="bottom">Range Movement <i data-lucide="info" style="width: 10px; height: 10px; vertical-align: -1px;"></i></span>
+        <span class="attr-item__value">${directionLabelForDiff(change)}</span>
+      </div>
+    </div>
+    <div class="c360-dna-trend-chart"><div data-dna-line-mount></div></div>
+    ${dnaTrendMarkersHTML(profile.monthlyReviews, points)}
+  `;
+  renderLineChart(contentEl.querySelector("[data-dna-line-mount]"), {
+    series: [{ name: "DNA Score", color: "var(--chart-blue)", values: points.map((p) => p.score) }],
+    labels: thinLabels(points.map((p) => p.date)),
+    formatValue: (n) => String(Math.round(n)),
+    yMax: 100,
+    yMin: 0,
+    yTicks: 5,
+  });
+  refreshIcons();
+}
+
+function directionLabelForDiff(diff) {
+  if (diff > 1) return "Up over this range";
+  if (diff < -1) return "Down over this range";
+  return "Flat over this range";
+}
+
+function dnaScoringBreakdownHTML(profile) {
+  const c = profile.components;
+  const weightRow = (label, weightPct, value) =>
+    `<div class="attr-item"><span class="attr-item__label">${label} Score · ${weightPct}%</span><span class="attr-item__value">${value !== undefined ? value : "Weight only"}</span></div>`;
+
+  const factorKeys = Object.keys(profile.factors || {});
+  const factorsHTML = factorKeys.length
+    ? `<details class="c360-population-section" style="margin-top: var(--space-3);">
+        <summary class="cluster gap-2" style="color: var(--text-secondary); font-size: var(--text-sm);"><i data-lucide="chevron-right"></i>Available scoring factors (${factorKeys.length})</summary>
+        <div class="attr-grid" style="margin-top: var(--space-3);">
+          ${factorKeys.map((k) => `<div class="attr-item"><span class="attr-item__label">${factorLabel(k)}</span><span class="attr-item__value">${profile.factors[k]}</span></div>`).join("")}
+        </div>
+      </details>`
+    : "";
+
+  const checkLine = c
+    ? `Risk ${c.risk} × 0.40 + Behavior ${c.behavior} × 0.40 + Style ${c.style} × 0.20 = ${(c.risk * DNA_WEIGHTS.risk + c.behavior * DNA_WEIGHTS.behavior + c.style * DNA_WEIGHTS.style).toFixed(1)} → rounded to ${profile.dna_score}.`
+    : "Component scores are not recorded for this customer — only the documented weights are shown.";
+
+  return `
+    <p class="subhead" style="margin-bottom: var(--space-3);">Scoring Breakdown</p>
+    <div class="attr-grid attr-grid--3" style="margin-bottom: var(--space-3);">
+      ${weightRow("Risk", 40, c?.risk)}
+      ${weightRow("Behavior", 40, c?.behavior)}
+      ${weightRow("Style", 20, c?.style)}
+    </div>
+    ${factorsHTML}
+    <p style="font-size: var(--text-xs); color: var(--text-tertiary); margin-top: var(--space-3);">${checkLine} No investment-product recommendation is implied by this breakdown.</p>
+  `;
+}
+
+function dnaCampaignReadinessHTML(readiness) {
+  const statusBadgeClass = { ready: "badge--success", pending: "badge--warning", ineligible: "badge--danger", data_unavailable: "badge--neutral" }[readiness.status];
+  return `
+    <div class="c360-signal-card">
+      <div class="c360-signal-card__header">
+        <span class="c360-signal-card__title">Campaign Readiness</span>
+        <span class="badge ${statusBadgeClass}">${readiness.statusLabel}</span>
+      </div>
+      <div class="attr-grid" style="margin-bottom: var(--space-2);">
+        <div class="attr-item"><span class="attr-item__label">Mapped Product Group</span><span class="attr-item__value">${readiness.productGroup}</span></div>
+        <div class="attr-item"><span class="attr-item__label">Trend Confirmation</span><span class="attr-item__value">${readiness.candidateSegment ? (readiness.trendConfirmed ? "Confirmed" : "Pending / not confirmed") : "Not available"}</span></div>
+        <div class="attr-item"><span class="attr-item__label">Candidate Segment</span><span class="attr-item__value font-mono" style="font-size: var(--text-xs);">${readiness.candidateSegment || "Not available"}</span></div>
+        <div class="attr-item"><span class="attr-item__label">Channel Consent (Marketing)</span><span class="attr-item__value">${readiness.consentStatus}</span></div>
+        <div class="attr-item"><span class="attr-item__label">Last Review Date</span><span class="attr-item__value">${readiness.lastReviewed}</span></div>
+      </div>
+      <p class="c360-signal-card__caveat">${readiness.explanation} DNA score does not equal campaign eligibility; confirmed trend does not guarantee channel consent; product mapping is a CRM/campaign use-case mapping, not personalized investment advice.</p>
+    </div>`;
+}
+
+function dnaCampaignTestingHTML(readiness) {
+  const statusBadgeClass = { ready: "badge--success", pending: "badge--warning", ineligible: "badge--danger", data_unavailable: "badge--neutral" }[readiness.status];
+  return `
+    <div class="c360-signal-card">
+      <div class="c360-signal-card__header">
+        <span class="c360-signal-card__title">Campaign Testing</span>
+        <span class="c360-synthetic-note"><i data-lucide="flask-conical"></i>Synthetic demo data</span>
+      </div>
+      <dl class="c360-dna-testing-kv">
+        <dt>candidate_segment</dt><dd>${readiness.candidateSegment || "null"}</dd>
+        <dt>required_condition</dt><dd>${readiness.requiredCondition}</dd>
+        <dt>anti_flip_condition</dt><dd>${readiness.antiFlipCondition}</dd>
+        <dt>channel_consent</dt><dd>${readiness.consentStatus}${readiness.consentEligible ? " (eligible)" : " (not eligible)"}</dd>
+        <dt>overall_readiness</dt><dd><span class="badge ${statusBadgeClass}" style="margin-left: 0;">${readiness.statusLabel}</span></dd>
+      </dl>
+      <p class="c360-signal-card__caveat">A "Ready for testing" result applies to this prototype's synthetic dataset only — it never implies production campaign eligibility, and nothing on this panel sends a message or activates a campaign.</p>
+    </div>`;
+}
+
+function renderDnaRiskAppetite(c) {
+  const mount = document.querySelector("[data-c360-dna]");
+  if (!mount) return;
+  const profile = getDnaProfile(c.id);
+
+  if (!profile.available) {
+    mount.innerHTML = insufficientDataNote(profile.unavailableReason);
+    refreshIcons();
+    return;
+  }
+
+  mount.innerHTML = `
+    <div class="c360-dna-top">
+      <div>
+        ${renderDnaGaugeHTML({ score: profile.dna_score, band: profile.dna_band })}
+        <p style="font-size: var(--text-xs); color: var(--text-tertiary); margin-top: var(--space-3); text-align: center;" data-tooltip="Reflects the model's risk-seeking profile only — not a guarantee of investment suitability or loss tolerance." data-tooltip-pos="bottom">
+          <i data-lucide="info" style="width: 11px; height: 11px; vertical-align: -1px;"></i>
+          Risk-seeking profile only — not a suitability guarantee.
+        </p>
+      </div>
+      <div>
+        <p class="subhead" style="margin-bottom: var(--space-3);">Current DNA Profile</p>
+        <div class="c360-relative-summary" style="margin-bottom: 0;">
+          <div class="c360-relative-summary__item">
+            <span class="c360-relative-summary__label">Current DNA Score <span style="font-weight: var(--weight-regular);">(as of ${profile.dna_last_scored})</span></span>
+            <span class="c360-relative-summary__value">${profile.dna_score} / 100</span>
+          </div>
+          <div class="c360-relative-summary__item"><span class="c360-relative-summary__label">DNA Band</span><span class="c360-relative-summary__value">${profile.dna_band.label}</span></div>
+          <div class="c360-relative-summary__item">
+            <span class="c360-relative-summary__label" data-tooltip="The model-level trend, confirmed only after two consecutive monthly reviews agree — distinct from short-term movement in the chart below." data-tooltip-pos="bottom">Model DNA Trend</span>
+            <span class="c360-relative-summary__value">${dnaTrendBadgeHTML(profile)}</span>
+          </div>
+          <div class="c360-relative-summary__item"><span class="c360-relative-summary__label">Last Scoring Date</span><span class="c360-relative-summary__value">${profile.dna_last_scored}</span></div>
+          <div class="c360-relative-summary__item"><span class="c360-relative-summary__label">Last Monthly Review</span><span class="c360-relative-summary__value">${profile.dna_last_reviewed || "Not available in demo data"}</span></div>
+          <div class="c360-relative-summary__item"><span class="c360-relative-summary__label">DNA Lifecycle</span><span class="c360-relative-summary__value">${profile.dna_lifecycle_stage}</span></div>
+        </div>
+      </div>
+    </div>
+    <div data-dna-block="trend" style="margin-bottom: var(--space-6);">
+      <div class="cluster" style="justify-content: space-between; align-items: center; flex-wrap: wrap; gap: var(--space-3); margin-bottom: var(--space-3);">
+        <p class="subhead" style="margin-bottom: 0;">DNA Score Trend <span style="font-weight: var(--weight-regular); color: var(--text-tertiary);">— 0–100 scale</span></p>
+        ${chartSwitchHTML("dna-trend-range", [{ id: "7d", label: "7D" }, { id: "30d", label: "30D" }, { id: "60s", label: "60 Sessions" }, { id: "90d", label: "90D" }], "30d")}
+      </div>
+      <div data-chart-content="dna-trend"></div>
+      <p style="font-size: var(--text-xs); color: var(--text-tertiary); margin-top: var(--space-3);">Chart shows raw scoring-session history for the selected range only, on the full documented 0–100 scale — a separate measure from the Model DNA Trend above, which only updates after two consecutive monthly reviews agree on direction.</p>
+    </div>`
+     /*`<div style="margin-bottom: var(--space-6);">
+      ${dnaScoringBreakdownHTML(profile)}
+    </div>
+
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: var(--space-5);">
+      ${dnaCampaignReadinessHTML(getCampaignReadiness(profile, c.consent))}
+      ${dnaCampaignTestingHTML(getCampaignReadiness(profile, c.consent))}
+    </div>`*/
+  ;
+
+  const trendBlock = mount.querySelector('[data-dna-block="trend"]');
+  const trendContent = trendBlock.querySelector('[data-chart-content="dna-trend"]');
+  renderDnaTrendInto(trendContent, profile, "30d");
+  wireChartSwitch(trendBlock, "dna-trend-range", (windowKey) => renderDnaTrendInto(trendContent, profile, windowKey));
+
+  refreshIcons();
 }
 
 /* ---------------------------------------------------------------- */
@@ -2206,6 +2401,7 @@ async function openDetail(id, { fromResults = false } = {}) {
   renderSummary(currentCustomer);
   renderProfileAnalytics(currentCustomer);
   renderJourney(currentCustomer);
+  renderDnaRiskAppetite(currentCustomer);
   renderIdentity(currentCustomer);
   renderAttributes(currentCustomer);
   renderBehavior(currentCustomer);

@@ -172,6 +172,67 @@ export function renderScatterHTML({ points, highlighted, xLabel, yLabel, xDomain
 }
 
 /* ------------------------------------------------------------------ */
+/* DNA Score gauge — semicircular arc, 0 (left) to 100 (right), fixed  */
+/* restrained green→yellow→red gradient (score MAGNITUDE only — this  */
+/* is never a "good/bad customer" scale, see the caller's helper text  */
+/* and note band badges are value-neutral, never colored by band).     */
+/* The pointer's angle is computed directly from the same score that   */
+/* is printed next to it, so they can never visually disagree.         */
+/* ------------------------------------------------------------------ */
+function polar(cx, cy, r, angleDeg) {
+  const rad = (angleDeg * Math.PI) / 180;
+  return { x: cx + r * Math.cos(rad), y: cy - r * Math.sin(rad) };
+}
+
+export function renderDnaGaugeHTML({ score, band }) {
+  const clamped = Math.max(0, Math.min(100, score));
+  const width = 220;
+  const cx = width / 2;
+  const cy = 108;
+  const r = 86;
+  const strokeWidth = 16;
+  const angleForScore = (s) => 180 - (s / 100) * 180;
+
+  const arcPath = `M ${cx - r} ${cy} A ${r} ${r} 0 0 1 ${cx + r} ${cy}`;
+
+  // Band-boundary ticks (35 / 50 / 70) — an accessibility aid so band
+  // edges never rely on the color gradient alone.
+  const boundaryTicks = [35, 50, 70]
+    .map((s) => {
+      const inner = polar(cx, cy, r - strokeWidth / 2 - 2, angleForScore(s));
+      const outer = polar(cx, cy, r + strokeWidth / 2 + 2, angleForScore(s));
+      return `<line x1="${inner.x.toFixed(1)}" y1="${inner.y.toFixed(1)}" x2="${outer.x.toFixed(1)}" y2="${outer.y.toFixed(1)}" class="c360-dna-gauge__boundary"></line>`;
+    })
+    .join("");
+
+  const needleTip = polar(cx, cy, r - strokeWidth / 2 - 6, angleForScore(clamped));
+
+  return `
+    <div class="c360-dna-gauge">
+      <svg class="c360-dna-gauge__svg" viewBox="0 0 ${width} ${cy + 22}" role="img" aria-label="Customer DNA Score gauge: ${clamped} out of 100, ${band.label} band">
+        <defs>
+          <linearGradient id="dnaGaugeGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stop-color="var(--chart-green)"></stop>
+            <stop offset="50%" stop-color="var(--chart-gold)"></stop>
+            <stop offset="100%" stop-color="var(--chart-red)"></stop>
+          </linearGradient>
+        </defs>
+        <path d="${arcPath}" fill="none" stroke="url(#dnaGaugeGradient)" stroke-width="${strokeWidth}" stroke-linecap="round"></path>
+        ${boundaryTicks}
+        <line x1="${cx}" y1="${cy}" x2="${needleTip.x.toFixed(1)}" y2="${needleTip.y.toFixed(1)}" class="c360-dna-gauge__needle"></line>
+        <circle cx="${cx}" cy="${cy}" r="5" class="c360-dna-gauge__hub"></circle>
+        <text x="${cx - r}" y="${cy + 18}" text-anchor="middle" class="c360-dna-gauge__tick">0</text>
+        <text x="${cx}" y="${cy - r - 8}" text-anchor="middle" class="c360-dna-gauge__tick">50</text>
+        <text x="${cx + r}" y="${cy + 18}" text-anchor="middle" class="c360-dna-gauge__tick">100</text>
+      </svg>
+      <div class="c360-dna-gauge__readout">
+        <span class="c360-dna-gauge__score">${clamped}<span class="c360-dna-gauge__score-unit">/100</span></span>
+        <span class="badge badge--neutral c360-dna-gauge__band"><i data-lucide="${band.icon}"></i>${band.label}</span>
+      </div>
+    </div>`;
+}
+
+/* ------------------------------------------------------------------ */
 /* Funnel — centered, decreasing-width bars. The "Horizontal Bar"      */
 /* switch variant is the EXACT same markup/data, just left-aligned —   */
 /* one calculation, two renderings, per the chart-switch contract.    */

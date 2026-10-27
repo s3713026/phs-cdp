@@ -575,3 +575,133 @@
   font-weight: var(--weight-semibold);
   color: var(--text-primary);
 }
+
+/* ==================================================================== */
+/* Investment Risk Appetite — Customer DNA                               */
+/* ==================================================================== */
+
+/* ---- Semicircular score gauge ---- */
+.c360-dna-gauge {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-2);
+}
+/* Scoped to the gauge's OWN svg element (a class on the <svg> tag
+   itself, set in js/pages/customer-360-charts.js) — NOT a descendant
+   selector. A former `.c360-dna-gauge svg` rule here also matched the
+   small band-icon <svg> that lucide.createIcons() renders inside the
+   badge below (.c360-dna-gauge__band > svg), and — because this file
+   loads after badge.css in css/main.css at equal selector specificity
+   — won the cascade over badge.css's `.badge svg { width:12px;
+   height:12px; }`, stretching that icon up to 240px and overlapping
+   the score/needle/band text. Fixed by only ever targeting the gauge
+   arc's own svg by class. */
+.c360-dna-gauge__svg {
+  width: 100%;
+  max-width: 240px;
+  height: auto;
+  display: block;
+}
+.c360-dna-gauge__boundary {
+  stroke: var(--surface-base);
+  stroke-width: 2;
+}
+.c360-dna-gauge__needle {
+  stroke: var(--color-ink-900);
+  stroke-width: 3;
+  stroke-linecap: round;
+}
+.c360-dna-gauge__hub {
+  fill: var(--color-ink-900);
+}
+.c360-dna-gauge__tick {
+  font-size: 11px;
+  fill: var(--text-tertiary);
+  font-family: var(--font-ui);
+}
+.c360-dna-gauge__readout {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-2);
+}
+.c360-dna-gauge__score {
+  font-size: var(--text-2xl);
+  font-weight: var(--weight-semibold);
+  color: var(--text-primary);
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+}
+.c360-dna-gauge__score-unit {
+  font-size: var(--text-sm);
+  font-weight: var(--weight-regular);
+  color: var(--text-tertiary);
+  margin-left: 2px;
+}
+.c360-dna-gauge__band {
+  font-size: var(--text-xs);
+}
+
+/* ---- Top layout: gauge (left) + current-profile summary (right) ---- */
+.c360-dna-top {
+  display: grid;
+  grid-template-columns: minmax(220px, 280px) 1fr;
+  gap: var(--space-8);
+  align-items: center;
+  margin-bottom: var(--space-6);
+}
+@media (max-width: 860px) {
+  .c360-dna-top {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ---- Trend chart width cap — the shared chart.js SVG keeps a fixed
+   680:240 aspect ratio and scales height from its container's width
+   (chart.css: `.chart-line svg { width:100%; height:auto; }`), so an
+   un-capped full-section-width container renders a much taller chart
+   than the other (narrower, 2-up) charts elsewhere on this page. This
+   caps width — not height directly — so the aspect ratio keeps the
+   chart's own geometry (axis ticks, dot/tooltip hit targets) correct;
+   it lands around 260–320px tall on desktop. ---- */
+.c360-dna-trend-chart {
+  max-width: 860px;
+}
+
+/* ---- Monthly review marker list, under the trend chart ---- */
+.c360-dna-reviews {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin-top: var(--space-3);
+}
+.c360-dna-review-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  font-size: var(--text-xs);
+  color: var(--text-secondary);
+  background: var(--surface-sunken);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-xs);
+  padding: var(--space-1) var(--space-2);
+}
+
+/* ---- Campaign Testing literal key/value block ---- */
+.c360-dna-testing-kv {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: var(--space-1) var(--space-3);
+  font-size: var(--text-xs);
+  margin: 0;
+}
+.c360-dna-testing-kv dt {
+  color: var(--text-tertiary);
+  font-family: var(--font-mono, monospace);
+}
+.c360-dna-testing-kv dd {
+  margin: 0;
+  color: var(--text-primary);
+  font-family: var(--font-mono, monospace);
+}

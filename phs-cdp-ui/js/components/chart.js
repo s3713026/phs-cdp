@@ -20,8 +20,16 @@
  *   caller with a small integer max (e.g. a handful of events/day) can pass
  *   a smaller tick count — with the default 4 steps, a small max rounds to
  *   visibly duplicated adjacent labels (e.g. "0, 1, 1, 2, 2").
+ * @param {number} [config.yMax] - fixed Y-axis maximum. Default (omitted):
+ *   unchanged for every existing caller — auto-scaled to 1.12x the series'
+ *   own max, so a modest data range fills most of the chart height. Pass
+ *   an explicit yMax when the series has a fixed, DOCUMENTED scale (e.g.
+ *   a 0–100 score) and auto-scaling to the visible data would visually
+ *   exaggerate a small movement by stretching it across the full height.
+ * @param {number} [config.yMin] - fixed Y-axis minimum (default 0,
+ *   unchanged for every existing caller that doesn't pass it).
  */
-export function renderLineChart(container, { series, labels, formatValue = String, yTicks = 4 }) {
+export function renderLineChart(container, { series, labels, formatValue = String, yTicks = 4, yMax, yMin = 0 }) {
   const width = 680;
   const height = 240;
   const padding = { top: 12, right: 8, bottom: 26, left: 54 };
@@ -30,8 +38,8 @@ export function renderLineChart(container, { series, labels, formatValue = Strin
 
   const allValues = series.flatMap((s) => s.values);
   const maxRaw = Math.max(...allValues);
-  const max = maxRaw * 1.12;
-  const min = 0;
+  const max = yMax !== undefined ? yMax : maxRaw * 1.12;
+  const min = yMin;
   const pointCount = labels.length;
 
   const x = (i) => padding.left + (pointCount === 1 ? 0 : (i / (pointCount - 1)) * innerW);

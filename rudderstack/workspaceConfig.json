@@ -1,0 +1,235 @@
+{
+  "sources": [
+    {
+      "id": "phs-web-source",
+      "name": "PHS Web App",
+      "writeKey": "phs_web_write_key_2024",
+      "enabled": true,
+      "sourceDefinitionId": "javascript",
+      "config": {},
+      "destinations": [
+        {
+          "destinationId": "phs-dest-warehouse"
+        },
+        {
+          "destinationId": "phs-dest-mautic"
+        },
+        {
+          "destinationId": "dest-cdp-bff-webhook"
+        },
+        {
+          "destinationId": "dest-mvkbe6ye-ic27"
+        },
+        {
+          "destinationId": "dest-mvkbqzcd-8yjn"
+        },
+        {
+          "destinationId": "dest-mvkbs5kr-x59x"
+        }
+      ]
+    },
+    {
+      "id": "phs-mobile-source",
+      "name": "PHS Mobile App",
+      "writeKey": "phs_mobile_write_key_2024",
+      "enabled": true,
+      "sourceDefinitionId": "android",
+      "config": {},
+      "destinations": [
+        {
+          "destinationId": "phs-dest-warehouse"
+        },
+        {
+          "destinationId": "phs-dest-mautic"
+        },
+        {
+          "destinationId": "dest-cdp-bff-webhook"
+        },
+        {
+          "destinationId": "dest-mvkbqzcd-8yjn"
+        },
+        {
+          "destinationId": "dest-mvkbrpmd-jvjn"
+        },
+        {
+          "destinationId": "dest-mvkc0lje-2l18"
+        },
+        {
+          "destinationId": "dest-mvkbs5kr-x59x"
+        }
+      ]
+    },
+    {
+      "id": "phs-server-source",
+      "name": "PHS Server Side",
+      "writeKey": "phs_server_write_key_2024",
+      "enabled": true,
+      "sourceDefinitionId": "node",
+      "config": {},
+      "destinations": [
+        {
+          "destinationId": "phs-dest-warehouse"
+        },
+        {
+          "destinationId": "dest-cdp-bff-webhook"
+        }
+      ]
+    },
+    {
+      "id": "src-mvkb0pfc-7qxc",
+      "name": "PHS JavaScript",
+      "writeKey": "phs_Javascript_mvkb0pfc",
+      "enabled": true,
+      "sourceDefinitionId": "Javascript",
+      "config": {},
+      "destinations": []
+    },
+    {
+      "id": "src-mvklyv1y-1tqc",
+      "name": "PHS Node",
+      "writeKey": "phs_Node_mvklyv1y",
+      "enabled": true,
+      "sourceDefinitionId": "Node",
+      "config": {},
+      "destinations": []
+    },
+    {
+      "id": "src-mvklzlwe-iiin",
+      "name": "PHS Postgres",
+      "writeKey": "phs_postgres_mvklzlwe",
+      "enabled": true,
+      "sourceDefinitionId": "postgres",
+      "config": {},
+      "destinations": []
+    }
+  ],
+  "destinations": [
+    {
+      "id": "phs-dest-warehouse",
+      "name": "PHS Data Warehouse",
+      "destinationDefinitionId": "POSTGRES",
+      "enabled": true,
+      "config": {
+        "host": "cdp-postgres",
+        "port": 5432,
+        "database": "cdp_profiles",
+        "user": "cdp"
+      }
+    },
+    {
+      "id": "phs-dest-mautic",
+      "name": "Mautic (Marketing Automation)",
+      "destinationDefinitionId": "MAUTIC",
+      "enabled": true,
+      "config": {
+        "baseUrl": "http://mautic:80",
+        "user": "phs_admin"
+      }
+    },
+    {
+      "id": "dest-cdp-bff-webhook",
+      "name": "PHS CDP Profile Store",
+      "destinationDefinitionId": "WEBHOOK",
+      "enabled": true,
+      "config": {
+        "webhookUrl": "http://phs-cdp-bff:3001/api/webhook/rudderstack",
+        "webhookMethod": "POST",
+        "headers": [
+          {
+            "from": "Content-Type",
+            "to": "application/json"
+          }
+        ]
+      }
+    },
+    {
+      "id": "dest-mvkbe6ye-ic27",
+      "name": "PHS Facebook Pixel",
+      "destinationDefinitionId": "FACEBOOK_PIXEL",
+      "enabled": true,
+      "config": {},
+      "transformationIds": [
+        "tf-pii-mask-external"
+      ]
+    },
+    {
+      "id": "dest-mvkbezfm-n1l1",
+      "name": "PHS Google Analytics 4 (GA4)",
+      "destinationDefinitionId": "GA4",
+      "enabled": true,
+      "config": {},
+      "transformationIds": [
+        "tf-pii-mask-external"
+      ]
+    },
+    {
+      "id": "dest-mvkbqzcd-8yjn",
+      "name": "PHS CleverTap",
+      "destinationDefinitionId": "CLEVERTAP",
+      "enabled": true,
+      "config": {},
+      "transformationIds": [
+        "tf-pii-mask-external"
+      ]
+    },
+    {
+      "id": "dest-mvkbrpmd-jvjn",
+      "name": "PHS Webhook",
+      "destinationDefinitionId": "WEBHOOK",
+      "enabled": true,
+      "config": {
+        "webhookUrl": "",
+        "method": "",
+        "authHeader": ""
+      }
+    },
+    {
+      "id": "dest-mvkbs5kr-x59x",
+      "name": "PHS OneSignal",
+      "destinationDefinitionId": "ONE_SIGNAL",
+      "enabled": true,
+      "config": {},
+      "transformationIds": [
+        "tf-pii-mask-external"
+      ]
+    },
+    {
+      "id": "dest-mvkc0lje-2l18",
+      "name": "PHS CleverTap",
+      "destinationDefinitionId": "CLEVERTAP",
+      "enabled": true,
+      "config": {},
+      "transformationIds": [
+        "tf-pii-mask-external"
+      ]
+    },
+    {
+      "id": "dest-mvkc1ili-l1yo",
+      "name": "PHS OneSignal",
+      "destinationDefinitionId": "ONE_SIGNAL",
+      "enabled": true,
+      "config": {},
+      "transformationIds": [
+        "tf-pii-mask-external"
+      ]
+    },
+    {
+      "id": "dest-mvkc2xaq-sbrm",
+      "name": "PHS OneSignal",
+      "destinationDefinitionId": "ONE_SIGNAL",
+      "enabled": true,
+      "config": {},
+      "transformationIds": [
+        "tf-pii-mask-external"
+      ]
+    }
+  ],
+  "destTransformations": [
+    {
+      "id": "tf-pii-mask-external",
+      "name": "PII Masking for External Destinations",
+      "description": "Mask email, phone, name before sending to Facebook, GA4, CleverTap, OneSignal",
+      "code": "\n// PHS CDP — PII Masking Transformation\n// Applied to: Facebook Pixel, GA4, CleverTap, OneSignal, External Webhooks\n// NOT applied to: BFF Webhook (internal), Mautic (internal)\n\nfunction maskEmail(email) {\n  if (!email) return undefined;\n  const [local, domain] = email.split('@');\n  if (!domain) return '***@***.***';\n  return local.charAt(0) + '***@' + domain;\n}\n\nfunction maskPhone(phone) {\n  if (!phone) return undefined;\n  const digits = String(phone).replace(/\\D/g, '');\n  if (digits.length < 4) return '***';\n  return digits.slice(0, 2) + '***' + digits.slice(-2);\n}\n\nfunction maskName(name) {\n  if (!name) return undefined;\n  const parts = String(name).split(' ');\n  return parts.map((p, i) => i === 0 ? p.charAt(0) + '***' : '***').join(' ');\n}\n\nfunction hashValue(val) {\n  // Simple hash indicator — in production use SHA256\n  if (!val) return undefined;\n  return '[HASHED]';\n}\n\nexport function transformEvent(event) {\n  // Deep clone to avoid mutation\n  const e = JSON.parse(JSON.stringify(event));\n  \n  // Mask identify traits\n  if (e.traits) {\n    if (e.traits.email) e.traits.email = maskEmail(e.traits.email);\n    if (e.traits.phone) e.traits.phone = maskPhone(e.traits.phone);\n    if (e.traits.mobile) e.traits.mobile = maskPhone(e.traits.mobile);\n    if (e.traits.name) e.traits.name = maskName(e.traits.name);\n    if (e.traits.firstName) e.traits.firstName = e.traits.firstName.charAt(0) + '***';\n    if (e.traits.lastName) e.traits.lastName = '***';\n    // Remove sensitive financial fields\n    delete e.traits.id_number;\n    delete e.traits.passport_number;\n    delete e.traits.bank_account;\n    delete e.traits.balance;\n    delete e.traits.portfolio_value;\n  }\n  \n  // Mask context.traits as well\n  if (e.context && e.context.traits) {\n    if (e.context.traits.email) e.context.traits.email = maskEmail(e.context.traits.email);\n    if (e.context.traits.phone) e.context.traits.phone = maskPhone(e.context.traits.phone);\n    if (e.context.traits.name) e.context.traits.name = maskName(e.context.traits.name);\n  }\n  \n  // For track events, remove any PII accidentally in properties\n  if (e.properties) {\n    if (e.properties.email) e.properties.email = maskEmail(e.properties.email);\n    if (e.properties.phone) e.properties.phone = maskPhone(e.properties.phone);\n    // Keep non-PII properties intact (stock codes, product names, etc.)\n  }\n  \n  // Remove userId for anonymous tracking to external (use anonymousId only)\n  // Uncomment if strict privacy required:\n  // delete e.userId;\n  \n  return e;\n}\n"
+    }
+  ]
+}

@@ -254,26 +254,56 @@ function initDetailDrawer() {
 async function loadDashboardMetricsFromBFF() {
   if (typeof PHSAPI === 'undefined') return;
   try {
-    // Fetch audience summary count for the header metric
-    const [audienceRes, dqRes] = await Promise.all([
-      PHSAPI.audiences.list({ limit: 1 }),
-      PHSAPI.dataQuality.overview(),
-    ]);
-    const totalAudiences = audienceRes.pagination?.total ?? audienceRes.total;
-    const dqScore = dqRes?.score;
+    // Single call to /api/dashboard — tổng hợp tất cả metrics
+    const dash = await PHSAPI.dashboard.summary();
 
-    if (totalAudiences != null) {
+    // Customers
+    if (dash.customers?.total) {
+      document.querySelectorAll('[data-metric="total-profiles"]').forEach(el => {
+        el.textContent = dash.customers.total.toLocaleString();
+      });
+      document.querySelectorAll('[data-metric="known-profiles"]').forEach(el => {
+        el.textContent = dash.customers.known.toLocaleString();
+      });
+      document.querySelectorAll('[data-metric="anonymous-profiles"]').forEach(el => {
+        el.textContent = dash.customers.anonymous.toLocaleString();
+      });
+    }
+
+    // Audiences
+    if (dash.audiences?.total != null) {
       document.querySelectorAll('[data-metric="audiences"]').forEach(el => {
-        el.textContent = totalAudiences.toLocaleString();
+        el.textContent = dash.audiences.total.toLocaleString();
       });
     }
-    if (dqScore != null) {
+
+    // Data Quality score
+    if (dash.dataQuality?.score != null) {
       document.querySelectorAll('[data-metric="dq-score"]').forEach(el => {
-        el.textContent = dqScore + '%';
+        el.textContent = dash.dataQuality.score + '%';
       });
     }
+
+    // Events today (from RudderStack)
+    if (dash.recentActivity?.eventsToday != null) {
+      document.querySelectorAll('[data-metric="events-today"]').forEach(el => {
+        el.textContent = dash.recentActivity.eventsToday.toLocaleString();
+      });
+    }
+
+    // Source badge — hiển thị "LIVE" hoặc "MOCK"
+    const mode = dash.mode || (dash.customers?.source === 'mautic' ? 'live' : 'mock');
+    document.querySelectorAll('[data-metric="data-source"]').forEach(el => {
+      el.textContent = mode === 'live' ? '● LIVE' : '○ Demo';
+      el.style.color = mode === 'live' ? 'var(--color-success)' : 'var(--color-warning)';
+    });
+
+    console.info('[Dashboard] BFF data loaded. Mode:', mode,
+      '| Customers:', dash.customers?.total,
+      '| Audiences:', dash.audiences?.total,
+      '| DQ Score:', dash.dataQuality?.score + '%');
   } catch (e) {
-    console.warn('[Dashboard] BFF metrics unavailable:', e.message);
+    console.warn('[Dashboard] BFF metrics unavailable, using static data:', e.message);
   }
 }
 

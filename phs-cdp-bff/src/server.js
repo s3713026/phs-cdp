@@ -71,6 +71,8 @@ app.use('/api/consent',      require('./routes/consent'));
 app.use('/api/directory',    require('./routes/directory'));
 app.use('/api/connections',     require('./routes/connections'));
 app.use('/api/transformations', require('./routes/transformations'));
+app.use('/api/tracking-plan',   require('./routes/tracking-plan'));
+app.use('/api/dashboard',      require('./routes/dashboard'));
 
 app.use((_req, res) => res.status(404).json({ error: 'Not found' }));
 app.use(require('./middleware/errorHandler'));

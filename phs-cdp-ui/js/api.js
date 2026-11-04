@@ -153,6 +153,12 @@
     /** Latest events snapshot */
     stream:  (params) => get('/events/stream', { params }),
 
+    /** Aggregate stats: total, today, byType (from RudderStack Postgres) */
+    stats: () => get('/events/stats'),
+
+    /** RudderStack data plane health */
+    health: () => get('/events/health'),
+
     /**
      * Subscribe to live event stream (Server-Sent Events).
      * Returns an EventSource. Caller is responsible for closing it.
@@ -251,7 +257,13 @@
     customer: (id) => get(`/consent/customers/${id}`),
   };
 
-  // ─── Utility helpers ─────────────────────────────────────────────────────
+  // ─── Dashboard ───────────────────────────────────────────────────
+  const dashboard = {
+    /** All dashboard metrics in one call: customers, audiences, events, systemHealth */
+    summary: () => get('/dashboard'),
+  };
+
+    // ─── Utility helpers ─────────────────────────────────────────────────────
 
   /**
    * Render an error into a container element with a retry button.
@@ -353,6 +365,7 @@
     consent,
     directory,
     connections,
+    dashboard,
 
     // Utilities
     renderError,
@@ -364,10 +377,18 @@
     // Error class (for instanceof checks in page JS)
     Error: PHSApiError,
 
+    // Direct request access (for custom endpoints like /api/dashboard)
+    request,
+
     // Config
     BASE,
     getRole,
     setRole: (role) => sessionStorage.setItem('phs_role', role),
+
+    // RudderStack Data Plane URL (exposed to SDK snippets in source-wizard)
+    // Points to rudder-server via Docker network; for browser SDK use public IP/hostname
+    RS_DATA_PLANE: 'http://100.117.24.87:8080',
+    RS_WRITE_KEY:  'phs_web_write_key_2024',
   };
 
 })(window);

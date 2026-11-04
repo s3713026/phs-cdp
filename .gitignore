@@ -12,6 +12,10 @@ yarn-debug.log*
 *.log
 logs/
 
+# ── Temp files ───────────────────────────────────────────────
+*.tmp
+*.bak
+
 # ── Docker volumes / data ────────────────────────────────────
 data/
 pg_data/
@@ -27,4 +31,7 @@ Thumbs.db
 *.swp
 
 # ── Secrets / config with real credentials ────────────────────
+# Block workspaceConfig at root and in bff (may contain DB passwords, tokens)
+# but ALLOW rudderstack/workspaceConfig.json (only contains internal write keys)
 workspaceConfig.json
+!rudderstack/workspaceConfig.json

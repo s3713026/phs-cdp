@@ -2,10 +2,13 @@ const express = require('express');
 const router  = express.Router();
 const { requireRole } = require('../middleware/rbac');
 const { Pool } = require('pg');
+const RudderStackAdapter = require('../adapters/RudderStackAdapter');
+
+const rudder = new RudderStackAdapter();
 
 const pgPool = new Pool({
-  host:                    process.env.RS_PG_HOST     || '127.0.0.1',
-  port:                    parseInt(process.env.RS_PG_PORT || '5433'),
+  host:                    process.env.RS_PG_HOST     || 'rudder-postgres',
+  port:                    parseInt(process.env.RS_PG_PORT || '5432'),
   user:                    process.env.RS_PG_USER     || 'rudder',
   password:                process.env.RS_PG_PASSWORD || 'rudderpassword',
   database:                process.env.RS_PG_DB       || 'jobsdb',
@@ -25,9 +28,10 @@ async function getLatestGwTable() {
     WHERE schemaname = 'public' AND tablename LIKE 'gw_jobs_%'
     ORDER BY tablename DESC LIMIT 1
   `);
-  return result.rows[0]?.tablename || 'gw_jobs_4';
+  return result.rows[0]?.tablename || 'gw_jobs_1';
 }
 
+// GET /events — list events from RudderStack Postgres
 router.get('/', requireRole('viewer'), async (req, res) => {
   const { limit = 50, customerId, eventName } = req.query;
 
@@ -69,6 +73,27 @@ router.get('/', requireRole('viewer'), async (req, res) => {
   } catch (err) {
     console.error('[events] PG error:', err.message);
     res.status(500).json({ error: { message: 'Failed to load events', detail: err.message } });
+  }
+});
+
+// GET /events/stats — aggregate stats from RudderStack
+router.get('/stats', requireRole('viewer'), async (_req, res) => {
+  try {
+    const stats = await rudder.getEventStats();
+    res.json(stats);
+  } catch (err) {
+    console.error('[events/stats] error:', err.message);
+    res.status(500).json({ error: { message: 'Failed to load event stats', detail: err.message } });
+  }
+});
+
+// GET /events/health — RudderStack data plane health
+router.get('/health', requireRole('viewer'), async (_req, res) => {
+  try {
+    const health = await rudder.healthCheck();
+    res.json(health);
+  } catch (err) {
+    res.status(500).json({ status: 'error', error: err.message });
   }
 });
 

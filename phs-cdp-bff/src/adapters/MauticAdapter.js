@@ -141,7 +141,11 @@ class MauticAdapter {
   // ── HEALTH CHECK ──
   async healthCheck() {
     const result = await this.request('GET', '/contacts', null, { limit: 1 });
-    return result.ok;
+    return {
+      status: result.ok ? 'connected' : 'degraded',
+      ok: result.ok,
+      error: result.ok ? undefined : result.message,
+    };
   }
   // ── FIELDS ──
   async getContactFields() {

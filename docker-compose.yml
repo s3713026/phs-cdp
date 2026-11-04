@@ -68,6 +68,7 @@ services:
       JOBS_DB_HOST: rudder-postgres
       JOBS_DB_PORT: "5432"
       JOBS_DB_NAME: ${RS_DB_NAME:-jobsdb}
+      JOBS_DB_DB_NAME: ${RS_DB_NAME:-jobsdb}
       JOBS_DB_USER: ${RS_DB_USER:-rudder}
       JOBS_DB_PASSWORD: ${RS_DB_PASSWORD:-rudderpassword}
       RSERVER_JOBS_DB_HOST: rudder-postgres
@@ -202,6 +203,12 @@ services:
       CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:8811,http://100.117.24.87:8811}
       JWT_SECRET: ${JWT_SECRET}
       RATE_LIMIT_MAX_REQUESTS: ${RATE_LIMIT_MAX_REQUESTS:-500}
+      # RudderStack PostgreSQL (for events query)
+      RS_PG_HOST: rudder-postgres
+      RS_PG_PORT: "5432"
+      RS_PG_USER: ${RS_DB_USER:-rudder}
+      RS_PG_PASSWORD: ${RS_DB_PASSWORD:-rudderpassword}
+      RS_PG_DB: ${RS_DB_NAME:-jobsdb}
     networks:
       - cdp_network
     mem_limit: 512m

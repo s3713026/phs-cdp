@@ -1,6 +1,7 @@
 import { NODE_TYPE_META, JOURNEY_STATUSES, TEST_CUSTOMERS, simulateJourney, loadJourneys, getNodeById, getEntryNode } from "../data/journeys.js";
 import { AUDIENCES } from "../data/audiences.js";
 import { renderJourneyFlow } from "./journey-builder.js";
+import { checkModuleStatus } from "../utils/module-status.js";
 
 let journeys = [];
 const filterState = { query: "", status: "all" };
@@ -295,7 +296,9 @@ function initTestJourney() {
 /* ---------------------------------------------------------------- */
 /* Init                                                                */
 /* ---------------------------------------------------------------- */
-export function initJourneys() {
+export async function initJourneys() {
+  const ok = await checkModuleStatus('journeys');
+  if (!ok) return;
   journeys = loadJourneys();
   renderSummary();
   initFilters();

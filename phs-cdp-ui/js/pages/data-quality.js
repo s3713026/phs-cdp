@@ -56,7 +56,9 @@ async function loadDataQualityFromBFF() {
       }
     }
   } catch (e) {
-    console.warn('[DataQuality] BFF unavailable, using inline data:', e.message);
+    console.warn('[DataQuality] BFF unreachable:', e.message);
+    // Clear mock stats so UI shows empty/not-connected state
+    overview = null;
   }
 }
 let dateFilter = { preset: "Last 24 hours" };

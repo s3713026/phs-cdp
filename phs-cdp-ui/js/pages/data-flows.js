@@ -145,7 +145,9 @@ async function loadFromBFF() {
       `[DataFlows] BFF loaded: ${cmSources.length} sources, ${cmDestinations.length} destinations, ${bffLinks.length} links`
     );
   } catch (err) {
-    console.warn("[DataFlows] BFF unavailable — using mock data:", err.message);
+    console.warn("[DataFlows] BFF unreachable:", err.message);
+    // Clear mock — show empty state
+    setLiveData([], [], null);
   }
 }
 

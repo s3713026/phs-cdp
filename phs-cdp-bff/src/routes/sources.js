@@ -40,7 +40,7 @@ router.get('/', requireRole('viewer'), (_req, res) => {
   const rawList = rs.getSources();
 
   if (!rawList.length) {
-    return res.json({ data: MOCK_SOURCES, total: MOCK_SOURCES.length, _fallback: 'mock' });
+    return res.json({ data: [], total: 0, _dataStatus: "not_connected" });
   }
 
   const data = rawList.map(transformSource);

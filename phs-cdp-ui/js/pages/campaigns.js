@@ -49,6 +49,7 @@ import { CONTENT, templatesByChannel, getContentById } from "../data/content.js"
 import { getDestinationById } from "../data/destinations.js";
 import { initFilterPanel, countActiveFilters } from "../components/connector-directory.js";
 import { initAllDropdowns } from "../components/dropdown.js";
+import { checkModuleStatus } from "../utils/module-status.js";
 
 let filterState = { query: "", status: [], channel: [], goal: [], owner: [] };
 
@@ -859,7 +860,9 @@ function initWizardNav() {
   });
 }
 
-export function initCampaigns() {
+export async function initCampaigns() {
+  const ok = await checkModuleStatus('campaigns');
+  if (!ok) return;
   renderSummary();
   renderList();
   initSearchAndFilter();

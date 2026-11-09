@@ -95,13 +95,20 @@ async function loadAudiencesFromBFF() {
   if (typeof PHSAPI === 'undefined') return;
   try {
     const res = await PHSAPI.audiences.list({ limit: 100 });
-    const list = res.data || res.audiences || [];
-    if (list.length) {
+    // If BFF signals not_connected → keep mock only when USE_MOCK is on
+    if (res._dataStatus === 'not_connected') {
+      console.warn('[Audiences] BFF not connected:', res._reason);
+      // Clear mock data — show empty state instead
       audiences.length = 0;
-      list.forEach(a => audiences.push(normalizeAudience(a)));
+      return;
     }
+    // BFF reachable: always replace mock with real data (even if empty)
+    const list = res.data || res.audiences || [];
+    audiences.length = 0;
+    list.forEach(a => audiences.push(normalizeAudience(a)));
   } catch (e) {
-    console.warn('[Audiences] BFF unavailable, using inline mock data:', e.message);
+    console.warn('[Audiences] BFF unreachable, clearing mock data:', e.message);
+    audiences.length = 0;
   }
 }
 

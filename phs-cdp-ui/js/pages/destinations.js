@@ -141,8 +141,7 @@ async function loadDestinationsFromBFF() {
   try {
     const res = await PHSAPI.destinations.list();
     const list = Array.isArray(res) ? res : (res?.data ?? []);
-    if (!list.length) return;                     // BFF empty → keep mock
-
+    // BFF reachable: always replace mock (even if empty)
     // BFF has data → replace mock entirely
     const now = new Date().toISOString().slice(0, 10);
     destinations = list.map(bff => {
@@ -212,9 +211,12 @@ async function loadDestinationsFromBFF() {
 
     renderDestSummary();
     renderDestTable();
-    console.log('[Destinations] BFF data loaded —', destinations.length, 'destinations (mock replaced)');
+    console.log('[Destinations] BFF data loaded —', destinations.length, 'destinations');
   } catch (e) {
-    console.warn('[Destinations] BFF unavailable, using mock:', e.message);
+    console.warn('[Destinations] BFF unreachable:', e.message);
+    destinations.length = 0;  // clear mock
+    renderDestSummary();
+    renderDestTable();
   }
 }
 
@@ -237,8 +239,7 @@ async function loadSourcesFromBFF() {
   try {
     const res = await PHSAPI.sources.list();
     const list = Array.isArray(res) ? res : (res?.data ?? []);
-    if (!list.length) return;                     // BFF empty → keep mock
-
+    // BFF reachable: always replace mock (even if empty)
     // BFF has data → replace mock entirely
     const now = new Date().toISOString().slice(0, 10);
     sources = list.map(s => {
@@ -271,9 +272,12 @@ async function loadSourcesFromBFF() {
 
     renderSourceSummary();
     renderSourceTable();
-    console.log('[Sources] BFF data loaded —', sources.length, 'sources (mock replaced)');
+    console.log('[Sources] BFF data loaded —', sources.length, 'sources');
   } catch (e) {
-    console.warn('[Sources] BFF unavailable, using mock:', e.message);
+    console.warn('[Sources] BFF unreachable:', e.message);
+    sources.length = 0;  // clear mock
+    renderSourceSummary();
+    renderSourceTable();
   }
 }
 let sources = [...SOURCES].map(s => ({

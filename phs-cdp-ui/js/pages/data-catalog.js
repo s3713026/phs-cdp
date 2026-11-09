@@ -1,6 +1,6 @@
 /**
  * Data Catalog — PHS CDP
- * Full CRUD + Block/Unblock + Validation rules (Admin only)
+ * Full CRUD + Block/Unblock + Validation rules + Source-level Rules (Admin only)
  */
 
 const BFF = window.__CDP_CONFIG__?.bffUrl || 'http://localhost:3001';
@@ -12,7 +12,7 @@ let _events = [], _attributes = [], _sources = [], _domains = [];
 
 function refreshIcons() { if (window.lucide) window.lucide.createIcons(); }
 
-// ── Domain / status badges ────────────────────────────────────────────────────
+// ── Badges ────────────────────────────────────────────────────────────────────
 const DOMAIN_CLASS = {
   'Account & Identity': 'badge--primary', 'Trading & Investment': 'badge--success',
   'Product Interest': 'badge--warning',   'Engagement': 'badge--neutral',
@@ -29,6 +29,18 @@ function statusBadge(s) {
   if (s === 'blocked')    return `<span class="badge badge--danger badge--dest-tag"><i data-lucide="ban" style="width:11px;height:11px;"></i> Blocked</span>`;
   if (s === 'deprecated') return `<span class="badge badge--warning badge--dest-tag"><i data-lucide="alert-triangle" style="width:11px;height:11px;"></i> Deprecated</span>`;
   return `<span class="status-dot status-dot--success">Active</span>`;
+}
+function sourceActionBadge(action) {
+  if (action === 'block')    return `<span class="badge badge--danger badge--dest-tag" style="font-size:10px;">block</span>`;
+  if (action === 'require')  return `<span class="badge badge--primary badge--dest-tag" style="font-size:10px;">require</span>`;
+  if (action === 'readonly') return `<span class="badge badge--warning badge--dest-tag" style="font-size:10px;">readonly</span>`;
+  return `<span class="badge badge--success badge--dest-tag" style="font-size:10px;">allow</span>`;
+}
+function sourceRulesSummary(rules) {
+  if (!rules || rules.length === 0) return '<span class="cell-muted" style="font-size:11px;">—</span>';
+  const blocked = rules.filter(r => r.action === 'block').length;
+  if (blocked > 0) return `<span style="font-size:11px;color:var(--color-danger);font-weight:500;"><i data-lucide="ban" style="width:10px;height:10px;"></i> ${blocked} blocked</span>`;
+  return `<span style="font-size:11px;color:var(--text-secondary);">${rules.length} rule${rules.length>1?'s':''}</span>`;
 }
 
 // ── API helpers ───────────────────────────────────────────────────────────────
@@ -69,30 +81,88 @@ function showConfirm(msg) {
   });
 }
 
-// ── Property row helper ───────────────────────────────────────────────────────
-function propertyRow(p, i) {
-  return `<div class="prop-row" style="display:grid;grid-template-columns:1fr 100px 80px 32px;gap:6px;align-items:center;" data-row="${i}">
-    <input class="input input--sm" placeholder="property_name" name="prop_name_${i}" value="${p.name||''}">
-    <select class="input input--sm" name="prop_type_${i}">
-      ${['string','number','boolean','date','datetime','array','object'].map(t =>
-        `<option value="${t}" ${p.type===t?'selected':''}>${t}</option>`).join('')}
+// ── Source rule mini-table ────────────────────────────────────────────────────
+// Renders an inline source-rules editor used inside both event modal and attribute modal.
+// mode: 'event' (allow|block|deprecated), 'param' (allow|block|require), 'attr' (allow|block|readonly)
+function buildSourceRulesEditor(containerId, existingRules, mode) {
+  const actions = {
+    event: ['allow','block','deprecated'],
+    param: ['allow','block','require'],
+    attr:  ['allow','block','readonly'],
+  }[mode] || ['allow','block'];
+
+  const rows = (existingRules || []).map((r, i) => srcRuleRowHtml(r, i, actions)).join('');
+  return `
+    <div class="src-rules-editor" id="${containerId}" data-mode="${mode}" data-count="${(existingRules||[]).length}">
+      <div class="src-rules-editor__rows" style="display:flex;flex-direction:column;gap:6px;">
+        ${rows}
+      </div>
+      <button type="button" class="btn btn--ghost btn--xs" style="margin-top:6px;color:var(--text-secondary);" data-add-rule>
+        <i data-lucide="plus" style="width:12px;height:12px;"></i> Add source rule
+      </button>
+    </div>`;
+}
+
+function srcRuleRowHtml(r, i, actions) {
+  return `<div class="src-rule-row" data-row="${i}" style="display:grid;grid-template-columns:160px 100px 1fr auto;gap:6px;align-items:center;background:var(--surface-secondary);border-radius:6px;padding:6px 8px;">
+    <select class="input input--sm" data-field="sourceId">
+      <option value="">— Source —</option>
+      ${_sources.map(s => `<option value="${s.id}" ${r.sourceId===s.id?'selected':''}>${s.name}</option>`).join('')}
     </select>
-    <label style="display:flex;align-items:center;gap:4px;font-size:12px;cursor:pointer;white-space:nowrap;">
-      <input type="checkbox" name="prop_req_${i}" ${p.required?'checked':''}> Required
-    </label>
-    <button type="button" class="btn btn--ghost btn--xs remove-row-btn" style="padding:0;width:28px;height:28px;"><i data-lucide="x"></i></button>
+    <select class="input input--sm" data-field="action">
+      ${actions.map(a => `<option value="${a}" ${r.action===a?'selected':''}>${a}</option>`).join('')}
+    </select>
+    <input class="input input--sm" placeholder="Reason (optional)" data-field="reason" value="${r.reason||''}">
+    <button type="button" class="btn btn--ghost btn--xs" data-remove-rule style="padding:0;width:24px;height:24px;color:var(--text-tertiary);">
+      <i data-lucide="x" style="width:12px;height:12px;"></i>
+    </button>
   </div>`;
 }
 
+function bindSourceRulesEditor(container) {
+  container.querySelectorAll('[data-add-rule]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const editor   = btn.closest('.src-rules-editor');
+      const rows     = editor.querySelector('.src-rules-editor__rows');
+      const count    = parseInt(editor.dataset.count || 0);
+      const mode     = editor.dataset.mode;
+      const actions  = { event:['allow','block','deprecated'], param:['allow','block','require'], attr:['allow','block','readonly'] }[mode] || ['allow','block'];
+      rows.insertAdjacentHTML('beforeend', srcRuleRowHtml({}, count, actions));
+      editor.dataset.count = count + 1;
+      refreshIcons();
+      bindRemoveRuleRows(rows);
+    });
+  });
+  bindRemoveRuleRows(container);
+}
+
+function bindRemoveRuleRows(container) {
+  container.querySelectorAll('[data-remove-rule]').forEach(btn => {
+    btn.onclick = () => btn.closest('.src-rule-row').remove();
+  });
+}
+
+function collectSourceRulesFrom(editor) {
+  if (!editor) return [];
+  return [...editor.querySelectorAll('.src-rule-row')].map(row => {
+    const sourceId = row.querySelector('[data-field="sourceId"]')?.value;
+    const action   = row.querySelector('[data-field="action"]')?.value;
+    const reason   = row.querySelector('[data-field="reason"]')?.value?.trim();
+    if (!sourceId || !action) return null;
+    return { sourceId, action, ...(reason ? { reason } : {}) };
+  }).filter(Boolean);
+}
+
+// ── Validation rule rows ──────────────────────────────────────────────────────
 function ruleRow(r, i) {
-  return `<div class="rule-row" style="display:grid;grid-template-columns:1fr 90px 1fr 80px 32px;gap:6px;align-items:center;" data-row="${i}">
+  return `<div class="rule-row" data-row="${i}" style="display:grid;grid-template-columns:1fr 90px 1fr 80px 32px;gap:6px;align-items:center;">
     <input class="input input--sm" placeholder="field_name" name="rule_field_${i}" value="${r.field||''}">
     <select class="input input--sm" name="rule_type_${i}">
       ${['regex','enum','min','max'].map(t => `<option value="${t}" ${r.type===t?'selected':''}>${t}</option>`).join('')}
     </select>
     <input class="input input--sm" placeholder="value / pattern / values" name="rule_value_${i}" value="${r.pattern||r.values?.join(',')||r.value||''}">
     <select class="input input--sm" name="rule_level_${i}">
-      <option value="error" ${r.level==='error'?'selected':''}>error</option>
+      <option value="error"   ${r.level==='error'  ?'selected':''}>error</option>
       <option value="warning" ${r.level==='warning'?'selected':''}>warning</option>
     </select>
     <button type="button" class="btn btn--ghost btn--xs remove-row-btn" style="padding:0;width:28px;height:28px;"><i data-lucide="x"></i></button>
@@ -105,17 +175,6 @@ function bindRemove(container) {
   });
 }
 
-function collectProperties(overlay) {
-  return [...overlay.querySelectorAll('.prop-row')].map(row => {
-    const i = row.dataset.row;
-    return {
-      name: overlay.querySelector(`[name="prop_name_${i}"]`)?.value?.trim() || '',
-      type: overlay.querySelector(`[name="prop_type_${i}"]`)?.value || 'string',
-      required: !!(overlay.querySelector(`[name="prop_req_${i}"]`)?.checked),
-    };
-  }).filter(p => p.name);
-}
-
 function collectRules(overlay) {
   return [...overlay.querySelectorAll('.rule-row')].map(row => {
     const i = row.dataset.row;
@@ -126,13 +185,80 @@ function collectRules(overlay) {
     if (!field || !val) return null;
     const rule = { field, type, level };
     if (type === 'regex')     rule.pattern = val;
-    else if (type === 'enum') rule.values = val.split(',').map(v => v.trim());
-    else                      rule.value = Number(val);
+    else if (type === 'enum') rule.values  = val.split(',').map(v => v.trim());
+    else                      rule.value   = Number(val);
     return rule;
   }).filter(Boolean);
 }
 
-// ── Event modal (Add / Edit) ──────────────────────────────────────────────────
+// ── Property rows (expandable with source rules) ──────────────────────────────
+function propertyRow(p, i) {
+  const srcRulesHtml = buildSourceRulesEditor(`prop-src-${i}`, p.sourceRules||[], 'param');
+  const hasSrcRules  = (p.sourceRules||[]).length > 0;
+  return `<div class="prop-block" data-prop-idx="${i}" style="border:1px solid var(--border-subtle);border-radius:8px;overflow:hidden;">
+    <div style="display:grid;grid-template-columns:1fr 100px 90px auto;gap:6px;align-items:center;padding:8px 10px;background:var(--surface-secondary);">
+      <input class="input input--sm" placeholder="property_name" name="prop_name_${i}" value="${p.name||''}">
+      <select class="input input--sm" name="prop_type_${i}">
+        ${['string','number','boolean','date','datetime','array','object'].map(t =>
+          `<option value="${t}" ${p.type===t?'selected':''}>${t}</option>`).join('')}
+      </select>
+      <label style="display:flex;align-items:center;gap:4px;font-size:12px;cursor:pointer;white-space:nowrap;">
+        <input type="checkbox" name="prop_req_${i}" ${p.required?'checked':''}> Required
+      </label>
+      <div style="display:flex;gap:4px;">
+        <button type="button" class="btn btn--ghost btn--xs prop-toggle-src" data-idx="${i}" title="Source rules${hasSrcRules?' ('+p.sourceRules.length+')':''}" style="${hasSrcRules?'color:var(--color-danger);':'color:var(--text-tertiary);'}">
+          <i data-lucide="shield${hasSrcRules?'-alert':'-check'}" style="width:14px;height:14px;"></i>
+        </button>
+        <button type="button" class="btn btn--ghost btn--xs remove-prop-btn" style="padding:0;width:28px;height:28px;color:var(--text-tertiary);"><i data-lucide="x"></i></button>
+      </div>
+    </div>
+    <div class="prop-src-panel" id="prop-src-panel-${i}" style="display:${hasSrcRules?'block':'none'};padding:8px 10px;border-top:1px solid var(--border-subtle);">
+      <p style="font-size:11px;color:var(--text-secondary);margin:0 0 6px;">Source rules for <strong>${p.name||'this property'}</strong> — overrides global required</p>
+      ${srcRulesHtml}
+    </div>
+  </div>`;
+}
+
+function bindPropertyRows(container) {
+  // Remove button
+  container.querySelectorAll('.remove-prop-btn').forEach(btn => {
+    btn.onclick = () => btn.closest('.prop-block').remove();
+  });
+  // Toggle source rules panel
+  container.querySelectorAll('.prop-toggle-src').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const panel = container.querySelector(`#prop-src-panel-${btn.dataset.idx}`);
+      if (!panel) return;
+      const isOpen = panel.style.display !== 'none';
+      panel.style.display = isOpen ? 'none' : 'block';
+      if (!isOpen) {
+        // Update label in panel
+        const propName = container.querySelector(`[name="prop_name_${btn.dataset.idx}"]`)?.value || 'this property';
+        const p = panel.querySelector('p strong');
+        if (p) p.textContent = propName;
+      }
+      refreshIcons();
+    });
+  });
+  // Source rules editors inside panels
+  container.querySelectorAll('.src-rules-editor').forEach(editor => {
+    bindSourceRulesEditor(editor);
+  });
+}
+
+function collectProperties(overlay) {
+  return [...overlay.querySelectorAll('.prop-block')].map(block => {
+    const i     = block.dataset.propIdx;
+    const name  = overlay.querySelector(`[name="prop_name_${i}"]`)?.value?.trim() || '';
+    const type  = overlay.querySelector(`[name="prop_type_${i}"]`)?.value || 'string';
+    const req   = !!(overlay.querySelector(`[name="prop_req_${i}"]`)?.checked);
+    const panel = overlay.querySelector(`#prop-src-panel-${i}`);
+    const srcEditor = panel?.querySelector('.src-rules-editor');
+    return { name, type, required: req, sourceRules: collectSourceRulesFrom(srcEditor) };
+  }).filter(p => p.name);
+}
+
+// ── Event modal (Add / Edit) — tabbed ────────────────────────────────────────
 function openEventModal(event = null) {
   const isEdit = !!event;
   const overlay = document.createElement('div');
@@ -142,78 +268,152 @@ function openEventModal(event = null) {
   let propCount = isEdit ? event.properties.length : 0;
   let ruleCount = isEdit ? (event.validationRules||[]).length : 0;
 
+  // Source rules for entire event
+  const evtSrcRulesHtml = buildSourceRulesEditor('event-src-rules', isEdit ? event.sourceRules||[] : [], 'event');
+
   overlay.innerHTML = `
-    <div class="drawer" style="width:560px;max-width:95vw;border-radius:12px;max-height:90vh;overflow-y:auto;" role="dialog" aria-modal="true">
-      <div class="drawer__header">
+    <div class="drawer" style="width:640px;max-width:97vw;border-radius:12px;max-height:92vh;display:flex;flex-direction:column;" role="dialog" aria-modal="true">
+      <div class="drawer__header" style="flex-shrink:0;">
         <div>
           <div class="drawer__eyebrow">${isEdit ? 'Edit Event' : 'Add Event'}</div>
           <div class="drawer__title">${isEdit ? event.name : 'New Catalog Event'}</div>
         </div>
-        <button class="btn btn--ghost btn--sm" id="modal-close" aria-label="Close"><i data-lucide="x"></i></button>
+        <button class="btn btn--ghost btn--sm" id="evtmodal-close" aria-label="Close"><i data-lucide="x"></i></button>
       </div>
-      <div class="drawer__body">
-        <form id="event-form" style="display:flex;flex-direction:column;gap:16px;">
-          <div class="form-field">
-            <label class="form-label">Event Name <span style="color:var(--color-danger)">*</span></label>
-            <input class="input" name="name" required placeholder="e.g. Product Viewed" value="${isEdit ? event.name : ''}">
-          </div>
-          <div class="form-field">
-            <label class="form-label">Domain <span style="color:var(--color-danger)">*</span></label>
-            <select class="input" name="domain">
-              ${['Account & Identity','Trading & Investment','Product Interest','Engagement'].map(d =>
-                `<option value="${d}" ${isEdit && event.domain===d ? 'selected':''}>${d}</option>`).join('')}
-            </select>
-          </div>
-          <div class="form-field">
-            <label class="form-label">Description</label>
-            <textarea class="input" name="description" rows="2" placeholder="What does this event represent?">${isEdit ? event.description||'' : ''}</textarea>
-          </div>
-          <div class="form-field">
-            <label class="form-label">Platforms</label>
-            <div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:4px;">
-              ${['web','mobile','server'].map(p => `
-                <label style="display:flex;align-items:center;gap:6px;font-size:var(--text-sm);cursor:pointer;">
-                  <input type="checkbox" name="platforms" value="${p}" ${isEdit && event.platforms?.includes(p) ? 'checked':''}>
-                  ${p}
-                </label>`).join('')}
+
+      <!-- Modal tabs -->
+      <div style="display:flex;gap:0;border-bottom:1px solid var(--border-subtle);flex-shrink:0;padding:0 var(--space-5);">
+        ${['Basic','Properties','Validation','Source Rules'].map((tab,i) => `
+          <button type="button" class="evtmodal-tab" data-tab="${i}" style="padding:10px 16px;border:none;background:none;cursor:pointer;font-size:var(--text-sm);border-bottom:2px solid ${i===0?'var(--color-primary)':'transparent'};color:${i===0?'var(--text-primary)':'var(--text-secondary)'};font-weight:${i===0?'600':'400'};">${tab}</button>
+        `).join('')}
+      </div>
+
+      <div class="drawer__body" style="overflow-y:auto;flex:1;">
+        <form id="event-form">
+
+          <!-- Tab 0: Basic -->
+          <div class="evtmodal-panel" data-panel="0" style="display:flex;flex-direction:column;gap:14px;">
+            <div class="form-field">
+              <label class="form-label">Event Name <span style="color:var(--color-danger)">*</span></label>
+              <input class="input" name="name" required placeholder="e.g. Product Viewed" value="${isEdit ? event.name : ''}">
+            </div>
+            <div class="form-field">
+              <label class="form-label">Domain <span style="color:var(--color-danger)">*</span></label>
+              <select class="input" name="domain">
+                ${['Account & Identity','Trading & Investment','Product Interest','Engagement'].map(d =>
+                  `<option value="${d}" ${isEdit && event.domain===d ? 'selected':''}>${d}</option>`).join('')}
+              </select>
+            </div>
+            <div class="form-field">
+              <label class="form-label">Description</label>
+              <textarea class="input" name="description" rows="2" placeholder="What does this event represent?">${isEdit ? event.description||'' : ''}</textarea>
+            </div>
+            <div class="form-field">
+              <label class="form-label">Platforms</label>
+              <div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:4px;">
+                ${['web','mobile','server'].map(p => `
+                  <label style="display:flex;align-items:center;gap:6px;font-size:var(--text-sm);cursor:pointer;">
+                    <input type="checkbox" name="platforms" value="${p}" ${isEdit && event.platforms?.includes(p) ? 'checked':''}>
+                    ${p}
+                  </label>`).join('')}
+              </div>
+            </div>
+            <div class="form-field">
+              <label class="form-label">Lifecycle Stage</label>
+              <select class="input" name="lifecycleStage">
+                <option value="">— None —</option>
+                ${['Prospect','Lead','eKYC','Account Opening','Funding','First Trade','Active Investor','VIP','Dormant','Churn Risk','Reactivation'].map(s =>
+                  `<option value="${s}" ${isEdit && event.lifecycleStage===s ? 'selected':''}>${s}</option>`).join('')}
+              </select>
+            </div>
+            <div class="form-field">
+              <label class="form-label">Global Status</label>
+              <select class="input" name="status">
+                <option value="active"     ${!isEdit||event.status==='active'    ?'selected':''}>Active</option>
+                <option value="deprecated" ${isEdit&&event.status==='deprecated' ?'selected':''}>Deprecated</option>
+                <option value="blocked"    ${isEdit&&event.status==='blocked'    ?'selected':''}>Blocked (all sources)</option>
+              </select>
+              <p style="font-size:11px;color:var(--text-secondary);margin-top:4px;">Global status applies when no Source Rule overrides it.</p>
             </div>
           </div>
-          <div class="form-field">
-            <label class="form-label">Lifecycle Stage</label>
-            <select class="input" name="lifecycleStage">
-              <option value="">— None —</option>
-              ${['Prospect','Lead','eKYC','Account Opening','Funding','First Trade','Active Investor','VIP','Dormant','Churn Risk','Reactivation'].map(s =>
-                `<option value="${s}" ${isEdit && event.lifecycleStage===s ? 'selected':''}>${s}</option>`).join('')}
-            </select>
-          </div>
-          <div class="form-field">
-            <label class="form-label">Status</label>
-            <select class="input" name="status">
-              <option value="active" ${!isEdit||event.status==='active'?'selected':''}>Active</option>
-              <option value="deprecated" ${isEdit&&event.status==='deprecated'?'selected':''}>Deprecated</option>
-              <option value="blocked" ${isEdit&&event.status==='blocked'?'selected':''}>Blocked</option>
-            </select>
-          </div>
-          <div class="form-field">
-            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
-              <label class="form-label" style="margin:0;">Properties</label>
-              <button type="button" class="btn btn--outline btn--xs" id="add-prop-btn"><i data-lucide="plus"></i> Add Property</button>
-            </div>
+
+          <!-- Tab 1: Properties -->
+          <div class="evtmodal-panel" data-panel="1" style="display:none;flex-direction:column;gap:10px;">
+            <p style="font-size:var(--text-sm);color:var(--text-secondary);margin:0 0 var(--space-2);">
+              Click the <i data-lucide="shield-check" style="width:12px;height:12px;display:inline;"></i> icon on a property to add per-source rules (block / require).
+            </p>
             <div id="properties-list" style="display:flex;flex-direction:column;gap:8px;">
               ${(isEdit ? event.properties : []).map((p, i) => propertyRow(p, i)).join('')}
             </div>
+            <button type="button" class="btn btn--outline btn--sm" id="add-prop-btn" style="align-self:flex-start;">
+              <i data-lucide="plus"></i> Add Property
+            </button>
           </div>
-          <div class="form-field">
-            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
-              <label class="form-label" style="margin:0;">Validation Rules</label>
-              <button type="button" class="btn btn--outline btn--xs" id="add-rule-btn"><i data-lucide="plus"></i> Add Rule</button>
+
+          <!-- Tab 2: Validation Rules -->
+          <div class="evtmodal-panel" data-panel="2" style="display:none;flex-direction:column;gap:8px;">
+            <p style="font-size:var(--text-sm);color:var(--text-secondary);margin:0 0 var(--space-2);">
+              Global validation rules applied to all sources. Use Source Rules (Tab 4) for per-source differences.
+            </p>
+            <div style="display:grid;grid-template-columns:1fr 90px 1fr 80px 32px;gap:6px;padding:4px 0;border-bottom:1px solid var(--border-subtle);">
+              <span style="font-size:11px;color:var(--text-secondary);font-weight:600;">Field</span>
+              <span style="font-size:11px;color:var(--text-secondary);font-weight:600;">Rule</span>
+              <span style="font-size:11px;color:var(--text-secondary);font-weight:600;">Value</span>
+              <span style="font-size:11px;color:var(--text-secondary);font-weight:600;">Level</span>
+              <span></span>
             </div>
-            <div id="rules-list" style="display:flex;flex-direction:column;gap:8px;">
+            <div id="rules-list" style="display:flex;flex-direction:column;gap:6px;">
               ${(isEdit ? event.validationRules||[] : []).map((r, i) => ruleRow(r, i)).join('')}
             </div>
+            <button type="button" class="btn btn--outline btn--sm" id="add-rule-btn" style="align-self:flex-start;">
+              <i data-lucide="plus"></i> Add Rule
+            </button>
           </div>
-          <div style="display:flex;gap:8px;justify-content:flex-end;padding-top:8px;border-top:1px solid var(--border-subtle);">
-            <button type="button" class="btn btn--outline" id="modal-cancel">Cancel</button>
+
+          <!-- Tab 3: Source Rules -->
+          <div class="evtmodal-panel" data-panel="3" style="display:none;flex-direction:column;gap:14px;">
+            <div style="background:var(--surface-secondary);border-radius:8px;padding:12px 14px;font-size:var(--text-sm);color:var(--text-secondary);">
+              <strong style="color:var(--text-primary);display:block;margin-bottom:4px;">How source rules work</strong>
+              Source rules override the global status for a specific data source.<br>
+              <span style="color:var(--color-success);font-weight:600;">allow</span> — accept even if globally blocked ·
+              <span style="color:var(--color-danger);font-weight:600;">block</span> — reject even if globally active ·
+              <span style="color:var(--text-secondary);font-weight:600;">deprecated</span> — accept with warning
+            </div>
+
+            <div class="form-field">
+              <label class="form-label" style="margin-bottom:8px;">Event-level source rules</label>
+              <div id="event-src-rules">
+                ${evtSrcRulesHtml}
+              </div>
+            </div>
+
+            ${isEdit && event.properties.length > 0 ? `
+            <div class="form-field">
+              <label class="form-label" style="margin-bottom:4px;">Parameter source rules</label>
+              <p style="font-size:11px;color:var(--text-secondary);margin:0 0 10px;">These are set per-property on the Properties tab (shield icon).</p>
+              ${event.properties.some(p => (p.sourceRules||[]).length > 0) ? `
+                <div style="border:1px solid var(--border-subtle);border-radius:8px;overflow:hidden;">
+                  ${event.properties.filter(p => (p.sourceRules||[]).length > 0).map(p => `
+                    <div style="padding:8px 12px;border-bottom:1px solid var(--border-subtle);last-child:border-bottom:none;">
+                      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;">
+                        <span style="font-size:var(--text-sm);font-weight:600;font-family:monospace;">${p.name}</span>
+                        <span class="badge badge--neutral badge--dest-tag" style="font-size:10px;">${p.type}</span>
+                      </div>
+                      ${p.sourceRules.map(r => {
+                        const src = _sources.find(s => s.id === r.sourceId);
+                        return `<div style="display:flex;align-items:center;gap:8px;font-size:11px;color:var(--text-secondary);margin-top:3px;">
+                          <span>${src ? src.name : r.sourceId}</span>
+                          → ${sourceActionBadge(r.action)}
+                          ${r.reason ? `<span style="color:var(--text-tertiary);">${r.reason}</span>` : ''}
+                        </div>`;
+                      }).join('')}
+                    </div>`).join('')}
+                </div>` : `<p style="font-size:var(--text-sm);color:var(--text-tertiary);">No parameter source rules set yet. Go to Properties tab and click the shield icon.</p>`}
+            </div>` : ''}
+          </div>
+
+          <div style="display:flex;gap:8px;justify-content:flex-end;padding-top:var(--space-5);margin-top:var(--space-4);border-top:1px solid var(--border-subtle);">
+            <button type="button" class="btn btn--outline" id="evtmodal-cancel">Cancel</button>
             <button type="submit" class="btn btn--primary">${isEdit ? 'Save Changes' : 'Create Event'}</button>
           </div>
         </form>
@@ -224,17 +424,34 @@ function openEventModal(event = null) {
   document.body.style.overflow = 'hidden';
   refreshIcons();
 
-  const close = () => { overlay.remove(); document.body.style.overflow = ''; };
-  overlay.querySelector('#modal-close').onclick = close;
-  overlay.querySelector('#modal-cancel').onclick = close;
+  // ── Tab switching ─────────────────────────────────────────────────────────
+  overlay.querySelectorAll('.evtmodal-tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+      overlay.querySelectorAll('.evtmodal-tab').forEach(t => {
+        t.style.borderBottomColor = 'transparent';
+        t.style.color = 'var(--text-secondary)';
+        t.style.fontWeight = '400';
+      });
+      overlay.querySelectorAll('.evtmodal-panel').forEach(p => p.style.display = 'none');
+      tab.style.borderBottomColor = 'var(--color-primary)';
+      tab.style.color = 'var(--text-primary)';
+      tab.style.fontWeight = '600';
+      overlay.querySelector(`.evtmodal-panel[data-panel="${tab.dataset.tab}"]`).style.display = 'flex';
+      refreshIcons();
+    });
+  });
 
+  // ── Property rows ─────────────────────────────────────────────────────────
+  bindPropertyRows(overlay.querySelector('#properties-list'));
   overlay.querySelector('#add-prop-btn').onclick = () => {
     const list = overlay.querySelector('#properties-list');
     list.insertAdjacentHTML('beforeend', propertyRow({}, propCount++));
     refreshIcons();
-    bindRemove(list);
+    bindPropertyRows(list);
   };
 
+  // ── Validation rule rows ──────────────────────────────────────────────────
+  bindRemove(overlay.querySelector('#rules-list'));
   overlay.querySelector('#add-rule-btn').onclick = () => {
     const list = overlay.querySelector('#rules-list');
     list.insertAdjacentHTML('beforeend', ruleRow({}, ruleCount++));
@@ -242,30 +459,33 @@ function openEventModal(event = null) {
     bindRemove(list);
   };
 
-  bindRemove(overlay.querySelector('#properties-list'));
-  bindRemove(overlay.querySelector('#rules-list'));
+  // ── Event source rules editor ─────────────────────────────────────────────
+  const evtSrcEditor = overlay.querySelector('#event-src-rules .src-rules-editor');
+  if (evtSrcEditor) bindSourceRulesEditor(evtSrcEditor);
 
+  // ── Close ─────────────────────────────────────────────────────────────────
+  const close = () => { overlay.remove(); document.body.style.overflow = ''; };
+  overlay.querySelector('#evtmodal-close').onclick  = close;
+  overlay.querySelector('#evtmodal-cancel').onclick = close;
+
+  // ── Submit ────────────────────────────────────────────────────────────────
   overlay.querySelector('#event-form').onsubmit = async (e) => {
     e.preventDefault();
     const fd = new FormData(e.target);
     const payload = {
-      name: fd.get('name').trim(),
-      domain: fd.get('domain'),
-      description: fd.get('description').trim(),
-      platforms: fd.getAll('platforms'),
-      lifecycleStage: fd.get('lifecycleStage') || null,
-      status: fd.get('status'),
-      properties: collectProperties(overlay),
+      name:            fd.get('name').trim(),
+      domain:          fd.get('domain'),
+      description:     fd.get('description').trim(),
+      platforms:       fd.getAll('platforms'),
+      lifecycleStage:  fd.get('lifecycleStage') || null,
+      status:          fd.get('status'),
+      properties:      collectProperties(overlay),
       validationRules: collectRules(overlay),
+      sourceRules:     collectSourceRulesFrom(overlay.querySelector('#event-src-rules .src-rules-editor')),
     };
     try {
-      if (isEdit) {
-        await api('PUT', `/api/data-catalog/events/${event.id}`, payload);
-        showToast('Event updated');
-      } else {
-        await api('POST', '/api/data-catalog/events', payload);
-        showToast('Event created');
-      }
+      if (isEdit) { await api('PUT', `/api/data-catalog/events/${event.id}`, payload); showToast('Event updated'); }
+      else        { await api('POST', '/api/data-catalog/events', payload);             showToast('Event created'); }
       close();
       await reloadAndRender();
     } catch (err) { showToast(err.message, 'error'); }
@@ -305,12 +525,41 @@ function ensureDrawer() {
 function openEventDrawer(event) {
   const drawer = ensureDrawer();
   drawer.querySelector('[data-drawer-eyebrow]').textContent = event.domain;
-  drawer.querySelector('[data-drawer-title]').textContent = event.name;
+  drawer.querySelector('[data-drawer-title]').textContent   = event.name;
   const editBtn = drawer.querySelector('#drawer-edit-btn');
   if (editBtn) editBtn.onclick = () => {
     drawer.classList.remove('is-open'); document.body.style.overflow = '';
     openEventModal(event);
   };
+
+  const srcRulesSection = (event.sourceRules||[]).length ? `
+    <p class="subhead" style="margin:var(--space-4) 0 var(--space-2);">Event Source Rules</p>
+    <div class="event-config-list">
+      ${event.sourceRules.map(r => {
+        const src = _sources.find(s => s.id === r.sourceId);
+        return `<div class="event-config-row" style="flex-direction:column;align-items:flex-start;gap:2px;">
+          <div style="display:flex;justify-content:space-between;width:100%;align-items:center;">
+            <span class="event-config-row__label">${src ? src.name : r.sourceId}</span>
+            ${sourceActionBadge(r.action)}
+          </div>
+          ${r.reason ? `<span style="font-size:11px;color:var(--text-secondary);">${r.reason}</span>` : ''}
+        </div>`;
+      }).join('')}
+    </div>` : '';
+
+  const paramSrcSection = event.properties.some(p => (p.sourceRules||[]).length > 0) ? `
+    <p class="subhead" style="margin:var(--space-4) 0 var(--space-2);">Parameter Source Rules</p>
+    <div class="event-config-list">
+      ${event.properties.filter(p => (p.sourceRules||[]).length > 0).map(p =>
+        p.sourceRules.map(r => {
+          const src = _sources.find(s => s.id === r.sourceId);
+          return `<div class="event-config-row">
+            <span class="event-config-row__label font-mono" style="font-size:var(--text-xs);">${p.name} → ${src ? src.name : r.sourceId}</span>
+            ${sourceActionBadge(r.action)}
+          </div>`;
+        }).join('')
+      ).join('')}
+    </div>` : '';
 
   drawer.querySelector('[data-drawer-body]').innerHTML = `
     <div style="margin-bottom:var(--space-4);">
@@ -322,28 +571,24 @@ function openEventDrawer(event) {
     <div class="event-config-list" style="margin-bottom:var(--space-5);">
       <div class="event-config-row"><span class="event-config-row__label">Event ID</span><span class="event-config-row__value font-mono" style="font-size:var(--text-xs);">${event.id}</span></div>
       <div class="event-config-row"><span class="event-config-row__label">Platforms</span><span class="event-config-row__value" style="display:flex;gap:4px;flex-wrap:wrap;">${(event.platforms||[]).map(platformBadge).join('')}</span></div>
-      ${event.lifecycleStage ? `<div class="event-config-row"><span class="event-config-row__label">Lifecycle Stage</span><span class="event-config-row__value">${event.lifecycleStage}</span></div>` : ''}
+      ${event.lifecycleStage ? `<div class="event-config-row"><span class="event-config-row__label">Lifecycle</span><span class="event-config-row__value">${event.lifecycleStage}</span></div>` : ''}
       <div class="event-config-row"><span class="event-config-row__label">Properties</span><span class="event-config-row__value tabular-nums">${event.properties.length} total · ${event.properties.filter(p=>p.required).length} required</span></div>
-      ${(event.validationRules||[]).length ? `<div class="event-config-row"><span class="event-config-row__label">Validation Rules</span><span class="event-config-row__value tabular-nums">${event.validationRules.length} rules</span></div>` : ''}
+      ${(event.sourceRules||[]).length ? `<div class="event-config-row"><span class="event-config-row__label">Source Rules</span><span class="event-config-row__value">${sourceRulesSummary(event.sourceRules)}</span></div>` : ''}
     </div>
     ${event.properties.length ? `
     <p class="subhead" style="margin-bottom:var(--space-2);">Properties</p>
     <div class="event-config-list">
       ${event.properties.map(p => `
-        <div class="event-config-row">
-          <span class="event-config-row__label font-mono" style="font-size:var(--text-xs);">${p.name}${p.required ? '<span style="color:var(--color-danger);font-size:10px;margin-left:4px;">req</span>' : ''}</span>
-          <span class="badge badge--neutral badge--dest-tag" style="font-size:10px;">${p.type}</span>
+        <div class="event-config-row" style="flex-wrap:wrap;gap:4px;">
+          <span class="event-config-row__label font-mono" style="font-size:var(--text-xs);">${p.name}${p.required ? '<span style="color:var(--color-danger);margin-left:4px;font-size:10px;">req</span>' : ''}</span>
+          <div style="display:flex;gap:4px;align-items:center;">
+            <span class="badge badge--neutral badge--dest-tag" style="font-size:10px;">${p.type}</span>
+            ${(p.sourceRules||[]).length ? `<span style="font-size:10px;color:var(--color-danger);">${p.sourceRules.filter(r=>r.action==='block').length} blocked src</span>` : ''}
+          </div>
         </div>`).join('')}
     </div>` : ''}
-    ${(event.validationRules||[]).length ? `
-    <p class="subhead" style="margin:var(--space-4) 0 var(--space-2);">Validation Rules</p>
-    <div class="event-config-list">
-      ${event.validationRules.map(r => `
-        <div class="event-config-row">
-          <span class="event-config-row__label font-mono" style="font-size:var(--text-xs);">${r.field} · ${r.type}</span>
-          <span class="badge ${r.level==='error'?'badge--danger':'badge--warning'} badge--dest-tag" style="font-size:10px;">${r.level}</span>
-        </div>`).join('')}
-    </div>` : ''}`;
+    ${srcRulesSection}
+    ${paramSrcSection}`;
 
   drawer.classList.add('is-open');
   document.body.style.overflow = 'hidden';
@@ -353,10 +598,10 @@ function openEventDrawer(event) {
 // ── Summary cards ─────────────────────────────────────────────────────────────
 function renderSummary(data) {
   const s = data.summary;
-  document.querySelector('[data-summary-total]').textContent = s.totalFields;
-  document.querySelector('[data-summary-events]').textContent = s.totalEvents;
+  document.querySelector('[data-summary-total]').textContent      = s.totalFields;
+  document.querySelector('[data-summary-events]').textContent     = s.totalEvents;
   document.querySelector('[data-summary-attributes]').textContent = s.totalAttributes;
-  document.querySelector('[data-summary-sources]').textContent = s.totalSources;
+  document.querySelector('[data-summary-sources]').textContent    = s.totalSources;
   const blockedEl = document.querySelector('[data-summary-blocked]');
   if (blockedEl) blockedEl.textContent = s.blockedEvents || 0;
 }
@@ -369,7 +614,7 @@ function renderEventsTab() {
       <div class="section__header">
         <div>
           <h2 class="section__title">Events</h2>
-          <p class="section__subtitle">Click a row to view details. Blocked events are excluded from audiences and campaigns.</p>
+          <p class="section__subtitle">Click a row to view details. Use Edit to manage source rules per event and per parameter.</p>
         </div>
         <div class="page-header__actions">
           <div class="search-field" style="width:200px;">
@@ -393,8 +638,8 @@ function renderEventsTab() {
         <div class="table-wrap">
           <table class="table" id="catalog-events-table">
             <thead><tr>
-              <th>Event</th><th>Domain</th><th>Platforms</th><th>Lifecycle Stage</th>
-              <th>Properties</th><th>Validation</th><th>Status</th>
+              <th>Event</th><th>Domain</th><th>Platforms</th><th>Props</th>
+              <th>Source Rules</th><th>Status</th>
               ${IS_ADMIN ? '<th></th>' : ''}
             </tr></thead>
             <tbody>
@@ -402,13 +647,18 @@ function renderEventsTab() {
                 <tr data-event-id="${e.id}" style="cursor:pointer;${e.status==='blocked'?'opacity:.55;':''}">
                   <td><div class="event-cell">
                     <span class="event-cell__icon" style="${e.status==='blocked'?'color:var(--color-danger);':''}"><i data-lucide="${e.status==='blocked'?'ban':'zap'}"></i></span>
-                    <span class="event-cell__name">${e.name}</span>
+                    <div>
+                      <span class="event-cell__name">${e.name}</span>
+                      ${e.lifecycleStage ? `<span style="font-size:10px;color:var(--text-tertiary);display:block;">${e.lifecycleStage}</span>` : ''}
+                    </div>
                   </div></td>
                   <td>${domainBadge(e.domain)}</td>
-                  <td style="display:flex;gap:4px;flex-wrap:wrap;padding-top:12px;">${(e.platforms||[]).map(platformBadge).join('')}</td>
-                  <td class="cell-muted" style="font-size:var(--text-xs);">${e.lifecycleStage||'—'}</td>
-                  <td class="tabular-nums" style="font-size:var(--text-sm);">${e.properties.length}</td>
-                  <td class="tabular-nums" style="font-size:var(--text-sm);">${(e.validationRules||[]).length} rules</td>
+                  <td style="display:flex;gap:3px;flex-wrap:wrap;padding-top:12px;">${(e.platforms||[]).map(platformBadge).join('')}</td>
+                  <td class="tabular-nums" style="font-size:var(--text-sm);">
+                    ${e.properties.length}
+                    ${e.properties.some(p=>(p.sourceRules||[]).length>0) ? `<span style="font-size:10px;color:var(--color-danger);margin-left:4px;" title="Has parameter source rules">+param rules</span>` : ''}
+                  </td>
+                  <td>${sourceRulesSummary(e.sourceRules)}</td>
                   <td>${statusBadge(e.status)}</td>
                   ${IS_ADMIN ? `<td onclick="event.stopPropagation()" style="white-space:nowrap;">
                     <button class="btn btn--ghost btn--xs event-block-btn" data-id="${e.id}" data-status="${e.status}" title="${e.status==='blocked'?'Unblock':'Block'}">
@@ -506,14 +756,15 @@ function renderAttributesTab() {
       <div class="section__body">
         <div class="table-wrap">
           <table class="table">
-            <thead><tr><th>Attribute</th><th>Type</th><th>Source</th><th>Sensitivity</th><th>Description</th>${IS_ADMIN?'<th></th>':''}</tr></thead>
+            <thead><tr><th>Attribute</th><th>Type</th><th>Source</th><th>Sensitivity</th><th>Source Rules</th><th>Description</th>${IS_ADMIN?'<th></th>':''}</tr></thead>
             <tbody>
               ${attrs.map(a => `<tr>
                 <td class="cell-primary">${a.name}</td>
                 <td><span class="badge badge--neutral badge--dest-tag" style="font-size:10px;">${a.type}</span></td>
                 <td class="cell-muted" style="font-size:var(--text-xs);">${a.source}</td>
                 <td>${sensitivityBadge(a.sensitivity)}</td>
-                <td class="cell-muted" style="font-size:var(--text-xs);max-width:220px;white-space:normal;">${a.description}</td>
+                <td>${sourceRulesSummary(a.sourceRules)}</td>
+                <td class="cell-muted" style="font-size:var(--text-xs);max-width:200px;white-space:normal;">${a.description}</td>
                 ${IS_ADMIN?`<td style="white-space:nowrap;">
                   <button class="btn btn--ghost btn--xs attr-edit-btn" data-id="${a.id}" title="Edit"><i data-lucide="pencil"></i></button>
                   <button class="btn btn--ghost btn--xs attr-delete-btn" data-id="${a.id}" title="Delete" style="color:var(--color-danger);"><i data-lucide="trash-2"></i></button>
@@ -544,11 +795,12 @@ function renderAttributesTab() {
 
 function openAttrModal(attr = null) {
   const isEdit = !!attr;
+  const srcRulesHtml = buildSourceRulesEditor('attr-src-rules', isEdit ? attr.sourceRules||[] : [], 'attr');
   const overlay = document.createElement('div');
   overlay.className = 'drawer-overlay is-open';
   overlay.style.cssText = 'align-items:center;justify-content:center;';
   overlay.innerHTML = `
-    <div class="drawer" style="width:480px;max-width:95vw;border-radius:12px;" role="dialog">
+    <div class="drawer" style="width:520px;max-width:95vw;border-radius:12px;max-height:90vh;overflow-y:auto;" role="dialog">
       <div class="drawer__header">
         <div><div class="drawer__eyebrow">${isEdit?'Edit':'Add'} Attribute</div><div class="drawer__title">${isEdit?attr.name:'New Attribute'}</div></div>
         <button class="btn btn--ghost btn--sm" id="attr-modal-close"><i data-lucide="x"></i></button>
@@ -564,12 +816,25 @@ function openAttrModal(attr = null) {
             <select class="input" name="type">
               ${['string','number','boolean','date','datetime','enum','array'].map(t=>`<option value="${t}" ${isEdit&&attr.type===t?'selected':''}>${t}</option>`).join('')}
             </select></div>
-          <div class="form-field"><label class="form-label">Source</label><input class="input" name="source" placeholder="CRM, RudderStack, Mautic…" value="${isEdit?attr.source:''}"></div>
+          <div class="form-field"><label class="form-label">Source</label>
+            <input class="input" name="source" placeholder="CRM, RudderStack, Mautic…" value="${isEdit?attr.source:''}"></div>
           <div class="form-field"><label class="form-label">Sensitivity</label>
             <select class="input" name="sensitivity">
               ${['low','internal','pii'].map(s=>`<option value="${s}" ${isEdit&&attr.sensitivity===s?'selected':''}>${s}</option>`).join('')}
             </select></div>
-          <div class="form-field"><label class="form-label">Description</label><textarea class="input" name="description" rows="2">${isEdit?attr.description:''}</textarea></div>
+          <div class="form-field"><label class="form-label">Description</label>
+            <textarea class="input" name="description" rows="2">${isEdit?attr.description:''}</textarea></div>
+
+          <div class="form-field" style="border-top:1px solid var(--border-subtle);padding-top:14px;">
+            <label class="form-label" style="margin-bottom:4px;">Source Rules</label>
+            <p style="font-size:11px;color:var(--text-secondary);margin:0 0 8px;">
+              <strong>allow</strong> — source can read this attribute ·
+              <strong>readonly</strong> — read but cannot write ·
+              <strong>block</strong> — source cannot access this attribute
+            </p>
+            <div id="attr-src-rules">${srcRulesHtml}</div>
+          </div>
+
           <div style="display:flex;gap:8px;justify-content:flex-end;padding-top:8px;border-top:1px solid var(--border-subtle);">
             <button type="button" class="btn btn--outline" id="attr-cancel">Cancel</button>
             <button type="submit" class="btn btn--primary">${isEdit?'Save':'Create'}</button>
@@ -583,17 +848,20 @@ function openAttrModal(attr = null) {
   const close = () => { overlay.remove(); document.body.style.overflow = ''; };
   overlay.querySelector('#attr-modal-close').onclick = close;
   overlay.querySelector('#attr-cancel').onclick = close;
+  const attrSrcEditor = overlay.querySelector('#attr-src-rules .src-rules-editor');
+  if (attrSrcEditor) bindSourceRulesEditor(attrSrcEditor);
   overlay.querySelector('#attr-form').onsubmit = async (e) => {
     e.preventDefault();
     const fd = new FormData(e.target);
     const payload = {
       name: fd.get('name').trim(), domain: fd.get('domain'),
       type: fd.get('type'), source: fd.get('source').trim(),
-      sensitivity: fd.get('sensitivity'), description: fd.get('description').trim()
+      sensitivity: fd.get('sensitivity'), description: fd.get('description').trim(),
+      sourceRules: collectSourceRulesFrom(overlay.querySelector('#attr-src-rules .src-rules-editor')),
     };
     try {
       if (isEdit) { await api('PUT', `/api/data-catalog/attributes/${attr.id}`, payload); showToast('Attribute updated'); }
-      else { await api('POST', '/api/data-catalog/attributes', payload); showToast('Attribute created'); }
+      else        { await api('POST', '/api/data-catalog/attributes', payload);             showToast('Attribute created'); }
       close(); await reloadAndRender();
     } catch(err) { showToast(err.message,'error'); }
   };
@@ -668,8 +936,10 @@ function openSourceModal(src = null) {
             <select class="input" name="type">
               ${['web','mobile','server','marketing','crm'].map(t=>`<option value="${t}" ${isEdit&&src.type===t?'selected':''}>${t}</option>`).join('')}
             </select></div>
-          <div class="form-field"><label class="form-label">Platform</label><input class="input" name="platform" placeholder="web, ios_android, server…" value="${isEdit?src.platform:''}"></div>
-          <div class="form-field"><label class="form-label">Description</label><textarea class="input" name="description" rows="2">${isEdit?src.description:''}</textarea></div>
+          <div class="form-field"><label class="form-label">Platform</label>
+            <input class="input" name="platform" placeholder="web, ios_android, server…" value="${isEdit?src.platform:''}"></div>
+          <div class="form-field"><label class="form-label">Description</label>
+            <textarea class="input" name="description" rows="2">${isEdit?src.description:''}</textarea></div>
           <div style="display:flex;gap:8px;justify-content:flex-end;padding-top:8px;border-top:1px solid var(--border-subtle);">
             <button type="button" class="btn btn--outline" id="src-cancel">Cancel</button>
             <button type="submit" class="btn btn--primary">${isEdit?'Save':'Create'}</button>
@@ -692,7 +962,7 @@ function openSourceModal(src = null) {
     };
     try {
       if (isEdit) { await api('PUT', `/api/data-catalog/sources/${src.id}`, payload); showToast('Source updated'); }
-      else { await api('POST', '/api/data-catalog/sources', payload); showToast('Source created'); }
+      else        { await api('POST', '/api/data-catalog/sources', payload);            showToast('Source created'); }
       close(); await reloadAndRender();
     } catch(err) { showToast(err.message,'error'); }
   };
@@ -711,7 +981,7 @@ function initTabs() {
   });
 }
 
-// ── Reload all data and re-render tabs ────────────────────────────────────────
+// ── Reload all data and re-render ─────────────────────────────────────────────
 async function reloadAndRender() {
   const [summaryRes, eventsRes, attrsRes, sourcesRes] = await Promise.all([
     api('GET', '/api/data-catalog'),
@@ -729,7 +999,7 @@ async function reloadAndRender() {
   renderSourcesTab();
 }
 
-// ── Main entry point ──────────────────────────────────────────────────────────
+// ── Main entry ────────────────────────────────────────────────────────────────
 export async function initDataCatalog() {
   initTabs();
   try {

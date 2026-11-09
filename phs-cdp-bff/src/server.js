@@ -73,6 +73,7 @@ app.use('/api/connections',     require('./routes/connections'));
 app.use('/api/transformations', require('./routes/transformations'));
 app.use('/api/data-catalog',     require('./routes/data-catalog'));
 app.use('/api/dashboard',      require('./routes/dashboard'));
+app.use('/api/module-status',  require('./routes/module-status'));
 
 app.use((_req, res) => res.status(404).json({ error: 'Not found' }));
 app.use(require('./middleware/errorHandler'));

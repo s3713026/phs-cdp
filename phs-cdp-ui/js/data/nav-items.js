@@ -57,7 +57,6 @@ export const NAV_SECTIONS = [
     items: [
       { id: "data-governance", label: "Data Governance", icon: "fingerprint", href: "data-governance.html" },
       { id: "data-catalog", label: "Data Catalog", icon: "folder-tree", href: "data-catalog.html" },
-      { id: "tracking-plans", label: "Tracking Plans", icon: "clipboard-check", href: "tracking-plans.html" },
       { id: "consent-management", label: "Consent Management", icon: "scale", href: "consent-management.html" },
     ],
   },
@@ -101,7 +100,6 @@ export const NAV_SECTIONS = [
       { id: "sources", label: "Sources", icon: "arrow-down-to-line", href: "sources.html" },
       { id: "destinations", label: "Destinations", icon: "arrow-up-from-line", href: "destinations.html" },
       { id: "transformations", label: "Transformations", icon: "shuffle", href: "transformations.html" },
-      { id: "schemas", label: "Schemas", icon: "table-2", href: "#" },
       { id: "pipelines", label: "Pipelines", icon: "git-branch", href: "pipelines.html" },
       { id: "data-quality", label: "Data Quality", icon: "badge-check", href: "data-quality.html" },
       { id: "consent-preferences", label: "Consent & Preferences", icon: "shield-check", href: "consent-preferences.html" },

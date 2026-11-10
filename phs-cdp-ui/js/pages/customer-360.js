@@ -2297,13 +2297,12 @@ function goToSearch() {
   document.title = "Customer 360 — PHS CDP";
 }
 
-function goToResults() {
+async function goToResults() {
   if (!lastQuery) {
     goToSearch();
     return;
   }
-  renderResultsView(lastQuery, lastField, searchCustomers(lastQuery, lastField));
-  showView("results");
+  await runSearch(lastQuery, lastField);
 }
 
 function renderResultsView(query, field, results) {
@@ -2380,11 +2379,33 @@ function renderResultsView(query, field, results) {
   refreshIcons();
 }
 
-function runSearch(query, field) {
+async function runSearch(query, field) {
   lastQuery = query;
   lastField = field;
-  renderResultsView(query, field, searchCustomers(query, field));
   showView("results");
+
+  // Show loading state
+  const body = document.querySelector("[data-c360-results-body]");
+  if (body) body.innerHTML = '<div class="state-loading"><span class="spinner"></span> Searching...</div>';
+
+  let results;
+  if (window.PHSC360) {
+    // BFF search — real data from Postgres (no local mock fallback)
+    const bffList = await window.PHSC360.fetchCustomerList(query);
+    results = (bffList || []).map(c => ({
+      id: c.id || c.phs_account_id,
+      crmId: c.crmId || c.crm_id || c.id,
+      lifecycle: c.lifecycleLabel || c.lifecycle || 'Unknown',
+      status: c.status || (c.last_seen_at ? 'Active' : 'Unknown'),
+      lastActive: c.lastActive || c.last_seen_at || '',
+      ...c,
+    }));
+  } else {
+    // BFF not available — local mock only (dev without BFF)
+    results = searchCustomers(query, field);
+  }
+
+  renderResultsView(query, field, results);
 }
 
 function renderNotFoundView(id, fromResults) {

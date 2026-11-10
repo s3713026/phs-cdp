@@ -26,12 +26,8 @@ export const NAV_SECTIONS = [
     items: [{ id: "data-flows", label: "Data Flows", icon: "workflow", href: "data-flows.html" }],
   },
   {
-    label: "Customers",
-    icon: "users",
-    items: [
-      { id: "customer-360", label: "Customer 360", icon: "circle-user-round", href: "customer-360.html" },
-      { id: "identity-graph", label: "Identity Graph", icon: "network", href: "identity-graph.html" },
-    ],
+    label: null,
+    items: [{ id: "customer-360", label: "Customer 360", icon: "circle-user-round", href: "customer-360.html" }],
   },
   {
     label: "Audiences",
@@ -47,15 +43,16 @@ export const NAV_SECTIONS = [
     label: "Monitor",
     icon: "gauge",
     items: [
-      { id: "live-events", label: "Live Events", icon: "radio", href: "live-events.html" },
+      // Live Events removed — realtime single-user event debug lives in Customer 360 → Events tab
       { id: "event-streams", label: "Event Streams", icon: "cable", href: "event-streams.html" },
+      { id: "data-quality", label: "Data Quality", icon: "badge-check", href: "data-quality.html" },
     ],
   },
   {
     label: "Governance",
     icon: "shield",
     items: [
-      { id: "data-governance", label: "Data Governance", icon: "fingerprint", href: "data-governance.html" },
+      // Data Governance merged into Data Quality (Monitor section above)
       { id: "data-catalog", label: "Data Catalog", icon: "folder-tree", href: "data-catalog.html" },
       { id: "consent-management", label: "Consent Management", icon: "scale", href: "consent-management.html" },
     ],
@@ -72,10 +69,6 @@ export const NAV_SECTIONS = [
     label: "Activation",
     icon: "send",
     items: [
-      // Connections/Sources/Destinations moved into the Data group
-      // below (RudderStack-aligned IA) — no separate Activation entry
-      // for them any more, so there is exactly one canonical path to
-      // each, not two.
       { id: "campaigns", label: "Campaigns", icon: "megaphone", href: "campaigns.html" },
       { id: "content", label: "Content", icon: "layout-template", href: "content.html" },
     ],
@@ -84,24 +77,12 @@ export const NAV_SECTIONS = [
     label: "Data",
     icon: "database",
     items: [
-      // RudderStack-aligned connection-management IA: Directory
-      // (available connector types) -> Sources -> Destinations ->
-      // Transformations, with the Source<->Destination relationship
-      // visualization living on Data Flows (top of the sidebar) rather
-      // than a separate "Connections" page — the old standalone
-      // two-column Sources/Destinations inventory there duplicated
-      // what Sources/Destinations already show, so that nav entry and
-      // page are gone; connections.html now redirects to Data Flows
-      // for any stale link. "Data Sources" is likewise gone as a
-      // distinct nav item since Sources below is its one canonical
-      // replacement.
       { id: "directory", label: "Directory", icon: "layout-grid", href: "directory.html" },
       { id: "connections", label: "Connection Manager", icon: "git-branch", href: "connection-manager.html" },
       { id: "sources", label: "Sources", icon: "arrow-down-to-line", href: "sources.html" },
       { id: "destinations", label: "Destinations", icon: "arrow-up-from-line", href: "destinations.html" },
       { id: "transformations", label: "Transformations", icon: "shuffle", href: "transformations.html" },
       { id: "pipelines", label: "Pipelines", icon: "git-branch", href: "pipelines.html" },
-      { id: "data-quality", label: "Data Quality", icon: "badge-check", href: "data-quality.html" },
       { id: "consent-preferences", label: "Consent & Preferences", icon: "shield-check", href: "consent-preferences.html" },
     ],
   },

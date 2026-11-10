@@ -35,7 +35,7 @@ import {
 import { getPlanById, eventComplianceStatus } from "../data/tracking-plans.js";
 import { initColumnManager, initFilterPanel, countActiveFilters, getStoredColumns } from "../components/connector-directory.js";
 
-let streams = [...EVENT_STREAMS];
+let streams = []; // populated from BFF; falls back to empty state when no data
 let timeRange = "Last 1 hour";
 let visibleColumns = [];
 let currentDetailId = null;
@@ -776,113 +776,77 @@ function createStream() {
 }
 
 /* ================================================================ */
-/* BFF ENRICHMENT — Inject real RudderStack data into mock streams    */
+/* BFF LOAD — streams come from BFF/RudderStack, no mock fallback     */
 /* ================================================================ */
 
-// sourceId từ workspaceConfig → stream id trong mock EVENT_STREAMS
-const SOURCE_ID_TO_STREAM = {
-  'phs-web-source':    'es-001',
-  'phs-mobile-source': 'es-002',
-  'phs-server-source': 'es-003',
-};
-
-// source label → stream id (fallback dùng tên)
-const SOURCE_NAME_TO_STREAM = {
-  'Web App':    'es-001',
-  'Mobile App': 'es-002',
-  'Server Side':'es-003',
-};
-
-async function enrichStreamsFromBFF() {
-  if (typeof PHSAPI === 'undefined') return;
-
-  try {
-    // Lấy events thực từ RudderStack
-    const evRes = await PHSAPI.events.stream({ limit: 500 });
-    const evData = evRes?.data || [];
-
-    if (!evData.length) return;
-
-    // Đếm events per sourceId & tìm latest timestamp per source
-    const countBySource = {};
-    const latestBySource = {};
-
-    evData.forEach(ev => {
-      const sid = ev.sourceId || 'unknown';
-      countBySource[sid] = (countBySource[sid] || 0) + 1;
-
-      const ts = ev.receivedAt ? new Date(ev.receivedAt) : null;
-      if (ts && !isNaN(ts)) {
-        if (!latestBySource[sid] || ts > latestBySource[sid]) {
-          latestBySource[sid] = ts;
-        }
-      }
-    });
-
-    // Tổng event count & latest ts toàn bộ
-    const totalEvents = evData.length;
-    const latestTs = Object.values(latestBySource).sort((a, b) => b - a)[0];
-
-    // Enrich từng mock stream với real data
-    Object.entries(SOURCE_ID_TO_STREAM).forEach(([sourceId, streamId]) => {
-      const s = streams.find(x => x.id === streamId);
-      if (!s) return;
-
-      const count = countBySource[sourceId] || 0;
-      const latest = latestBySource[sourceId];
-
-      if (count > 0) {
-        // Cập nhật eventsToday với số thực (base * factor để EPM cũng hợp lý)
-        s.metrics.eventsTodayBase = count;
-        s.metrics.eventsPerMinuteBase = Math.max(1, Math.round(count / 60));
-        s.status = 'Healthy';
-      }
-
-      if (latest) {
-        // lastReceivedSec = số giây kể từ latest event
-        const secAgo = Math.max(0, Math.floor((Date.now() - latest.getTime()) / 1000));
-        s.lastReceivedSec = secAgo;
-      }
-    });
-
-    // Update summary với total real events (override eventsToday trên summary)
-    _bffTotalEvents = totalEvents;
-    _bffLatestTs = latestTs;
-
-    renderSummary();
-    renderTable();
-
-    console.log(`[EventStreams] BFF enrichment: ${totalEvents} events from ${Object.keys(countBySource).length} sources`);
-  } catch (err) {
-    console.warn('[EventStreams] BFF enrichment failed:', err.message);
-    // Fall back to mock silently
+function showEmptyState() {
+  const tableBody = document.querySelector('[data-streams-table-body]');
+  if (tableBody) {
+    tableBody.closest('table')?.closest('.table-wrap')?.setAttribute('hidden', '');
   }
+  let empty = document.querySelector('[data-streams-empty]');
+  if (!empty) {
+    empty = document.createElement('div');
+    empty.setAttribute('data-streams-empty', '');
+    empty.className = 'state-empty';
+    empty.innerHTML = `
+      <span class="state-empty__icon"><i data-lucide="cable"></i></span>
+      <h2 class="state-empty__title">No Event Streams</h2>
+      <p class="state-empty__description">
+        No data sources are connected yet. Configure a source in RudderStack to start receiving events.
+      </p>`;
+    const container = document.querySelector('[data-streams-list]') || document.querySelector('main');
+    if (container) container.appendChild(empty);
+    refreshIcons();
+  }
+  empty.hidden = false;
 }
 
-// Module-level BFF stats (used in renderSummary override)
-let _bffTotalEvents = null;
-let _bffLatestTs    = null;
-
-// Override renderSummary khi có BFF data
-function renderSummaryWithBFF() {
-  const active  = streams.filter(s => s.status !== 'Paused').length;
-  const healthy = streams.filter(s => s.status === 'Healthy').length;
-  const issues  = streams.filter(s => s.status === 'Warning' || s.status === 'Error').length;
-
-  // EPM: tính từ enriched streams
-  const epm = streams.reduce((sum, s) => sum + metricsForRange(s, timeRange).eventsPerMinute, 0);
-
-  document.querySelector('[data-summary-active]').textContent   = active;
-  document.querySelector('[data-summary-epm]').textContent      = _bffTotalEvents !== null
-    ? _bffTotalEvents.toLocaleString()   // show total events instead of epm when we have real data
-    : fmt(epm);
-  document.querySelector('[data-summary-healthy]').textContent  = healthy;
-  document.querySelector('[data-summary-issues]').textContent   = issues;
-
-  // Update the "Events / min" label to "Total Events" when we have real data
-  const epmLabel = document.querySelector('[data-summary-epm]')?.closest('.metric')?.querySelector('.metric__label');
-  if (epmLabel && _bffTotalEvents !== null) {
-    epmLabel.textContent = 'Total Events (live)';
+async function loadStreamsFromBFF() {
+  if (typeof PHSAPI === 'undefined') {
+    showEmptyState();
+    return;
+  }
+  try {
+    const res = await PHSAPI.events.stream({ limit: 500 });
+    const evData = res?.data || [];
+    if (!evData.length) {
+      streams = [];
+      showEmptyState();
+      return;
+    }
+    // Group events by source → build stream objects
+    const bySource = {};
+    evData.forEach(ev => {
+      const sid   = ev.sourceId   || 'unknown';
+      const sname = ev.sourceName || sid;
+      if (!bySource[sid]) bySource[sid] = { id: sid, name: sname, events: [], latest: null };
+      bySource[sid].events.push(ev);
+      const ts = ev.receivedAt ? new Date(ev.receivedAt) : null;
+      if (ts && !isNaN(ts) && (!bySource[sid].latest || ts > bySource[sid].latest)) {
+        bySource[sid].latest = ts;
+      }
+    });
+    streams = Object.values(bySource).map(s => ({
+      id:     s.id,
+      name:   s.name,
+      status: 'Healthy',
+      metrics: {
+        eventsTodayBase:    s.events.length,
+        eventsPerMinuteBase: Math.max(1, Math.round(s.events.length / 60)),
+      },
+      lastReceivedSec: s.latest
+        ? Math.max(0, Math.floor((Date.now() - s.latest.getTime()) / 1000))
+        : null,
+      _fromBFF: true,
+    }));
+    renderSummary();
+    renderTable();
+    console.log(`[EventStreams] Loaded ${streams.length} streams from BFF`);
+  } catch (err) {
+    console.warn('[EventStreams] BFF load failed:', err.message);
+    streams = [];
+    showEmptyState();
   }
 }
 
@@ -894,15 +858,13 @@ export function initEventStreams() {
   initFilters();
   renderTable();
 
-  document.querySelector("[data-back-to-list]").addEventListener("click", () => showView("list"));
-  document.querySelector("[data-create-stream]").addEventListener("click", openSetup);
-  document.querySelector("[data-setup-back]").addEventListener("click", closeSetup);
+  document.querySelector("[data-back-to-list]")?.addEventListener("click", () => showView("list"));
+  document.querySelector("[data-create-stream]")?.addEventListener("click", openSetup);
+  document.querySelector("[data-setup-back]")?.addEventListener("click", closeSetup);
 
   const openId = new URLSearchParams(location.search).get("open");
   if (openId && findStream(openId)) openDetail(openId);
 
-  // Enrich with real RudderStack data (non-blocking)
-  enrichStreamsFromBFF().then(() => {
-    renderSummaryWithBFF();
-  });
+  // Load real streams from BFF (no mock fallback)
+  loadStreamsFromBFF();
 }

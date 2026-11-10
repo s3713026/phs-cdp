@@ -32,33 +32,79 @@ import { getStreamById } from "../data/event-streams.js";
 import { initFilterPanel, countActiveFilters } from "../components/connector-directory.js";
 import { renderLineChart } from "../components/chart.js";
 
-let violations = [...VIOLATIONS];
+let violations = []; // populated from BFF only
+let _bffConnected = false; // set to true when BFF returns real data
 
 // ── BFF integration ───────────────────────────────────────────────────────
+function showDQEmptyState(message) {
+  // Hide score tiles
+  document.querySelectorAll('[data-dq-score-tile]').forEach(el => el.closest('.metric')?.setAttribute('hidden', ''));
+
+  // Show empty state in violations panel
+  const tbody = document.querySelector('[data-dq-violations-body]');
+  if (tbody) {
+    const wrap = tbody.closest('table')?.closest('.table-wrap');
+    if (wrap) wrap.setAttribute('hidden', '');
+  }
+  let empty = document.querySelector('[data-dq-empty]');
+  if (!empty) {
+    empty = document.createElement('div');
+    empty.setAttribute('data-dq-empty', '');
+    empty.className = 'state-empty';
+    empty.innerHTML = `
+      <span class="state-empty__icon"><i data-lucide="badge-check"></i></span>
+      <h2 class="state-empty__title">No Data Quality Issues</h2>
+      <p class="state-empty__description">${message || 'Connect a data source to start monitoring event quality, tracking plan compliance and delivery health.'}</p>`;
+    const container = document.querySelector('[data-dq-violations-panel]') || document.querySelector('main');
+    if (container) container.appendChild(empty);
+    if (window.lucide) window.lucide.createIcons();
+  }
+  empty.hidden = false;
+}
+
 async function loadDataQualityFromBFF() {
-  if (typeof PHSAPI === 'undefined') return;
+  if (typeof PHSAPI === 'undefined') {
+    showDQEmptyState();
+    return;
+  }
   try {
-    const [overview, issues] = await Promise.all([
+    const [overviewRes, issuesRes] = await Promise.all([
       PHSAPI.dataQuality.overview(),
       PHSAPI.dataQuality.issues(),
     ]);
-    // Surface the overall quality score in the header if available
-    if (overview && overview.score != null) {
-      const scoreEl = document.querySelector('[data-dq-overall-score]');
-      if (scoreEl) scoreEl.textContent = overview.score + '%';
+
+    const isNotConnected = overviewRes?._dataStatus === 'not_connected';
+
+    // Mark BFF as connected when we have real data
+    if (overviewRes && !isNotConnected) {
+      _bffConnected = true;
+      const scoreMap = {
+        '[data-dq-overall-score]':    overviewRes.overallScore,
+        '[data-dq-identity-score]':   overviewRes.identityCoverage,
+        '[data-dq-event-score]':      overviewRes.eventCompleteness,
+        '[data-dq-tracking-score]':   overviewRes.trackingCoverage,
+        '[data-dq-freshness-score]':  overviewRes.dataFreshness,
+      };
+      Object.entries(scoreMap).forEach(([sel, val]) => {
+        const el = document.querySelector(sel);
+        if (el) el.textContent = val != null ? `${val}%` : '—';
+      });
     }
-    // Replace violation list with BFF issues when provided
-    if (issues && Array.isArray(issues.data || issues.issues)) {
-      const bffIssues = issues.data || issues.issues;
-      if (bffIssues.length) {
-        violations.length = 0;
-        bffIssues.forEach(i => violations.push(i));
-      }
+
+    // Update violations from BFF
+    const bffIssues = issuesRes?.data || issuesRes?.issues || [];
+    violations = bffIssues;
+
+    if (violations.length === 0 && isNotConnected) {
+      showDQEmptyState('Connect Mautic and RudderStack to start monitoring data quality.');
+    } else if (violations.length === 0) {
+      showDQEmptyState('No issues found. Data quality looks good.');
     }
+
   } catch (e) {
     console.warn('[DataQuality] BFF unreachable:', e.message);
-    // Clear mock stats so UI shows empty/not-connected state
-    overview = null;
+    violations = [];
+    showDQEmptyState();
   }
 }
 let dateFilter = { preset: "Last 24 hours" };
@@ -207,6 +253,14 @@ function exportViolationsCsv() {
 /* KPIs + Tracking Plan Compliance                                     */
 /* ================================================================ */
 function renderKpis() {
+  if (!_bffConnected) {
+    ['[data-kpi-validated]','[data-kpi-violations]','[data-kpi-dropped]',
+     '[data-kpi-rate]','[data-kpi-sources]','[data-kpi-plans]'].forEach(sel => {
+      const el = document.querySelector(sel);
+      if (el) el.textContent = '—';
+    });
+    return;
+  }
   const c = trackingPlanCompliance(dateFilter);
   document.querySelector("[data-kpi-validated]").textContent = fmt(c.eventsValidated);
   document.querySelector("[data-kpi-violations]").textContent = fmt(c.eventsWithViolations);
@@ -217,11 +271,19 @@ function renderKpis() {
 }
 
 function renderTrackingPlanCompliance() {
+  const container = document.querySelector("[data-tp-compliance]");
+  if (!container) return;
+  if (!_bffConnected) {
+    container.innerHTML = `<p class="state-empty__description" style="padding: var(--space-4) 0;">
+      No tracking plan data available. Connect a data source to monitor compliance.
+    </p>`;
+    return;
+  }
   const c = trackingPlanCompliance(dateFilter);
   const validPct = 100 - c.violationRate - (c.eventsDropped / c.eventsValidated) * 100;
   const violPct = c.violationRate;
   const dropPct = (c.eventsDropped / c.eventsValidated) * 100;
-  document.querySelector("[data-tp-compliance]").innerHTML = `
+  container.innerHTML = `
     <div class="event-attr-grid" style="margin-bottom: var(--space-5);">
       <div class="attr-item"><span class="attr-item__label">Events Validated</span><span class="attr-item__value tabular-nums">${fmt(c.eventsValidated)}</span></div>
       <div class="attr-item"><span class="attr-item__label">Events With Violations</span><span class="attr-item__value tabular-nums">${fmt(c.eventsWithViolations)}</span></div>
@@ -232,20 +294,30 @@ function renderTrackingPlanCompliance() {
       <div style="width:${validPct}%; background: var(--color-primary-500);" title="Valid ${validPct.toFixed(2)}%"></div>
       <div style="width:${violPct}%; background: var(--color-gold-500);" title="With Violations ${violPct.toFixed(2)}%"></div>
       <div style="width:${dropPct}%; background: var(--color-danger-500);" title="Dropped ${dropPct.toFixed(2)}%"></div>
-    </div>
-    <p class="event-form-section__hint" style="margin-top: var(--space-2);">Prototype metrics, derived directly from the counts above — not an arbitrary composite score.</p>`;
+    </div>`;
 }
 
 /* ================================================================ */
 /* Charts                                                              */
 /* ================================================================ */
 function renderViolationsChart() {
-  document.querySelector("[data-violations-range]").textContent = dateRangeLabel();
+  const rangeEl = document.querySelector("[data-violations-range]");
+  if (rangeEl) rangeEl.textContent = dateRangeLabel();
+  if (!_bffConnected) {
+    const el = document.querySelector("[data-violations-chart]");
+    if (el) el.innerHTML = '<p class="chart-empty">No data — connect a source to see violation trends.</p>';
+    return;
+  }
   const { labels, series } = violationsOverTimeSeries(dateFilter);
   renderLineChart(document.querySelector("[data-violations-chart]"), { series, labels, formatValue: (n) => fmt(n) });
 }
 
 function renderVolumeChart() {
+  if (!_bffConnected) {
+    const el = document.querySelector("[data-volume-chart]");
+    if (el) el.innerHTML = '<p class="chart-empty">No data — connect a source to see event volume.</p>';
+    return;
+  }
   const v = eventVolumeSeries(dateFilter);
   renderLineChart(document.querySelector("[data-volume-chart]"), {
     series: [
@@ -263,70 +335,33 @@ function renderVolumeChart() {
 /* Quality by Source / Tracking Plan / Destination Delivery            */
 /* ================================================================ */
 function renderSourceQualityTable() {
-  const scale = trackingPlanCompliance(dateFilter).eventsValidated / trackingPlanCompliance({ preset: "Last 24 hours" }).eventsValidated;
   const tbody = document.querySelector("[data-source-quality-table] tbody");
-  tbody.innerHTML = SOURCE_QUALITY.map((s) => {
-    const record = getSourceRecord(s.sourceId);
-    const plan = s.trackingPlanId ? getPlanById(s.trackingPlanId) : null;
-    const validated = Math.round(s.eventsValidatedBase * scale);
-    const withViolations = Math.round(validated * (s.violationRate / 100));
-    const dropped = Math.round(validated * (s.droppedRate / 100));
-    return `<tr>
-      <td class="cell-primary">${record?.provider || s.sourceId}</td>
-      <td class="num tabular-nums">${fmt(validated)}</td>
-      <td class="num tabular-nums">${fmt(withViolations)}</td>
-      <td class="num tabular-nums">${pct(s.violationRate)}</td>
-      <td class="num tabular-nums">${fmt(dropped)}</td>
-      <td class="cell-muted">${plan ? plan.name : "—"}</td>
-      <td>${statusBadge(s.status)}</td>
-    </tr>`;
-  }).join("");
+  if (!tbody) return;
+  if (!_bffConnected) {
+    tbody.innerHTML = `<tr><td colspan="7" class="table__empty">No source data available. Connect a data source to monitor quality.</td></tr>`;
+    return;
+  }
+  tbody.innerHTML = `<tr><td colspan="7" class="table__empty">No source quality data.</td></tr>`;
 }
 
 function renderPlanQualityTable() {
-  const scale = trackingPlanCompliance(dateFilter).eventsValidated / trackingPlanCompliance({ preset: "Last 24 hours" }).eventsValidated;
   const tbody = document.querySelector("[data-plan-quality-table] tbody");
-  tbody.innerHTML = qualityByTrackingPlan()
-    .map((p) => {
-      const validated = Math.round(p.eventsValidatedBase * scale);
-      const viol = Math.round(p.violationsBase * scale);
-      const dropped = Math.round(p.droppedBase * scale);
-      return `<tr data-plan-row="${p.planId}" style="cursor:pointer;">
-      <td class="cell-primary">${p.plan.name}</td>
-      <td class="cell-muted font-mono">v${p.plan.id === "tp-lifecycle" ? "0.9" : "1"}</td>
-      <td class="num tabular-nums">${p.sourceCount}</td>
-      <td class="num tabular-nums">${fmt(validated)}</td>
-      <td class="num tabular-nums">${fmt(viol)}</td>
-      <td class="num tabular-nums">${pct(p.violationRate)}</td>
-      <td class="num tabular-nums">${fmt(dropped)}</td>
-      <td>${statusBadge(p.status)}</td>
-    </tr>`;
-    })
-    .join("");
-  tbody.querySelectorAll("[data-plan-row]").forEach((row) => {
-    row.addEventListener("click", () => (window.location.href = `tracking-plans.html?open=${row.dataset.planRow}`));
-  });
+  if (!tbody) return;
+  if (!_bffConnected) {
+    tbody.innerHTML = `<tr><td colspan="8" class="table__empty">No tracking plan data available.</td></tr>`;
+    return;
+  }
+  tbody.innerHTML = `<tr><td colspan="8" class="table__empty">No tracking plan quality data.</td></tr>`;
 }
 
 function renderDeliveryTable() {
   const tbody = document.querySelector("[data-delivery-table] tbody");
-  tbody.innerHTML = destinationDelivery()
-    .map((d) => {
-      const failures = Math.round(d.eventsSentBase * (d.failureRate / 100));
-      return `<tr data-delivery-row="${d.destination.id}" style="cursor:pointer;">
-      <td class="cell-primary">${d.destination.name}</td>
-      <td class="cell-muted">${d.destination.deliveryConfig.mode}</td>
-      <td class="num tabular-nums">${fmt(d.eventsSentBase)}</td>
-      <td class="num tabular-nums">${fmt(failures)}</td>
-      <td class="num tabular-nums">${pct(d.failureRate)}</td>
-      <td class="cell-muted">${d.lastDelivery}</td>
-      <td>${statusBadge(d.status)}</td>
-    </tr>`;
-    })
-    .join("");
-  tbody.querySelectorAll("[data-delivery-row]").forEach((row) => {
-    row.addEventListener("click", () => (window.location.href = `destinations.html?open=${row.dataset.deliveryRow}`));
-  });
+  if (!tbody) return;
+  if (!_bffConnected) {
+    tbody.innerHTML = `<tr><td colspan="7" class="table__empty">No delivery data available. Connect an activation channel to monitor delivery health.</td></tr>`;
+    return;
+  }
+  tbody.innerHTML = `<tr><td colspan="7" class="table__empty">No delivery data.</td></tr>`;
 }
 
 /* ================================================================ */

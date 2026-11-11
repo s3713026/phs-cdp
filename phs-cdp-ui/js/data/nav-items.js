@@ -43,7 +43,6 @@ export const NAV_SECTIONS = [
     label: "Monitor",
     icon: "gauge",
     items: [
-      // Live Events removed — realtime single-user event debug lives in Customer 360 → Events tab
       { id: "event-streams", label: "Event Streams", icon: "cable", href: "event-streams.html" },
       { id: "data-quality", label: "Data Quality", icon: "badge-check", href: "data-quality.html" },
     ],
@@ -52,7 +51,6 @@ export const NAV_SECTIONS = [
     label: "Governance",
     icon: "shield",
     items: [
-      // Data Governance merged into Data Quality (Monitor section above)
       { id: "data-catalog", label: "Data Catalog", icon: "folder-tree", href: "data-catalog.html" },
       { id: "consent-management", label: "Consent Management", icon: "scale", href: "consent-management.html" },
     ],
@@ -100,7 +98,8 @@ export const NAV_SECTIONS = [
     label: "Administration",
     icon: "shield-alert",
     items: [
-      { id: "admin-infrastructure", label: "Infrastructure", icon: "server", href: "admin-integrations.html" },
+      { id: "admin-infrastructure",     label: "Infrastructure",     icon: "server",    href: "admin-integrations.html" },
+      { id: "admin-identity-hierarchy", label: "Identity Hierarchy", icon: "git-merge", href: "admin-identity-hierarchy.html" },
     ],
   },
 ];

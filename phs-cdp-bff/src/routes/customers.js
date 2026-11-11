@@ -11,9 +11,9 @@ const GOLDEN_ID = 'PHS-CUS-GOLDEN-001';
 function mapDbCustomer(row) {
   const attrs = row.custom_attributes || {};
   return {
-    id:               row.phs_account_id || row.id,
+    id:               row.c360_customer_id || row.id,
     dbId:             row.id,
-    name:             row.full_name || row.email || `Customer ${row.phs_account_id || row.id}`,
+    name:             row.full_name || row.email || `Customer ${row.c360_customer_id || row.id}`,
     email:            row.email    || '',
     phone:            row.phone    || '',
     lifecycle:        row.lifecycle_stage || 'unknown',
@@ -46,7 +46,7 @@ router.get('/', requireRole('viewer'), async (req, res) => {
     let   p          = 1;
 
     if (search) {
-      conditions.push(`(full_name ILIKE $${p} OR email ILIKE $${p} OR phs_account_id ILIKE $${p})`);
+      conditions.push(`(full_name ILIKE $${p} OR email ILIKE $${p} OR c360_customer_id ILIKE $${p})`);
       params.push(`%${search}%`);
       p++;
     }
@@ -129,7 +129,7 @@ router.get('/:id', requireRole('viewer'), async (req, res) => {
        FROM cdp_customers c
        LEFT JOIN cdp_identities i ON i.customer_id = c.id
        LEFT JOIN cdp_consents   con ON con.customer_id = c.id
-       WHERE c.phs_account_id = $1 OR c.id::text = $1
+       WHERE c.c360_customer_id = $1 OR c.id::text = $1
        GROUP BY c.id
        LIMIT 1`,
       [id]
@@ -180,7 +180,7 @@ router.get('/:id/events', requireRole('viewer'), async (req, res) => {
   try {
     // Resolve UUID from phs_account_id
     const lookup = await db.query(
-      `SELECT id FROM cdp_customers WHERE phs_account_id = $1 OR id::text = $1 LIMIT 1`, [id]
+      `SELECT id FROM cdp_customers WHERE c360_customer_id = $1 OR id::text = $1 LIMIT 1`, [id]
     );
     if (!lookup.rows.length) return res.json({ data: [], total: 0, source: 'postgres' });
 

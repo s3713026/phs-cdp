@@ -30,22 +30,12 @@ function getPool() {
   return pool;
 }
 
-/**
- * Chạy query với auto-release connection.
- * @param {string} sql
- * @param {Array}  params
- * @returns {Promise<Array>}
- */
 async function query(sql, params = []) {
   const db = getPool();
   const [rows] = await db.execute(sql, params);
   return rows;
 }
 
-/**
- * Kiểm tra kết nối DB có hoạt động không.
- * @returns {Promise<boolean>}
- */
 async function healthCheck() {
   try {
     await query('SELECT 1');

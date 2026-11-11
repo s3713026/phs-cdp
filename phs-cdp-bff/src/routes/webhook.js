@@ -50,8 +50,9 @@ router.post('/rudderstack', verifyWebhookSecret, async (req, res) => {
 });
 
 async function processEvent(event) {
-  const { type, userId, anonymousId, traits = {}, properties = {} } = event;
+  const { type, userId, anonymousId, traits = {}, properties = {}, messageId } = event;
   const previousId = event.previousId || event.context?.previousId;
+  const rsJobId = event._rsJobId || null; // set by batch processor when available
 
   switch ((type || '').toLowerCase()) {
 
@@ -93,6 +94,8 @@ async function processEvent(event) {
         { ...properties, category: event.category },
         source,
         event.context?.sessionId || null,
+        messageId || null,
+        rsJobId,
       );
     }
 
@@ -113,6 +116,8 @@ async function processEvent(event) {
         },
         deriveSource(event),
         event.context?.sessionId || null,
+        messageId || null,
+        rsJobId,
       );
     }
 

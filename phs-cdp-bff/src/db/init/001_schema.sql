@@ -38,11 +38,8 @@ CREATE INDEX IF NOT EXISTS idx_customers_anonymous_id ON cdp_customers(anonymous
 CREATE TABLE IF NOT EXISTS cdp_identities (
   id               UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   customer_id      UUID NOT NULL REFERENCES cdp_customers(id) ON DELETE CASCADE,
-  identifier_type  VARCHAR(64) NOT NULL
-                   CHECK (identifier_type IN (
-                     'phs_account_id','email','phone','anonymous_id',
-                     'device_id','appsflyer_id','zalo_id'
-                   )),
+  identifier_type  VARCHAR(64) NOT NULL,
+  -- No CHECK constraint here — valid types governed by cdp_identity_config table
   identifier_value VARCHAR(512) NOT NULL,
   source           VARCHAR(64) DEFAULT 'rudderstack'
                    CHECK (source IN ('web','mobile','crm','rudderstack','server')),
@@ -73,6 +70,15 @@ CREATE INDEX IF NOT EXISTS idx_events_customer_id ON cdp_events(customer_id);
 CREATE INDEX IF NOT EXISTS idx_events_anonymous_id ON cdp_events(anonymous_id);
 CREATE INDEX IF NOT EXISTS idx_events_name ON cdp_events(event_name);
 CREATE INDEX IF NOT EXISTS idx_events_occurred_at ON cdp_events(occurred_at DESC);
+
+-- RudderStack traceability (additive — nullable, không ảnh hưởng existing data)
+ALTER TABLE cdp_events
+  ADD COLUMN IF NOT EXISTS rs_message_id VARCHAR(255),
+  ADD COLUMN IF NOT EXISTS rs_job_id     BIGINT;
+
+CREATE UNIQUE INDEX IF NOT EXISTS idx_events_rs_message_id
+  ON cdp_events(rs_message_id)
+  WHERE rs_message_id IS NOT NULL;
 
 -- ─── cdp_consents — Consent Management ───────────────────────
 CREATE TABLE IF NOT EXISTS cdp_consents (

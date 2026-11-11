@@ -20,17 +20,17 @@ const CustomerService = {
   },
 
   /**
-   * Find by userId (phs_account_id) or anonymous_id
+   * Find by userId (c360_customer_id) or anonymous_id
    */
   async findByUserId(userId) {
     const result = await db.query(`
       SELECT * FROM cdp_customers
-      WHERE phs_account_id = $1
+      WHERE c360_customer_id = $1
       LIMIT 1
     `, [userId]);
     if (result.rows[0]) return result.rows[0];
     // Try identity graph
-    return this.findByIdentifier('phs_account_id', userId);
+    return this.findByIdentifier('c360_customer_id', userId);
   },
 
   async findByAnonymousId(anonymousId) {
@@ -43,7 +43,7 @@ const CustomerService = {
 
   /**
    * Upsert profile from RudderStack identify() event
-   * @param {string} userId   - RudderStack userId (phs_account_id)
+   * @param {string} userId   - RudderStack userId (c360_customer_id)
    * @param {object} traits   - Profile traits from RS
    * @param {string} anonymousId
    */
@@ -75,18 +75,18 @@ const CustomerService = {
       let customer;
       if (setClauses) {
         const result = await client.query(`
-          INSERT INTO cdp_customers (phs_account_id, ${Object.keys(updates).join(', ')}, first_seen_at)
+          INSERT INTO cdp_customers (c360_customer_id, ${Object.keys(updates).join(', ')}, first_seen_at)
           VALUES ($1, ${Object.keys(updates).map((_, i) => `$${i + 2}`).join(', ')}, NOW())
-          ON CONFLICT (phs_account_id) DO UPDATE SET ${setClauses}, updated_at = NOW()
+          ON CONFLICT (c360_customer_id) DO UPDATE SET ${setClauses}, updated_at = NOW()
           RETURNING *
         `, values);
         customer = result.rows[0];
       } else {
         // No traits — just ensure customer exists
         const result = await client.query(`
-          INSERT INTO cdp_customers (phs_account_id, first_seen_at)
+          INSERT INTO cdp_customers (c360_customer_id, first_seen_at)
           VALUES ($1, NOW())
-          ON CONFLICT (phs_account_id) DO UPDATE SET updated_at = NOW()
+          ON CONFLICT (c360_customer_id) DO UPDATE SET updated_at = NOW()
           RETURNING *
         `, [userId]);
         customer = result.rows[0];
@@ -94,7 +94,7 @@ const CustomerService = {
 
       // Upsert identities
       const identities = [
-        { type: 'phs_account_id', value: userId },
+        { type: 'c360_customer_id', value: userId },
       ];
       if (traits.email) identities.push({ type: 'email', value: traits.email });
       if (traits.phone) identities.push({ type: 'phone', value: traits.phone });
@@ -122,7 +122,7 @@ const CustomerService = {
 
   /**
    * Merge anonymous → known (from RS alias() event)
-   * previousId = anonymous_id, userId = known phs_account_id
+   * previousId = anonymous_id, userId = known c360_customer_id
    */
   async mergeIdentities(previousId, userId) {
     const client = await db.getClient();
@@ -133,9 +133,9 @@ const CustomerService = {
       let knownCustomer = await this.findByUserId(userId);
       if (!knownCustomer) {
         const result = await client.query(`
-          INSERT INTO cdp_customers (phs_account_id, anonymous_id, first_seen_at)
+          INSERT INTO cdp_customers (c360_customer_id, anonymous_id, first_seen_at)
           VALUES ($1, $2, NOW())
-          ON CONFLICT (phs_account_id) DO UPDATE SET anonymous_id = $2, updated_at = NOW()
+          ON CONFLICT (c360_customer_id) DO UPDATE SET anonymous_id = $2, updated_at = NOW()
           RETURNING *
         `, [userId, previousId]);
         knownCustomer = result.rows[0];
@@ -196,11 +196,12 @@ const CustomerService = {
   /**
    * Insert a behavioral event
    */
-  async recordEvent(customerId, anonymousId, eventName, properties = {}, source = 'web', sessionId = null) {
+  async recordEvent(customerId, anonymousId, eventName, properties = {}, source = 'web', sessionId = null, rsMessageId = null, rsJobId = null) {
     const result = await db.query(`
       INSERT INTO cdp_events
-        (customer_id, anonymous_id, event_name, event_category, properties, source, session_id, occurred_at)
-      VALUES ($1, $2, $3, $4, $5, $6, $7, NOW())
+        (customer_id, anonymous_id, event_name, event_category, properties, source, session_id, rs_message_id, rs_job_id, occurred_at)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, NOW())
+      ON CONFLICT (rs_message_id) DO NOTHING
       RETURNING id
     `, [
       customerId || null,
@@ -210,6 +211,8 @@ const CustomerService = {
       JSON.stringify(properties),
       source,
       sessionId || null,
+      rsMessageId || null,
+      rsJobId || null,
     ]);
     return result.rows[0];
   },
@@ -227,7 +230,7 @@ const CustomerService = {
       params.push(lifecycle_stage);
     }
     if (search) {
-      where.push(`(full_name ILIKE $${idx} OR email ILIKE $${idx} OR phs_account_id ILIKE $${idx})`);
+      where.push(`(full_name ILIKE $${idx} OR email ILIKE $${idx} OR c360_customer_id ILIKE $${idx})`);
       params.push(`%${search}%`);
       idx++;
     }

@@ -70,11 +70,11 @@ router.get('/', requireRole('viewer'), async (req, res) => {
     if (customers.length > 0) {
       return res.json({
         data: customers.map(c => ({
-          id: c.id, name: c.full_name || c.email || c.phs_account_id,
+          id: c.id, name: c.full_name || c.email || c.c360_customer_id,
           email: c.email || '', phone: c.phone || '',
           lifecycle: c.lifecycle_stage || 'unknown',
           lifecycleLabel: LIFECYCLE_LABELS[c.lifecycle_stage] || c.lifecycle_stage || 'Unknown',
-          phs_account_id: c.phs_account_id, last_seen_at: c.last_seen_at,
+          phs_account_id: c.c360_customer_id, last_seen_at: c.last_seen_at,
           product_interests: c.product_interests || [], source: 'cdp',
         })),
         total, page: Number(page), limit: Number(limit),

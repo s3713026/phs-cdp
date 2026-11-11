@@ -75,6 +75,10 @@ app.use('/api/data-catalog',     require('./routes/data-catalog'));
 app.use('/api/dashboard',      require('./routes/dashboard'));
 app.use('/api/module-status',  require('./routes/module-status'));
 
+// ── Admin Routes ──────────────────────────────────────────────
+// Technical admin only — requires 'admin' role via RBAC middleware
+app.use('/api/admin/identity-config', require('./routes/admin-identity-config'));
+
 app.use((_req, res) => res.status(404).json({ error: 'Not found' }));
 app.use(require('./middleware/errorHandler'));
 

@@ -29,9 +29,10 @@ import { DESTINATIONS } from "./destinations.js";
 // Live registries — data-flows.js overrides these after BFF load so
 // linkStatus() / connectedDestinationsForSource() etc. always reflect
 // real RudderStack data without needing a module re-import.
-let _liveSources      = SOURCES;
-let _liveDestinations = DESTINATIONS;
-let _liveLinks        = null; // null = fall back to static list below
+// Start empty — no mock fallback; BFF data only.
+let _liveSources      = [];
+let _liveDestinations = [];
+let _liveLinks        = []; // empty until BFF load
 
 /** Called by data-flows.js after loading BFF data.
  *  sources      — live Source objects (from BFF)
@@ -39,9 +40,9 @@ let _liveLinks        = null; // null = fall back to static list below
  *  links        — [{ sourceId, destinationId, dataType }] from workspaceConfig
  */
 export function setLiveData(sources, destinations, links) {
-  _liveSources      = sources      || SOURCES;
-  _liveDestinations = destinations || DESTINATIONS;
-  _liveLinks        = links        || null;
+  _liveSources      = Array.isArray(sources)      ? sources      : [];
+  _liveDestinations = Array.isArray(destinations) ? destinations : [];
+  _liveLinks        = Array.isArray(links)        ? links        : [];
 }
 
 export const SOURCE_DESTINATION_LINKS = [
@@ -70,14 +71,14 @@ export const SOURCE_DESTINATION_LINKS = [
 ];
 
 function findSource(id) {
-  return _liveSources.find((s) => s.id === id) || SOURCES.find((s) => s.id === id);
+  return _liveSources.find((s) => s.id === id);
 }
 function findDestination(id) {
-  return _liveDestinations.find((d) => d.id === id) || DESTINATIONS.find((d) => d.id === id);
+  return _liveDestinations.find((d) => d.id === id);
 }
 
 function activeLinks() {
-  return _liveLinks || SOURCE_DESTINATION_LINKS;
+  return _liveLinks;
 }
 
 /** Derived relationship status — never stored, always computed from

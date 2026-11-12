@@ -31,7 +31,7 @@ export function bootstrapPage(config = {}) {
 
   const sidebarMount = document.querySelector("[data-sidebar-mount]");
   if (sidebarMount) {
-    renderSidebar(sidebarMount, { logoSrc: "assets/logo.webp", currentNavId });
+    renderSidebar(sidebarMount, { logoSrc: "../assets/logo.webp", currentNavId });
   }
 
   const topbarMount = document.querySelector("[data-topbar-mount]");

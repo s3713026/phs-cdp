@@ -79,6 +79,56 @@ app.use('/api/module-status',  require('./routes/module-status'));
 // Technical admin only — requires 'admin' role via RBAC middleware
 app.use('/api/admin/identity-config', require('./routes/admin-identity-config'));
 
+// ── RudderStack SDK /sourceConfig endpoint ───────────────────
+// SDK v3 fetches source config via configUrl/sourceConfig.
+// Self-hosted RudderStack in file-config mode does not expose this,
+// so BFF serves it directly from workspaceConfig.json.
+app.get('/sourceConfig', (req, res) => {
+  try {
+    const writeKey = req.query.writeKey ||
+      (req.headers.authorization
+        ? Buffer.from(req.headers.authorization.replace(/^Basic /, ''), 'base64')
+            .toString('utf8').split(':')[0]
+        : null);
+
+    const fs = require('fs');
+    const wsConfigPath = process.env.RUDDERSTACK_WORKSPACE_CONFIG ||
+      '/app/workspaceConfig.json';
+
+    let sources = [];
+    try {
+      const ws = JSON.parse(fs.readFileSync(wsConfigPath, 'utf8'));
+      sources = ws.sources || [];
+    } catch (e) {
+      console.warn('[sourceConfig] Could not read workspaceConfig:', e.message);
+    }
+
+    const source = writeKey ? sources.find(s => s.writeKey === writeKey) : null;
+    res.set('Cache-Control', 'no-store');
+    res.json({
+      source: source ? {
+        id: source.id,
+        name: source.name,
+        writeKey: source.writeKey,
+        config: source.config || {},
+        enabled: source.enabled !== false,
+        destinations: (source.destinations || []).map(d => ({
+          id: d.id, name: d.name, enabled: d.enabled !== false,
+          config: d.config || {},
+          destinationDefinition: d.destinationDefinition || {},
+        })),
+        updatedAt: new Date().toISOString(),
+      } : {
+        config: {}, destinations: [], enabled: true,
+        updatedAt: new Date().toISOString(),
+      }
+    });
+  } catch (err) {
+    console.error('[sourceConfig] Error:', err);
+    res.status(500).json({ error: 'Internal error' });
+  }
+});
+
 app.use((_req, res) => res.status(404).json({ error: 'Not found' }));
 app.use(require('./middleware/errorHandler'));
 

@@ -630,7 +630,7 @@ phs-cdp/
 │               └── 001_schema.sql
 └── phs-cdp-ui/
     ├── Dockerfile
-    ├── index.html
+    ├── pages/                  ← all .html pages (index, dashboard, ...)
     └── js/
         ├── api.js              ← PHSAPI global object
         └── pages/

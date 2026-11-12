@@ -74,19 +74,7 @@ import { getDestConfig } from "./dest-configs.js";
 /* ---------------------------------------------------------------- */
 /* Shared state                                                       */
 /* ---------------------------------------------------------------- */
-let destinations = [...DESTINATIONS].map(d => ({
-  ...d,
-  deliveryConfig:   d.deliveryConfig   || { mode: "Stream", retries: 3, timeout: 30 },
-  connectionConfig: d.connectionConfig || {},
-  consentConfig:    d.consentConfig    || { required: false, purposes: [] },
-  advancedConfig:   d.advancedConfig   || {},
-  mappingConfig:    d.mappingConfig    || { mappings: [] },
-  connection:       d.connection       || {},
-  provider:         d.provider         || d.name || "Unknown",
-  category:         d.category         || "Other",
-  destinationType:  d.destinationType  || d.category || "Other",
-  purpose:          d.purpose          || "Data Integration",
-}));
+let destinations = [];
 
 // ── BFF integration ────────────────────────────────────────────────────────
 // Mock data is the source of truth for this prototype (see the Phase
@@ -171,6 +159,11 @@ async function loadDestinationsFromBFF() {
           // Account/name
           if (flat.account)     mapped.account     = flat.account;
           if (flat.name)        mapped.account     = mapped.account || flat.name;
+          // For non-webhook providers, the destination name is the connection account name
+          // (e.g. "PHS Google Ads Account") — use it when no explicit account field set
+          if (!mapped.account && bff.name && meta.provider !== 'Webhook' && meta.provider !== 'HTTP API') {
+            mapped.account = bff.name;
+          }
           // URL-based providers
           if (flat.url)         mapped.account     = mapped.account || flat.url;
           if (flat.apiBaseUrl)  mapped.apiBaseUrl  = flat.apiBaseUrl;
@@ -206,6 +199,9 @@ async function loadDestinationsFromBFF() {
         usersBase7d:      mock.usersBase7d    || 0,
         error:            mock.error          || null,
         activity:         mock.activity       || [{ time: now, text: 'Loaded from RudderStack config' }],
+        configuration:    mock.configuration   || [],
+        dataSelection:    mock.dataSelection   || { mode: 'all', eventIds: [], eventProperties: {}, audienceIds: [], attributeIds: [], types: [], template: '' },
+        lastReceived:     mock.lastReceived    || '—',
       };
     });
 
@@ -267,6 +263,9 @@ async function loadSourcesFromBFF() {
         eventsBase7d:     mock.eventsBase7d   || 0,
         error:            mock.error          || null,
         activity:         mock.activity       || [{ time: now, text: 'Loaded from RudderStack config' }],
+        configuration:    mock.configuration   || [],
+        dataSelection:    mock.dataSelection   || { mode: 'all', eventIds: [], eventProperties: {}, audienceIds: [], attributeIds: [], types: [], template: '' },
+        lastReceived:     mock.lastReceived    || '—',
       };
     });
 
@@ -280,14 +279,7 @@ async function loadSourcesFromBFF() {
     renderSourceTable();
   }
 }
-let sources = [...SOURCES].map(s => ({
-  ...s,
-  deliveryConfig:  s.deliveryConfig  || { mode: "Stream", retries: 3, timeout: 30 },
-  provider:        s.provider        || s.name || "Unknown",
-  category:        s.category        || "Other",
-  sourceType:      s.sourceType      || s.category || "Other",
-  destinations:    Array.isArray(s.destinations) ? s.destinations : [],
-}));
+let sources = [];
 
 const destFilterState = { query: "", status: [], destinationType: [], category: [], dataType: [], delivery: [] };
 const sourceFilterState = { query: "", status: [], sourceType: [], category: [], dataType: [], delivery: [] };
@@ -857,6 +849,7 @@ function renderDestOverviewTab(d) {
             : `<p class="dest-empty-note">No conceptual Data Flow record exists for this destination yet.</p>`
         }
       </div>
+
     </section>`;
   refreshIcons();
 }
@@ -1097,6 +1090,17 @@ function buildDestinationDraft(destination) {
     : { mode: destination.deliveryConfig?.mode || 'Stream', syncFrequency: destination.deliveryConfig?.syncFrequency || null };
   // Normalize consentConfig to current shape
   const consentConfig = destination.consentConfig || { required: false, activationPolicy: '' };
+  // Normalize RS field names → UI field names for connection config
+  const rawConn = destination.connection || {};
+  const normalizedConn = {
+    ...rawConn,
+    // RudderStack uses "webhookUrl" and "webhookMethod"; UI uses "webhookUrl" and "method"
+    method:     rawConn.method || rawConn.webhookMethod || '',
+    webhookUrl: rawConn.webhookUrl || rawConn.url || '',
+    headers:    Array.isArray(rawConn.headers)
+      ? rawConn.headers.map(h => typeof h === 'object' ? `${h.from}: ${h.to}` : h)
+      : [],
+  };
   return {
     name: destination.name,
     provider: destination.provider,
@@ -1104,7 +1108,7 @@ function buildDestinationDraft(destination) {
     category: destination.category,
     dataStream,
     dataSelection: cloneDataSelection(dataStream, destination.dataSelection),
-    connection: { ...destination.connection, headers: [...(destination.connection?.headers || [])] },
+    connection: normalizedConn,
     deliveryConfig,
     consentConfig: { ...consentConfig, policy: [...(consentConfig.policy || [])] },
     advancedConfig: { requestTimeout: '10000', maxAttempts: '3', noOfWorkers: '4', maxBatchSize: '1000', ...(destination.advancedConfig || {}) },
@@ -1403,6 +1407,11 @@ function renderDestinationConfigForm(mount, { mode, destination, onCancel, onSav
       </div>
 
       ${(() => {
+        // Skip provider config section for webhook/httpApi — their connection fields
+        // already contain all required settings (webhookUrl, method, headers, authType).
+        // Showing both sections would create duplicate fields.
+        const kind = getConnectionKind(draft.provider);
+        if (kind === 'webhook' || kind === 'httpApi') return '';
         const providerConfigHtml = configFieldsForType({ id: (draft.provider||'').toLowerCase(), name: draft.provider, category: draft.category });
         const isGenericFallback = providerConfigHtml.includes('No additional configuration required');
         if (isGenericFallback) return '';
@@ -1856,10 +1865,17 @@ function handleSourceRowAction(id, action) {
     openTestConnectionModal();
   } else if (action === "delete") {
     if (confirm(`Delete "${s.name}"? This cannot be undone.`)) {
+      // Optimistic UI update
       const idx = sources.findIndex(x => x.id === id);
       if (idx !== -1) sources.splice(idx, 1);
       renderSourceSummary();
       renderSourceTable();
+      // Persist deletion to BFF / RudderStack
+      if (typeof PHSAPI !== 'undefined') {
+        PHSAPI.sources.delete(id).catch(err => {
+          console.warn('[Sources] Delete API failed:', err.message);
+        });
+      }
     }
   }
 }
@@ -2028,7 +2044,53 @@ function renderSourceOverviewTab(s) {
             : `<p class="dest-empty-note">No conceptual Data Flow record exists for this source yet.</p>`
         }
       </div>
-    </section>`;
+    </section>
+
+    ${s.writeKey ? `
+    <section class="section" style="margin-top: var(--space-4);">
+      <div class="section__header">
+        <div>
+          <h2 class="section__title">SDK Installation</h2>
+          <p class="section__subtitle">Copy the snippet below and paste it into your website or app to start sending data.</p>
+        </div>
+      </div>
+      <div class="section__body">
+        <div style="margin-bottom:12px;padding:10px 14px;background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;font-size:13px;">
+          <strong>Write Key:</strong>
+          <code style="margin-left:8px;font-family:monospace;background:#e0f2fe;padding:2px 8px;border-radius:4px;">${s.writeKey}</code>
+          <button onclick="navigator.clipboard.writeText('${s.writeKey}').then(()=>{this.textContent='Copied!';setTimeout(()=>this.textContent='Copy',2000)})" class="btn btn--sm btn--outline" style="margin-left:10px;font-size:12px;">Copy</button>
+        </div>
+        <div class="cluster gap-2" style="margin-bottom:var(--space-3);">
+          <button id="sdk-btn-js" class="btn btn--sm btn--primary" onclick="document.getElementById('sdk-tab-js').style.display='block';document.getElementById('sdk-tab-node').style.display='none';document.getElementById('sdk-btn-js').className='btn btn--sm btn--primary';document.getElementById('sdk-btn-node').className='btn btn--sm btn--outline';">JavaScript</button>
+          <button id="sdk-btn-node" class="btn btn--sm btn--outline" onclick="document.getElementById('sdk-tab-js').style.display='none';document.getElementById('sdk-tab-node').style.display='block';document.getElementById('sdk-btn-js').className='btn btn--sm btn--outline';document.getElementById('sdk-btn-node').className='btn btn--sm btn--primary';">Node.js</button>
+        </div>
+        <div id="sdk-tab-js" style="position:relative;">
+          <pre style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:16px;font-size:12px;line-height:1.6;overflow-x:auto;margin:0;white-space:pre-wrap;"><code id="sdk-js-code">&lt;script&gt;
+rudderanalytics=window.rudderanalytics=[];
+var m=["load","page","track","identify","alias","group","ready","reset","getAnonymousId","setAnonymousId"];
+for(var i=0;i&lt;m.length;i++){var mt=m[i];rudderanalytics[mt]=function(d){return function(){rudderanalytics.push([d,...arguments])}}(mt)}
+rudderanalytics.load("${s.writeKey}", "http://localhost:8082", { configUrl: "http://localhost:3001" });
+rudderanalytics.page();
+&lt;/script&gt;
+&lt;script src="https://cdn.rudderlabs.com/v3/modern/rsa.min.js"&gt;&lt;/script&gt;</code></pre>
+          <button onclick="navigator.clipboard.writeText(document.getElementById('sdk-js-code').innerText).then(()=>{this.textContent='Copied!';setTimeout(()=>this.textContent='Copy',2000)})" class="btn btn--sm btn--outline" style="position:absolute;top:10px;right:10px;">Copy</button>
+        </div>
+        <div id="sdk-tab-node" style="display:none;position:relative;">
+          <pre style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:16px;font-size:12px;line-height:1.6;overflow-x:auto;margin:0;white-space:pre-wrap;"><code id="sdk-node-code">// npm install @rudderstack/analytics-js
+import { RudderAnalytics } from '@rudderstack/analytics-js';
+const analytics = new RudderAnalytics();
+analytics.load("${s.writeKey}", "http://localhost:8082", { configUrl: "http://localhost:3001" });
+
+// Identify user after login
+analytics.identify("USER_ID", { email: "user@example.com", name: "Nguyen Van A" });
+
+// Track an event
+analytics.track("Product Viewed", { product_name: "Margin" });</code></pre>
+          <button onclick="navigator.clipboard.writeText(document.getElementById('sdk-node-code').innerText).then(()=>{this.textContent='Copied!';setTimeout(()=>this.textContent='Copy',2000)})" class="btn btn--sm btn--outline" style="position:absolute;top:10px;right:10px;">Copy</button>
+        </div>
+      </div>
+    </section>
+    ` : ''}` ;
   refreshIcons();
 }
 
@@ -2110,7 +2172,7 @@ function renderSourceConfigurationTab(s) {
       </div>
       <div class="section__body">
         <div class="dest-config-list">
-          ${s.configuration.map((c) => `<div class="dest-config-row"><span class="dest-config-row__label">${c.label}</span><span class="dest-config-row__value${c.masked ? " dest-config-row__value--masked" : ""}">${c.value || "—"}</span></div>`).join("")}
+          ${(s.configuration || []).map((c) => `<div class="dest-config-row"><span class="dest-config-row__label">${c.label}</span><span class="dest-config-row__value${c.masked ? " dest-config-row__value--masked" : ""}">${c.value || "—"}</span></div>`).join("") || '<p class="dest-empty-note">No configuration fields available.</p>'}
         </div>
       </div>
     </section>

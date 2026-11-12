@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Consent Management — PHS CDP</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../css/main.css" />
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="app-shell__sidebar" data-sidebar-mount></aside>
+    <div class="app-shell__topbar" data-topbar-mount></div>
+
+    <main class="app-shell__main">
+      <div class="page">
+
+        <div class="page-header">
+          <div>
+            <div class="page-header__eyebrow">
+              <i data-lucide="scale" style="width:13px;height:13px;"></i>
+              Governance · Consent Management
+            </div>
+            <h1 class="page-header__title">Consent Management</h1>
+            <p class="page-header__description">Manage consent policies, customer consent states, communication preferences and consent history across PHS CDP.</p>
+          </div>
+          <div class="page-header__actions">
+            <div class="col-manager-anchor">
+              <div class="select select--sm" style="width:160px;">
+                <select data-cm-daterange aria-label="Date range"></select>
+                <i class="select__chevron" data-lucide="chevron-down"></i>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Overview metrics (shared across tabs) -->
+        <section class="section">
+          <div class="section__body event-summary-grid" data-cm-overview></div>
+        </section>
+
+        <!-- Tabs -->
+        <div class="tabs" data-tabs style="margin-bottom: var(--space-6);">
+          <button class="tabs__tab is-active" data-tab="policy">
+            <i data-lucide="file-text" style="width:14px;height:14px;"></i>
+            Policy
+          </button>
+          <button class="tabs__tab" data-tab="customers">
+            <i data-lucide="users" style="width:14px;height:14px;"></i>
+            Customers
+          </button>
+          <button class="tabs__tab" data-tab="channels">
+            <i data-lucide="send" style="width:14px;height:14px;"></i>
+            Channels
+          </button>
+        </div>
+
+        <!-- TAB: Policy -->
+        <div data-tab-panel="policy">
+
+          <section class="section">
+            <div class="section__header">
+              <div>
+                <h2 class="section__title">Consent Purposes</h2>
+                <p class="section__subtitle">Each purpose's legal basis and where it applies.</p>
+              </div>
+            </div>
+            <div class="section__body">
+              <div class="table-wrap">
+                <table class="table" data-policy-table>
+                  <thead>
+                    <tr>
+                      <th>Purpose</th>
+                      <th>Legal Basis</th>
+                      <th>Channels</th>
+                      <th class="num">Granted</th>
+                      <th class="num">Denied</th>
+                      <th class="num">Pending</th>
+                      <th>Status</th>
+                      <th>Last Reviewed</th>
+                    </tr>
+                  </thead>
+                  <tbody></tbody>
+                </table>
+              </div>
+            </div>
+          </section>
+
+          <section class="section" style="margin-bottom:0;">
+            <div class="section__header">
+              <div>
+                <h2 class="section__title">Activation Eligibility</h2>
+                <p class="section__subtitle">Category → Channel → activation eligibility rules.</p>
+              </div>
+            </div>
+            <div class="section__body">
+              <div class="table-wrap">
+                <table class="table table--dense" data-cp-policy-table>
+                  <thead><tr><th>Consent Category</th><th>Channel</th><th>Eligibility Rule</th></tr></thead>
+                  <tbody></tbody>
+                </table>
+              </div>
+            </div>
+          </section>
+
+        </div>
+
+        <!-- TAB: Customers -->
+        <div data-tab-panel="customers" hidden>
+
+          <section class="section">
+            <div class="section__header">
+              <div>
+                <h2 class="section__title">Consent by Category</h2>
+                <p class="section__subtitle">Current consent distribution for Marketing, Analytics, and Personalization.</p>
+              </div>
+            </div>
+            <div class="section__body">
+              <div class="stack gap-5" data-cp-category></div>
+            </div>
+          </section>
+
+          <section class="section">
+            <div class="section__header">
+              <div>
+                <h2 class="section__title">Consent Sources</h2>
+                <p class="section__subtitle">Where consent was captured.</p>
+              </div>
+            </div>
+            <div class="section__body">
+              <div class="table-wrap">
+                <table class="table" data-cp-source-table>
+                  <thead><tr><th>Source</th><th class="num">Records</th><th class="num">Granted</th><th class="num">Denied</th><th>Last Activity</th><th>Status</th></tr></thead>
+                  <tbody></tbody>
+                </table>
+              </div>
+            </div>
+          </section>
+
+          <section class="section" style="margin-bottom:0;">
+            <div class="section__header">
+              <div>
+                <h2 class="section__title">Consent History</h2>
+                <p class="section__subtitle">Audit trail of consent state changes.</p>
+              </div>
+            </div>
+            <div class="section__body">
+              <div class="table-wrap">
+                <div class="table__toolbar">
+                  <div class="cluster gap-2" style="flex-wrap:wrap;align-items:center;">
+                    <div class="search-field" style="width:240px;">
+                      <i data-lucide="search"></i>
+                      <input class="input" type="text" placeholder="Search Customer ID or Record ID…" data-cp-search aria-label="Search consent history" />
+                    </div>
+                  </div>
+                  <div class="cluster gap-2">
+                    <div class="col-manager-anchor">
+                      <button class="btn btn--outline btn--sm" data-cp-filter-trigger>
+                        <i data-lucide="filter"></i> Filter
+                        <span class="filter-count-badge" data-cp-filter-count hidden>0</span>
+                      </button>
+                      <div class="col-manager" data-cp-filter-panel></div>
+                    </div>
+                  </div>
+                </div>
+                <table class="table" data-cp-history-table>
+                  <thead><tr><th>Timestamp</th><th>Customer</th><th>Consent</th><th>Previous</th><th>New State</th><th>Source</th><th>Channel</th></tr></thead>
+                  <tbody></tbody>
+                </table>
+              </div>
+            </div>
+          </section>
+
+        </div>
+
+        <!-- TAB: Channels -->
+        <div data-tab-panel="channels" hidden>
+
+          <section class="section">
+            <div class="section__header">
+              <div>
+                <h2 class="section__title">Communication Preferences</h2>
+                <p class="section__subtitle">Channel-level opt-in coverage across the customer base.</p>
+              </div>
+            </div>
+            <div class="section__body">
+              <div class="table-wrap">
+                <table class="table" data-cp-channel-table>
+                  <thead><tr><th>Channel</th><th class="num">Allowed</th><th class="num">Denied</th><th class="num">Not Set</th><th>Last Updated</th><th>Coverage</th></tr></thead>
+                  <tbody></tbody>
+                </table>
+              </div>
+            </div>
+          </section>
+
+          <section class="section" style="margin-bottom:0;">
+            <div class="section__header">
+              <div>
+                <h2 class="section__title">Recent Consent Activity</h2>
+                <p class="section__subtitle">Latest consent state changes across all channels.</p>
+              </div>
+            </div>
+            <div class="section__body">
+              <div class="table-wrap">
+                <table class="table table--dense" data-activity-table>
+                  <thead><tr><th>Timestamp</th><th>Customer</th><th>Purpose / Status</th><th>Source</th></tr></thead>
+                  <tbody></tbody>
+                </table>
+              </div>
+            </div>
+          </section>
+
+        </div>
+
+      </div>
+    </main>
+  </div>
+
+  <!-- Consent history detail drawer -->
+  <div class="drawer-overlay" id="consent-detail-drawer">
+    <aside class="drawer" role="dialog" aria-modal="true" aria-label="Consent record detail">
+      <div class="drawer__header">
+        <div>
+          <div class="drawer__eyebrow">Consent Record</div>
+          <div class="drawer__title" data-consent-drawer-title>—</div>
+        </div>
+        <button class="btn btn--ghost btn--sm" data-drawer-close aria-label="Close"><i data-lucide="x"></i></button>
+      </div>
+      <div class="drawer__body" data-consent-drawer-body></div>
+    </aside>
+  </div>
+
+  <script src="../js/api.js"></script>
+  <script src="https://unpkg.com/lucide@1.47.0/dist/umd/lucide.js"></script>
+  <script type="module">
+    import { bootstrapPage } from "../js/main.js";
+    import { initConsentManagement } from "../js/pages/consent-management.js";
+    import { initConsentPreferences } from "../js/pages/consent-preferences.js";
+
+    // Tab switching logic
+    const tabs = document.querySelectorAll("[data-tab]");
+    const panels = document.querySelectorAll("[data-tab-panel]");
+    tabs.forEach(tab => {
+      tab.addEventListener("click", () => {
+        tabs.forEach(t => t.classList.remove("is-active"));
+        panels.forEach(p => p.hidden = true);
+        tab.classList.add("is-active");
+        document.querySelector(`[data-tab-panel="${tab.dataset.tab}"]`).hidden = false;
+      });
+    });
+
+    bootstrapPage({
+      currentNavId: "consent-management",
+      breadcrumb: [{ label: "PHS CDP", href: "index.html" }, { label: "Governance" }, { label: "Consent Management" }],
+    });
+
+    // Init both modules — each populates its own data-* targets
+    initConsentManagement();
+    initConsentPreferences();
+  </script>
+</body>
+</html>

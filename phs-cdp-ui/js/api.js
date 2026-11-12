@@ -261,6 +261,8 @@
   const dashboard = {
     /** All dashboard metrics in one call: customers, audiences, events, systemHealth */
     summary: () => get('/dashboard'),
+    /** Profile growth time-series. period: 7d | 30d | 90d */
+    growth: (period = '30d') => get('/dashboard/growth', { params: { period } }),
   };
 
     // ─── Utility helpers ─────────────────────────────────────────────────────

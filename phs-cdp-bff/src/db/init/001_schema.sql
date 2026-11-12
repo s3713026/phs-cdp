@@ -44,7 +44,8 @@ CREATE TABLE IF NOT EXISTS cdp_identities (
   source           VARCHAR(64) DEFAULT 'rudderstack'
                    CHECK (source IN ('web','mobile','crm','rudderstack','server')),
   created_at       TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-  UNIQUE(identifier_type, identifier_value)
+  UNIQUE(identifier_type, identifier_value),
+  CONSTRAINT uq_identities_customer_type_value UNIQUE (customer_id, identifier_type, identifier_value)
 );
 
 CREATE INDEX IF NOT EXISTS idx_identities_customer_id ON cdp_identities(customer_id);
@@ -79,6 +80,10 @@ ALTER TABLE cdp_events
 CREATE UNIQUE INDEX IF NOT EXISTS idx_events_rs_message_id
   ON cdp_events(rs_message_id)
   WHERE rs_message_id IS NOT NULL;
+
+-- Full constraint needed for ON CONFLICT (rs_message_id) DO NOTHING
+ALTER TABLE cdp_events DROP CONSTRAINT IF EXISTS uq_events_rs_message_id;
+ALTER TABLE cdp_events ADD CONSTRAINT uq_events_rs_message_id UNIQUE (rs_message_id);
 
 -- ─── cdp_consents — Consent Management ───────────────────────
 CREATE TABLE IF NOT EXISTS cdp_consents (

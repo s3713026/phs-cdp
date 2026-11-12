@@ -210,10 +210,9 @@ services:
       RS_PG_PASSWORD: ${RS_DB_PASSWORD:-rudderpassword}
       RS_PG_DB: ${RS_DB_NAME:-jobsdb}
     volumes:
-      # Mount workspaceConfig.json as a volume so it persists across rebuilds.
-      # Edit ./phs-cdp-bff/workspaceConfig.json on the host to add/remove sources
-      # and destinations — no rebuild needed, just restart the container.
-      - ./phs-cdp-bff/workspaceConfig.json:/app/workspaceConfig.json
+      # Share the same workspaceConfig.json as RudderStack so /sourceConfig
+      # endpoint always reflects the live source/destination list.
+      - ./rudderstack/workspaceConfig.json:/app/workspaceConfig.json:ro
     networks:
       - cdp_network
     mem_limit: 512m
@@ -230,6 +229,9 @@ services:
       - phs-cdp-bff
     ports:
       - "${UI_PORT:-8811}:80"
+    volumes:
+      # Mount source files so changes apply without rebuild
+      - ./phs-cdp-ui:/usr/share/nginx/html:ro
     networks:
       - cdp_network
     mem_limit: 256m

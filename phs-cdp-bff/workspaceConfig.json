@@ -1,1 +1,32 @@
-{"sources":[],"destinations":[],"destTransformations":[]}
+{
+  "sources": [
+    {
+      "id": "src-mwd0djfl-rfq9",
+      "name": "Web test PHS",
+      "writeKey": "phs_Javascript_mwd0djfl",
+      "enabled": true,
+      "sourceDefinitionId": "Javascript",
+      "config": {},
+      "destinations": [
+        "dest-mwcyss02-q50k"
+      ]
+    }
+  ],
+  "destinations": [
+    {
+      "id": "dest-mwcyss02-q50k",
+      "name": "PHS CDP Webhook",
+      "destinationDefinitionId": "WEBHOOK",
+      "enabled": true,
+      "config": {
+        "webhookUrl": "http://phs_cdp_bff:3001/api/webhook/rudderstack",
+        "headers": [
+          "Authorization: Bearer CHANGE_ME_webhook_secret"
+        ],
+        "webhookMethod": "POST",
+        "method": "POST"
+      }
+    }
+  ],
+  "destTransformations": []
+}

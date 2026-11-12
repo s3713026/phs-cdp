@@ -295,11 +295,13 @@ export const DEST_CONFIGS = {
   ],
 
   /* ─── WEBHOOK ─── */
+  // Note: webhook fields intentionally mirror CONNECTION_KIND_FIELDS.webhook
+  // in js/data/destinations.js so Create and Edit forms are consistent.
   webhook: [
     { key: 'webhookUrl', label: 'Webhook URL', type: 'url', required: true, placeholder: 'https://hooks.example.com/endpoint' },
-    { key: 'method', label: 'Method', type: 'select', required: true, options: ['POST','PUT','GET'], defaultValue: 'POST' },
+    { key: 'method', label: 'HTTP Method', type: 'select', required: true, options: ['POST','PUT','GET','PATCH','DELETE'], defaultValue: 'POST' },
     { key: 'headers', label: 'Headers', type: 'taglist', hint: 'One header per line: "Key: Value"' },
-    { key: 'useOAuth', label: 'Use OAuth 2.0', type: 'toggle' },
+    { key: 'authType', label: 'Authentication', type: 'select', options: ['None','Bearer Token','API Key','Basic Auth'], defaultValue: 'None' },
   ],
 
   /* ─── MAUTIC ─── */

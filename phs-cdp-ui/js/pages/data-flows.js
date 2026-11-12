@@ -12,9 +12,9 @@ import {
   SYSTEM_TYPE_BY_NAME,
   ADD_FLOW_SYSTEMS,
   getFlowById,
-} from "../data/dataflows.js";
-import { SOURCES, SOURCE_ICONS } from "../data/sources.js";
-import { DESTINATIONS, DESTINATION_ICONS, STATUS_META as CONN_STATUS_META } from "../data/destinations.js";
+} from "../data/dataflows.js?v=1794458244";
+import { SOURCES, SOURCE_ICONS } from "../data/sources.js?v=1794458244";
+import { DESTINATIONS, DESTINATION_ICONS, STATUS_META as CONN_STATUS_META } from "../data/destinations.js?v=1794458244";
 import {
   connectedDestinationsForSource,
   connectedSourcesForDestination,
@@ -22,17 +22,16 @@ import {
   linksForDestination,
   linkStatus,
   setLiveData,
-} from "../data/connection-map.js";
+} from "../data/connection-map.js?v=1794458244";
 
 // Local, mutable copy — Save Data Flow appends to this, not to the
-// imported const, so the data file stays the source of truth for the
-// *initial* mock set.
-let flows = [...FLOWS];
+// Flows table — populated from BFF only. No mock fallback.
+let flows = [];
 
 // Live sources/destinations loaded from BFF (RudderStack workspaceConfig).
-// Falls back to mock data when BFF is unreachable.
-let cmSources = [...SOURCES];
-let cmDestinations = [...DESTINATIONS];
+// Start empty — populated from BFF only. No mock fallback.
+let cmSources = [];
+let cmDestinations = [];
 
 /**
  * Load real Sources and Destinations from the BFF, which reads them from
@@ -141,13 +140,62 @@ async function loadFromBFF() {
     // Push live data to connection-map so linkStatus/connectedXxx use real state
     setLiveData(cmSources, cmDestinations, bffLinks.length > 0 ? bffLinks : null);
 
+    // Build flows table from real sources + destinations
+    // Each source becomes an Inbound flow; each destination becomes an Outbound flow.
+    const liveFlows = [];
+    cmSources.forEach((s) => {
+      liveFlows.push({
+        id:           s.id,
+        name:         s.name || s.provider,
+        direction:    "Inbound",
+        systemType:   s.sourceType || "Connector",
+        systemName:   s.provider   || s.name,
+        dataTypes:    ["Event"],
+        deliveryMode: "Stream",
+        status:       s.status,  // "Connected" | "Disconnected"
+        lastSync:     s.lastReceived || "—",
+        recordCount:  s.usersBase7d  || 0,
+        recordLabel:  "events",
+        ingestionType: "API Ingestion",
+        activationType: undefined,
+        description:   `Inbound data from ${s.name || s.provider} via RudderStack.`,
+        endpoint:      s.writeKey ? `Write Key: ${s.writeKey.slice(0, 8)}…` : "—",
+        credentialLabel: "Write Key",
+      });
+    });
+    cmDestinations.forEach((d) => {
+      liveFlows.push({
+        id:           d.id,
+        name:         d.name || d.provider,
+        direction:    "Outbound",
+        systemType:   d.destinationType || d.category || "Connector",
+        systemName:   d.provider || d.name,
+        dataTypes:    ["Event"],
+        deliveryMode: "Stream",
+        status:       d.status,
+        lastSync:     d.lastSync || "—",
+        recordCount:  d.usersBase7d || 0,
+        recordLabel:  "records",
+        ingestionType: undefined,
+        activationType: "Audience Activation",
+        description:   `Outbound activation to ${d.name || d.provider} via RudderStack.`,
+        endpoint:      d.name || d.provider,
+        credentialLabel: "API Key",
+      });
+    });
+
+    if (liveFlows.length > 0) {
+      flows = liveFlows;
+      console.log(`[DataFlows] Built ${flows.length} flows from real BFF data (${cmSources.length} sources + ${cmDestinations.length} destinations)`);
+    }
+
     console.log(
       `[DataFlows] BFF loaded: ${cmSources.length} sources, ${cmDestinations.length} destinations, ${bffLinks.length} links`
     );
   } catch (err) {
     console.warn("[DataFlows] BFF unreachable:", err.message);
-    // Clear mock — show empty state
-    setLiveData([], [], null);
+    flows = [];
+    setLiveData([], [], []);
   }
 }
 
@@ -208,7 +256,7 @@ function renderSummary() {
 /* Separate data model from FLOWS above: this reads the real SOURCES/  */
 /* DESTINATIONS records (the same ones Sources/Destinations pages      */
 /* manage) plus the explicit SOURCE_DESTINATION_LINKS relationship set */
-/* (js/data/connection-map.js) — never inferred from matching names or */
+/* (js/data/connection-map.js?v=1794458244) — never inferred from matching names or */
 /* data types. Nodes are rendered as ordinary DOM (reusing the existing*/
 /* .flow-node styling); only the connector lines are SVG, positioned   */
 /* by measuring real rendered node rects — no drag/graph-editor layer. */
@@ -331,7 +379,7 @@ function cmWireNodes() {
  * by that ONE endpoint's own connector status — a segment represents
  * "is this source/destination itself healthy", not a specific pair,
  * since one source/destination can anchor several relationships. Same
- * status vocabulary as linkStatus() in connection-map.js so
+ * status vocabulary as linkStatus() in connection-map.js?v=1794458244 so
  * cmPathStatusClass() below still applies unchanged. */
 function cmConnectorPathStatus(record) {
   if (record.status === "Error") return "Error";
@@ -380,7 +428,7 @@ function cmDrawPaths() {
 
   const segments = [];
 
-  SOURCES.forEach((s) => {
+  cmSources.forEach((s) => {
     if (!visSourceIds.has(s.id)) return;
     const hasVisibleDestination = connectedDestinationsForSource(s.id).some((x) => visDestIds.has(x.destination.id));
     if (!hasVisibleDestination) return;
@@ -400,7 +448,7 @@ function cmDrawPaths() {
     });
   });
 
-  DESTINATIONS.forEach((d) => {
+  cmDestinations.forEach((d) => {
     if (!visDestIds.has(d.id)) return;
     const hasVisibleSource = connectedSourcesForDestination(d.id).some((x) => visSourceIds.has(x.source.id));
     if (!hasVisibleSource) return;
@@ -477,7 +525,7 @@ function cmShowTooltip(kind, id, count) {
   if (!tip || !mapEl) return;
   const el = kind === "source" ? document.querySelector(`[data-cm-source="${id}"]`) : document.querySelector(`[data-cm-dest="${id}"]`);
   if (!el) return;
-  const record = kind === "source" ? SOURCES.find((s) => s.id === id) : DESTINATIONS.find((d) => d.id === id);
+  const record = kind === "source" ? cmSources.find((s) => s.id === id) : cmDestinations.find((d) => d.id === id);
   const counterpartLabel = kind === "source" ? "destination" : "source";
   const text = count
     ? `${record.provider} · ${count} connected ${counterpartLabel}${count === 1 ? "" : "s"}`
@@ -509,7 +557,7 @@ function cmStatusBadgeForLinkStatus(status) {
 function cmOpenDetail(kind, id) {
   const overlay = document.getElementById("cm-detail-drawer");
   if (!overlay) return;
-  const record = kind === "source" ? SOURCES.find((s) => s.id === id) : DESTINATIONS.find((d) => d.id === id);
+  const record = kind === "source" ? cmSources.find((s) => s.id === id) : cmDestinations.find((d) => d.id === id);
   if (!record) return;
 
   const eyebrow = overlay.querySelector("[data-drawer-eyebrow]");
@@ -565,7 +613,7 @@ function initConnectionMapFilters() {
   const searchInput = document.querySelector("[data-cm-search]");
 
   if (typeSelect) {
-    const types = Array.from(new Set([...SOURCES.map((s) => s.category), ...DESTINATIONS.map((d) => d.category)])).sort();
+    const types = Array.from(new Set([...cmSources.map((s) => s.category), ...cmDestinations.map((d) => d.category)])).sort();
     typeSelect.innerHTML = `<option value="all">All types</option>` + types.map((t) => `<option value="${t}">${t}</option>`).join("");
     typeSelect.addEventListener("change", (e) => {
       cmFilterState.type = e.target.value;
@@ -834,7 +882,7 @@ function initAddFlowModal() {
 /* Init                                                                */
 /* ---------------------------------------------------------------- */
 export async function initDataFlows() {
-  // Render immediately with mock data so the page isn't blank while BFF loads
+  // Render empty state immediately while BFF loads real data
   renderSummary();
   initFilters();
   initAddFlowModal();
@@ -845,7 +893,11 @@ export async function initDataFlows() {
   renderConnectionMap();
   initConnectionMapResize();
 
-  // Then load real Sources/Destinations from BFF and refresh the Connection Map
+  // Then load real Sources/Destinations from BFF,
+  // rebuild the flows table AND refresh the Connection Map
   await loadFromBFF();
+  renderSummary();   // re-render with live counts
+  renderAll();       // re-render flows table with live data
+  initConnectionMapFilters(); // re-populate type dropdown with live categories
   renderConnectionMap();
 }

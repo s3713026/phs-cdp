@@ -621,9 +621,13 @@ export function getDestinationById(id) {
 }
 
 /** All Connection Accounts belonging to one provider — used by "Create
- * another connection" (section 25) to show sibling accounts. */
-export function connectionAccountsForProvider(providerName) {
-  return DESTINATIONS.filter((d) => d.provider === providerName);
+ * another connection" (section 25) to show sibling accounts.
+ * Accepts an optional live destinations array (from BFF); falls back to mock. */
+export function connectionAccountsForProvider(providerName, liveDestinations) {
+  const list = Array.isArray(liveDestinations) && liveDestinations.length > 0
+    ? liveDestinations
+    : DESTINATIONS;
+  return list.filter((d) => d.provider === providerName);
 }
 
 /** Resolves a destination's referenced audience names to their real

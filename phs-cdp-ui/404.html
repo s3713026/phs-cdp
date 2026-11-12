@@ -1,0 +1,161 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#f5f5f3">
+<meta name="description" content="PHS CDP — Page not found">
+<title>404 | PHS CDP</title>
+<style>
+:root{
+  --green:#1b7a4d;--green-dark:#145d3a;--green-soft:#eaf5ef;
+  --gold:#b8892c;--gold-soft:#fbf3e1;
+  --app:#f5f5f3;--panel:#fff;--sunken:#ececea;
+  --ink:#1a1918;--secondary:#5c5a54;--muted:#7c7972;
+  --border:#dfdedb;--border-strong:#c8c6c1;
+  --radius-sm:4px;--radius-md:6px;--radius-lg:8px;
+  --font:-apple-system,BlinkMacSystemFont,"SF Pro Display","SF Pro Text","Helvetica Neue","Segoe UI",Arial,sans-serif;
+}
+*{box-sizing:border-box}
+html,body{margin:0;min-height:100%;font-family:var(--font);color:var(--ink)}
+body{min-height:100vh;background:var(--app);display:grid;grid-template-rows:56px 1fr}
+.topbar{
+  height:56px;background:var(--panel);border-bottom:1px solid var(--border);
+  display:flex;align-items:center;justify-content:space-between;padding:0 30px;gap:20px
+}
+.brand{display:inline-flex;align-items:center;text-decoration:none}
+.brand img{width:112px;max-height:36px;object-fit:contain;display:block}
+.topbar-right{display:flex;align-items:center;gap:10px;color:var(--muted);font-size:12px}
+.product-mark{display:inline-flex;align-items:center;gap:8px;color:var(--secondary);font-weight:600}
+.product-mark:before{content:"";width:7px;height:7px;border-radius:50%;background:var(--green)}
+.divider{height:18px;width:1px;background:var(--border)}
+.workspace{width:min(1320px,100%);margin:0 auto;padding:24px 40px 34px}
+.breadcrumb{display:flex;align-items:center;gap:9px;color:var(--muted);font-size:12px;margin:2px 0 22px}
+.breadcrumb .current{color:var(--secondary);font-weight:600}
+.crumb-chevron{color:#a3a099}
+.error-panel{
+  min-height:min(690px,calc(100vh - 150px));background:var(--panel);
+  border:1px solid var(--border);border-radius:var(--radius-lg);
+  display:grid;grid-template-columns:1fr 1fr;align-items:center;overflow:hidden;
+}
+.message{padding:clamp(34px,6vw,78px);position:relative;z-index:1}
+.eyebrow{display:inline-flex;align-items:center;gap:8px;color:var(--green-dark);background:var(--green-soft);
+  border:1px solid #cfe9dc;border-radius:var(--radius-sm);padding:6px 9px;
+  font-size:11px;line-height:1.2;font-weight:700;letter-spacing:.07em;text-transform:uppercase}
+.eyebrow-dot{width:6px;height:6px;border-radius:50%;background:var(--green)}
+.error-code{font-size:clamp(76px,10vw,126px);line-height:.95;letter-spacing:-.075em;
+  font-weight:650;color:var(--green);margin:25px 0 12px;font-variant-numeric:tabular-nums}
+h1{font-size:clamp(25px,3vw,34px);line-height:1.2;letter-spacing:-.035em;font-weight:600;margin:0 0 12px}
+.description{font-size:15px;line-height:1.65;color:var(--secondary);max-width:440px;margin:0}
+.actions{display:flex;flex-wrap:wrap;gap:10px;margin-top:28px}
+.btn{height:38px;padding:0 14px;border-radius:var(--radius-sm);display:inline-flex;align-items:center;justify-content:center;gap:8px;
+  text-decoration:none;font-size:13px;font-weight:600;transition:background .18s,border-color .18s,transform .18s}
+.btn:hover{transform:translateY(-1px);text-decoration:none}
+.btn-primary{background:var(--green);border:1px solid var(--green);color:white}
+.btn-primary:hover{background:var(--green-dark);border-color:var(--green-dark)}
+.btn-secondary{background:white;border:1px solid var(--border-strong);color:var(--secondary)}
+.btn-secondary:hover{background:var(--app);border-color:#a3a099}
+.support{font-size:12px;color:var(--muted);margin-top:24px}
+.support a{color:var(--green-dark);font-weight:600;text-decoration:none}
+.illustration{
+  min-height:510px;position:relative;display:grid;place-items:center;
+  background:linear-gradient(135deg,#fafaf9 0%,#f5f5f3 100%);
+  border-left:1px solid var(--border);overflow:hidden
+}
+.illustration:before{content:"";position:absolute;width:420px;height:420px;border:1px solid #ececea;border-radius:50%;animation:orbit 38s linear infinite}
+.illustration:after{content:"";position:absolute;width:320px;height:320px;border:1px dashed #dfdedb;border-radius:50%;animation:orbit 28s linear infinite reverse}
+.data-scene{width:min(88%,480px);aspect-ratio:1.12;position:relative;z-index:1}
+.data-window{
+  position:absolute;inset:13% 8% 13% 8%;background:white;border:1px solid var(--border);
+  border-radius:8px;box-shadow:0 2px 8px rgba(26,25,24,.04);overflow:hidden
+}
+.window-head{height:42px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 15px}
+.window-title{font-size:10px;color:var(--secondary);font-weight:650;letter-spacing:.045em}
+.window-state{font-size:9px;color:var(--green);display:flex;align-items:center;gap:6px}
+.window-state:before{content:"";width:6px;height:6px;border-radius:50%;background:var(--green);animation:status 2s infinite}
+.window-body{position:absolute;inset:43px 0 0;background-image:linear-gradient(to right,transparent 49.8%,#f5f5f3 50%,transparent 50.2%),linear-gradient(to bottom,transparent 49.8%,#f5f5f3 50%,transparent 50.2%);background-size:100% 100%}
+.flow-line{position:absolute;inset:14% 8% 16%;width:84%;height:70%;overflow:visible}
+.flow-line path{fill:none;stroke:var(--green);stroke-width:2.4;stroke-linecap:round;stroke-dasharray:7 7;animation:dash 2.4s linear infinite}
+.flow-line .soft{stroke:#a4d5be;stroke-width:1.5;stroke-dasharray:3 7}
+.flow-node{position:absolute;width:42px;height:42px;border:1px solid #cfe9dc;border-radius:7px;background:#eaf5ef;color:var(--green);display:grid;place-items:center;animation:float 4s ease-in-out infinite}
+.flow-node svg{width:19px;height:19px}
+.n1{left:5%;top:27%}.n2{right:4%;top:17%;animation-delay:-1.3s}.n3{right:13%;bottom:5%;animation-delay:-2.2s}
+.data-chip{position:absolute;left:13%;bottom:8%;padding:7px 10px;border:1px solid var(--border);border-radius:4px;background:#fff;color:var(--muted);font-size:9px;letter-spacing:.04em;box-shadow:0 2px 6px rgba(26,25,24,.04)}
+.data-chip b{color:var(--green);font-weight:650}
+.gold-spark{position:absolute;width:7px;height:7px;border-radius:50%;background:var(--gold);box-shadow:0 0 0 4px var(--gold-soft);animation:spark 2.4s ease-in-out infinite}
+.gs1{top:10%;right:19%}.gs2{bottom:16%;left:14%;animation-delay:-1.1s}
+.float-card{position:absolute;right:0;top:7%;padding:10px 12px;background:#fff;border:1px solid var(--border);border-radius:6px;box-shadow:0 2px 8px rgba(26,25,24,.05);font-size:9px;color:var(--muted);animation:float 4.5s ease-in-out infinite -1s}
+.float-card strong{display:block;color:var(--green);font-size:14px;margin-top:3px;font-variant-numeric:tabular-nums}
+.float-card small{color:var(--gold);font-size:9px}
+.footer{display:flex;justify-content:space-between;gap:16px;color:var(--muted);font-size:11px;padding:15px 2px 0}
+.footer strong{color:var(--secondary);font-weight:600}
+@keyframes dash{to{stroke-dashoffset:-56}}
+@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
+@keyframes orbit{to{transform:rotate(360deg)}}
+@keyframes status{50%{box-shadow:0 0 0 4px rgba(27,122,77,.12)}}
+@keyframes spark{0%,100%{opacity:.45;transform:scale(.8)}50%{opacity:1;transform:scale(1.2)}}
+@media(max-width:850px){
+ .workspace{padding:18px 18px 26px}.error-panel{grid-template-columns:1fr}.illustration{grid-row:1;min-height:330px;border-left:0;border-bottom:1px solid var(--border)}
+ .data-scene{width:min(78%,420px)}.message{padding:34px 28px 40px}.error-code{margin-top:16px}
+}
+@media(max-width:520px){
+ .topbar{padding:0 16px}.brand img{width:96px}.topbar-right{font-size:10px}.workspace{padding:14px 12px 22px}
+ .breadcrumb{margin-bottom:14px}.illustration{min-height:270px}.data-scene{width:88%}
+ .message{padding:28px 22px 32px}.error-code{font-size:78px}.description{font-size:14px}
+ .footer{font-size:10px}.footer span:last-child{text-align:right}
+}
+@media(prefers-reduced-motion:reduce){
+ *,*:before,*:after{animation-duration:.01ms!important;animation-iteration-count:1!important;scroll-behavior:auto!important}
+}
+</style>
+</head>
+<body>
+<header class="topbar">
+  <a class="brand" href="https://www.phs.vn/" aria-label="PHS homepage">
+    <img src="https://www.phs.vn/cms/assets/645eb6a1-c2b5-45bd-bd7d-dfa6efc4685a" alt="PHS">
+  </a>
+  <div class="topbar-right"><span class="product-mark">Customer Data Platform</span><i class="divider"></i><span>Workspace</span></div>
+</header>
+<main class="workspace">
+  <nav class="breadcrumb" aria-label="Breadcrumb"><span>Workspace</span><span class="crumb-chevron">/</span><span class="current">Page not found</span></nav>
+  <section class="error-panel" aria-labelledby="error-title">
+    <div class="message">
+      <div class="eyebrow"><span class="eyebrow-dot"></span> Navigation error</div>
+      <div class="error-code">404</div>
+      <h1 id="error-title">Page not found</h1>
+      <p class="description">The page you’re looking for doesn’t exist or may have been moved. Check the URL, or return to your CDP workspace to continue working with your customer data.</p>
+      <div class="actions">
+        <a class="btn btn-primary" href="/" aria-label="Back to CDP dashboard">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="m3 10 9-7 9 7v10a1 1 0 0 1-1 1h-5v-7H9v7H4a1 1 0 0 1-1-1V10Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg>
+          Back to dashboard
+        </a>
+        <a class="btn btn-secondary" href="javascript:history.back()">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M19 12H5m7-7-7 7 7 7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          Go back
+        </a>
+      </div>
+      <p class="support">Still can’t find what you need? <a href="/">Return to workspace</a></p>
+    </div>
+    <div class="illustration" aria-hidden="true">
+      <div class="data-scene">
+        <div class="gold-spark gs1"></div><div class="gold-spark gs2"></div>
+        <div class="float-card">Unified profiles<strong>Customer 360</strong><small>Identity resolution</small></div>
+        <div class="data-window">
+          <div class="window-head"><span class="window-title">CUSTOMER DATA FLOW</span><span class="window-state">Connected</span></div>
+          <div class="window-body"></div>
+          <svg class="flow-line" viewBox="0 0 400 260" preserveAspectRatio="none">
+            <path class="soft" d="M25 145 C90 145 88 62 160 62 S240 190 305 160 350 110 375 75"/>
+            <path d="M25 145 C90 145 88 62 160 62 S240 190 305 160 350 110 375 75"/>
+          </svg>
+          <div class="flow-node n1"><svg viewBox="0 0 24 24" fill="none"><circle cx="9" cy="8" r="3" stroke="currentColor" stroke-width="1.7"/><path d="M3.5 19c.5-3.1 2.3-4.7 5.5-4.7 1.4 0 2.5.3 3.4.9M16 13.5a3 3 0 1 0 0-6 3 3 0 0 0 0 6Zm-2 5.5c.3-2.1 1.5-3.2 3.8-3.2 1.7 0 2.7.7 3.2 2.2" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg></div>
+          <div class="flow-node n2"><svg viewBox="0 0 24 24" fill="none"><path d="M4 5h16v14H4zM8 9h8M8 13h5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+          <div class="flow-node n3"><svg viewBox="0 0 24 24" fill="none"><path d="M4 18V6m0 12h16M8 15l3-4 3 2 5-7" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+          <div class="data-chip">EVENT STREAM <b>● LIVE</b></div>
+        </div>
+      </div>
+    </div>
+  </section>
+  <footer class="footer"><span><strong>Phu Hung Securities</strong> · PHS CDP</span><span>Customer data · Connected intelligence</span></footer>
+</main>
+</body>
+</html>

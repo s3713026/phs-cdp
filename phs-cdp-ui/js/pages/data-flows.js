@@ -669,7 +669,7 @@ function renderTable() {
       <tr data-flow-row="${f.id}">
         <td class="cell-primary">${flowLabel}</td>
         <td><span class="badge badge--neutral">${f.direction.toUpperCase()}</span></td>
-        <td>${f.dataTypes.map((dt) => `<span class="badge badge--neutral badge--flow-type"><i data-lucide="${DATA_TYPE_META[dt].icon}"></i>${DATA_TYPE_META[dt].label}</span>`).join(" ")}</td>
+        <td>${f.dataTypes.map((dt) => { const m = DATA_TYPE_META[dt] || { icon: 'circle', label: dt }; return `<span class="badge badge--neutral badge--flow-type"><i data-lucide="${m.icon}"></i>${m.label}</span>`; }).join(" ")}</td>
         <td><span class="badge badge--neutral badge--flow-delivery"><i data-lucide="${deliveryMeta.icon}"></i>${deliveryMeta.label}</span></td>
         <td><span class="status-dot ${statusMeta.dot}">${f.status}</span></td>
         <td class="cell-muted tabular-nums">${f.lastSync}</td>
@@ -750,7 +750,7 @@ function openFlowDrawer(id) {
 }
 
 function badgesHTMLTypesOnly(f) {
-  return f.dataTypes.map((dt) => `<span class="badge badge--neutral badge--flow-type"><i data-lucide="${DATA_TYPE_META[dt].icon}"></i>${DATA_TYPE_META[dt].label}</span>`).join(" ");
+  return f.dataTypes.map((dt) => { const m = DATA_TYPE_META[dt] || { icon: 'circle', label: dt }; return `<span class="badge badge--neutral badge--flow-type"><i data-lucide="${m.icon}"></i>${m.label}</span>`; }).join(" ");
 }
 
 /* ---------------------------------------------------------------- */

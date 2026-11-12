@@ -8,7 +8,18 @@
       "sourceDefinitionId": "Javascript",
       "config": {},
       "destinations": [
-        "dest-mwcyss02-q50k"
+        {
+          "id": "dest-mwcyss02-q50k",
+          "name": "PHS CDP Webhook",
+          "destinationDefinitionId": "WEBHOOK",
+          "enabled": true,
+          "config": {
+            "webhookUrl": "http://phs_cdp_bff:3001/api/webhook/rudderstack",
+            "webhookMethod": "POST",
+            "method": "POST"
+          },
+          "transformations": []
+        }
       ]
     }
   ],
@@ -20,12 +31,10 @@
       "enabled": true,
       "config": {
         "webhookUrl": "http://phs_cdp_bff:3001/api/webhook/rudderstack",
-        "headers": [
-          "Authorization: Bearer CHANGE_ME_webhook_secret"
-        ],
         "webhookMethod": "POST",
         "method": "POST"
-      }
+      },
+      "transformations": []
     }
   ],
   "destTransformations": []

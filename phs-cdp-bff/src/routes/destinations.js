@@ -71,8 +71,8 @@ router.get('/:id', requireRole('viewer'), (req, res) => {
 // ─── RudderStack reload helper ────────────────────────────────────────────────
 const http = require('http');
 function reloadRudderStack() {
-  const RS_HOST = process.env.RS_HOST || '100.117.24.87';
-  const RS_PORT = parseInt(process.env.RS_CONTROL_PORT || '8082');
+  const RS_HOST = process.env.RS_HOST || 'rudder-server';
+  const RS_PORT = parseInt(process.env.RS_CONTROL_PORT || '8080');
   const RS_PASS = process.env.RUDDER_ADMIN_PASSWORD || 'PHS@Rudder2024!';
   const auth    = Buffer.from(`admin:${RS_PASS}`).toString('base64');
   // RS self-hosted config-from-file: try known admin reload endpoints

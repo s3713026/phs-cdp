@@ -14,6 +14,7 @@
 export const DIRECTIONS = ["Inbound", "Outbound"];
 
 export const DATA_TYPE_META = {
+  Event:    { icon: "zap",          label: "EVENT"    },
   Profile: { icon: "user-round", label: "PROFILE" },
   Behavior: { icon: "activity", label: "BEHAVIOR" },
   Consent: { icon: "shield-check", label: "CONSENT" },

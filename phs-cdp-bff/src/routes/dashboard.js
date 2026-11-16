@@ -83,8 +83,7 @@ async function buildRealDashboard() {
       GROUP BY lifecycle_stage
       ORDER BY cnt DESC
     `),
-    // CDP Postgres: recent activity — join c360_event (primary) or cdp_events (fallback)
-    // Try c360_event first (richer schema), fallback handled in JS
+    // CDP Postgres: recent activity from c360_event (primary event store)
     db.query(`
       SELECT
         e.event_name,
@@ -97,22 +96,7 @@ async function buildRealDashboard() {
       WHERE e.occurred_at >= NOW() - INTERVAL '24 hours'
       ORDER BY e.occurred_at DESC
       LIMIT 25
-    `).catch(() =>
-      // fallback to cdp_events if c360_event doesn't exist yet
-      db.query(`
-        SELECT
-          e.event_name,
-          e.source,
-          e.created_at,
-          COALESCE(c.full_name, 'Anonymous') AS customer_name,
-          c.id                               AS customer_id
-        FROM cdp_events e
-        LEFT JOIN cdp_customers c ON e.customer_id = c.id
-        WHERE e.created_at >= NOW() - INTERVAL '24 hours'
-        ORDER BY e.created_at DESC
-        LIMIT 25
-      `)
-    ),
+    `),
     // CDP Postgres: active customers = seen in last 30 days
     db.query(`
       SELECT COUNT(*) AS active
@@ -184,7 +168,7 @@ async function buildRealDashboard() {
     };
   }
 
-  // ── Recent Customer Activity (CDP Postgres cdp_events) ───────────
+  // ── Recent Customer Activity (CDP Postgres c360_event) ──────────
   let recentCustomerActivity = [];
   if (cdpActivityStats.status === 'fulfilled') {
     recentCustomerActivity = (cdpActivityStats.value?.rows || []).map(r => ({

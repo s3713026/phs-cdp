@@ -1,166 +1,73 @@
 const express = require('express');
 const router  = express.Router();
-const RudderStackAdapter = require('../adapters/RudderStackAdapter');
+const store   = require('../services/WorkspaceConfigStore');
 const { SOURCES: MOCK_SOURCES } = require('../mock/sources');
 const { requireRole } = require('../middleware/rbac');
 
-// Helper — map writeKey → source type label
 const SOURCE_TYPE_LABEL = {
-  javascript: 'Web (JavaScript)',
-  android:    'Mobile (Android)',
-  ios:        'Mobile (iOS)',
-  node:       'Server (Node.js)',
-  python:     'Server (Python)',
+  javascript: 'Web (JavaScript)', android: 'Mobile (Android)', ios: 'Mobile (iOS)',
+  node: 'Server (Node.js)', python: 'Server (Python)',
 };
 
-// Transform raw workspaceConfig source → UI-friendly shape
-function transformSource(raw) {
-  // workspaceConfig stores destinations as an array of destinationId strings
-  const rawDests = raw.destinations || [];
-  const destIds  = rawDests.map((d) => (typeof d === 'string' ? d : d?.id)).filter(Boolean);
+function toUI(s, links) {
+  const destinations = links.filter(l => l.sourceId === s.id).map(l => l.destinationId);
   return {
-    id:               raw.id,
-    name:             raw.name,
-    writeKey:         raw.writeKey,
-    type:             SOURCE_TYPE_LABEL[(raw.sourceDefinitionId || '').toLowerCase()] || raw.sourceDefinitionId,
-    typeId:           raw.sourceDefinitionId,
-    status:           raw.enabled ? 'connected' : 'disconnected',
-    enabled:          raw.enabled,
-    destinationCount: destIds.length,   // count for table display
-    destinations:     destIds,           // IDs so UI can build connection-map links
+    id: s.id, name: s.name, writeKey: s.writeKey,
+    type: SOURCE_TYPE_LABEL[String(s.type).toLowerCase()] || s.type,
+    typeId: s.type, sourceDefinitionId: s.type,
+    status: s.enabled ? 'connected' : 'disconnected', enabled: s.enabled,
+    config: s.config || {},
+    destinationCount: destinations.length, destinations,
   };
 }
+const fail = (res, e) => res.status(e.status || 500).json({ error: { message: e.message } });
 
 router.get('/', requireRole('viewer'), (_req, res) => {
-  if (process.env.USE_MOCK === 'true') {
-    return res.json({ data: MOCK_SOURCES, total: MOCK_SOURCES.length });
-  }
-
-  const rs      = new RudderStackAdapter();
-  const rawList = rs.getSources();
-
-  if (!rawList.length) {
-    return res.json({ data: [], total: 0, _dataStatus: "not_connected" });
-  }
-
-  const data = rawList.map(transformSource);
-  res.json({ data, total: data.length });
+  if (process.env.USE_MOCK === 'true') return res.json({ data: MOCK_SOURCES, total: MOCK_SOURCES.length });
+  try {
+    const m = store.load();
+    const data = m.sources.map(s => toUI(s, m.links));
+    res.json(data.length ? { data, total: data.length } : { data: [], total: 0, _dataStatus: 'not_connected' });
+  } catch (e) { fail(res, e); }
 });
 
 router.get('/:id', requireRole('viewer'), (req, res) => {
   if (process.env.USE_MOCK === 'true') {
     const s = MOCK_SOURCES.find(x => x.id === req.params.id);
-    if (!s) return res.status(404).json({ error: { message: 'Source not found', code: 'NOT_FOUND' } });
-    return res.json(s);
+    return s ? res.json(s) : res.status(404).json({ error: { message: 'Source not found', code: 'NOT_FOUND' } });
   }
-
-  const rs      = new RudderStackAdapter();
-  const rawList = rs.getSources();
-  const raw     = rawList.find(x => x.id === req.params.id);
-
-  if (!raw) return res.status(404).json({ error: { message: 'Source not found', code: 'NOT_FOUND' } });
-  res.json(transformSource(raw));
+  try {
+    const m = store.load();
+    const s = m.sources.find(x => x.id === req.params.id);
+    if (!s) return res.status(404).json({ error: { message: 'Source not found', code: 'NOT_FOUND' } });
+    res.json(toUI(s, m.links));
+  } catch (e) { fail(res, e); }
 });
 
-// ─── WRITE operations ─────────────────────────────────────────────────────────
-const fs   = require('fs');
-const path = require('path');
-const WS_CANDIDATES = [
-  path.join(__dirname, '../../workspaceConfig.json'),
-  path.join(__dirname, '../../../phs-cdp-ui/rudderstack-setup/workspaceConfig.json'),
-];
-function getConfigPath() {
-  for (const p of WS_CANDIDATES) if (fs.existsSync(p)) return p;
-  return WS_CANDIDATES[0];
-}
-function readCfg() {
-  try { return JSON.parse(fs.readFileSync(getConfigPath(), 'utf8')); } catch { return { sources:[], destinations:[] }; }
-}
-// ─── RudderStack reload helper ─────────────────────────────────────────────────
-const http = require('http');
-function reloadRudderStack() {
-  const RS_HOST = process.env.RS_HOST || 'rudder-server';
-  const RS_PORT = parseInt(process.env.RS_CONTROL_PORT || '8080');
-  const RS_PASS = process.env.RUDDER_ADMIN_PASSWORD || 'PHS@Rudder2024!';
-  const auth    = Buffer.from(`admin:${RS_PASS}`).toString('base64');
-  const endpoints = ['/backend/config/refreshConfig', '/adminHandler'];
-  function tryNext(i) {
-    if (i >= endpoints.length) return;
-    const opts = {
-      hostname: RS_HOST, port: RS_PORT, path: endpoints[i], method: 'POST',
-      headers: { Authorization: `Basic ${auth}`, 'Content-Type': 'application/json' },
-    };
-    const req = http.request(opts, r => {
-      if (r.statusCode < 300) console.log(`[RS] reload OK via ${endpoints[i]} (${r.statusCode})`);
-      else tryNext(i + 1);
-    });
-    req.on('error', () => tryNext(i + 1));
-    req.end(JSON.stringify({ arg: 'reload-features' }));
-  }
-  tryNext(0);
-}
-
-function writeCfg(cfg) {
-  const p = getConfigPath();
-  fs.writeFileSync(p, JSON.stringify(cfg, null, 2));
-  WS_CANDIDATES.filter(c => c !== p).forEach(c => { try { fs.writeFileSync(c, JSON.stringify(cfg, null, 2)); } catch {} });
-}
-function uid(pfx) { return `${pfx}-${Date.now().toString(36)}-${Math.random().toString(36).slice(2,6)}`; }
-
-// POST /sources — create new source
 router.post('/', requireRole('operator'), (req, res) => {
   try {
-    const { name, sourceDefinitionId, config = {}, enabled = true } = req.body;
-    if (!name || !sourceDefinitionId) return res.status(400).json({ error: { message: 'name and sourceDefinitionId required' } });
-    const cfg = readCfg();
-    const src = {
-      id: uid('src'), name,
-      writeKey: `phs_${sourceDefinitionId}_${Date.now().toString(36)}`,
-      enabled, sourceDefinitionId, config, destinations: [],
-    };
-    cfg.sources.push(src);
-    writeCfg(cfg);
-    res.status(201).json(transformSource(src));
-  } catch (e) { res.status(500).json({ error: { message: e.message } }); }
+    const { name, sourceDefinitionId, config, enabled } = req.body || {};
+    const s = store.createSource({ name, type: sourceDefinitionId, config, enabled });
+    res.status(201).json(toUI(s, store.load().links));
+  } catch (e) { fail(res, e); }
 });
 
-// PUT /sources/:id — update source
 router.put('/:id', requireRole('operator'), (req, res) => {
   try {
-    const cfg = readCfg();
-    const idx = cfg.sources.findIndex(s => s.id === req.params.id);
-    if (idx === -1) return res.status(404).json({ error: { message: 'Source not found' } });
-    const { id, writeKey, ...updates } = req.body;
-    cfg.sources[idx] = { ...cfg.sources[idx], ...updates };
-    writeCfg(cfg);
-    reloadRudderStack();
-    res.json(transformSource(cfg.sources[idx]));
-  } catch (e) { res.status(500).json({ error: { message: e.message } }); }
+    const s = store.updateSource(req.params.id, req.body || {});
+    res.json(toUI(s, store.load().links));
+  } catch (e) { fail(res, e); }
 });
 
-// DELETE /sources/:id — delete source
-router.delete('/:id', requireRole('operator'), (req, res) => {
-  try {
-    const cfg = readCfg();
-    const before = cfg.sources.length;
-    cfg.sources = cfg.sources.filter(s => s.id !== req.params.id);
-    if (cfg.sources.length === before) return res.status(404).json({ error: { message: 'Source not found' } });
-    writeCfg(cfg);
-    reloadRudderStack();
-    res.json({ ok: true });
-  } catch (e) { res.status(500).json({ error: { message: e.message } }); }
-});
-
-// PATCH /sources/:id — toggle enabled
 router.patch('/:id', requireRole('operator'), (req, res) => {
   try {
-    const cfg = readCfg();
-    const src = cfg.sources.find(s => s.id === req.params.id);
-    if (!src) return res.status(404).json({ error: { message: 'Source not found' } });
-    Object.assign(src, req.body);
-    writeCfg(cfg);
-    res.json(transformSource(src));
-  } catch (e) { res.status(500).json({ error: { message: e.message } }); }
+    const s = store.updateSource(req.params.id, req.body || {});
+    res.json(toUI(s, store.load().links));
+  } catch (e) { fail(res, e); }
+});
+
+router.delete('/:id', requireRole('operator'), (req, res) => {
+  try { res.json(store.deleteSource(req.params.id)); } catch (e) { fail(res, e); }
 });
 
 module.exports = router;

@@ -22,11 +22,20 @@ pgPool.on('error', (err) => {
   console.error('[PG Pool] Unexpected error:', err.message);
 });
 
+// Display name of an SDK event: track → its event name, page/screen → "Page Viewed: <name>".
+function eventName(e) {
+  if (e.type === 'page')   return `Page Viewed${e.name ? ': ' + e.name : (e.properties && e.properties.title ? ': ' + e.properties.title : '')}`;
+  if (e.type === 'screen') return `Screen Viewed${e.name ? ': ' + e.name : ''}`;
+  if (e.type === 'identify') return 'Identify';
+  if (e.type === 'alias') return 'Alias';
+  return e.event || 'Unknown';
+}
+
 async function getLatestGwTable() {
   const result = await pgPool.query(`
     SELECT tablename FROM pg_tables
     WHERE schemaname = 'public' AND tablename LIKE 'gw_jobs_%'
-    ORDER BY tablename DESC LIMIT 1
+    ORDER BY NULLIF(regexp_replace(tablename, '\D', '', 'g'), '')::int DESC NULLS LAST LIMIT 1
   `);
   return result.rows[0]?.tablename || 'gw_jobs_1';
 }
@@ -55,7 +64,7 @@ router.get('/', requireRole('viewer'), async (req, res) => {
         const e = row.event_data || {};
         return {
           id:         row.job_id,
-          name:       e.event        || 'Unknown',
+          name:       eventName(e),
           type:       e.type         || 'track',
           customerId: e.userId       || e.anonymousId || null,
           sourceId:   row.source_id,
@@ -111,7 +120,7 @@ router.get('/stream', requireRole('viewer'), async (req, res) => {
     const data = result.rows.map(row => {
       const e = row.event_data || {};
       return {
-        id: row.job_id, name: e.event || 'Unknown', type: e.type || 'track',
+        id: row.job_id, name: eventName(e), type: e.type || 'track',
         customerId: e.userId || e.anonymousId || null,
         sourceId: row.source_id, properties: e.properties || {},
         receivedAt: e.receivedAt || row.created_at,
@@ -152,7 +161,7 @@ router.get('/stream/sse', requireRole('viewer'), async (req, res) => {
       init.rows.forEach(row => {
         const e = row.event_data || {};
         const event = {
-          id: row.job_id, name: e.event || 'Unknown', type: e.type || 'track',
+          id: row.job_id, name: eventName(e), type: e.type || 'track',
           customerId: e.userId || e.anonymousId || null,
           sourceId: row.source_id, properties: e.properties || {},
           receivedAt: e.receivedAt || row.created_at,
@@ -180,7 +189,7 @@ router.get('/stream/sse', requireRole('viewer'), async (req, res) => {
         result.rows.forEach(row => {
           const e = row.event_data || {};
           const event = {
-            id: row.job_id, name: e.event || 'Unknown', type: e.type || 'track',
+            id: row.job_id, name: eventName(e), type: e.type || 'track',
             customerId: e.userId || e.anonymousId || null,
             sourceId: row.source_id, properties: e.properties || {},
             receivedAt: e.receivedAt || row.created_at,

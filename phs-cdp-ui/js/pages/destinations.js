@@ -2069,7 +2069,7 @@ function renderSourceOverviewTab(s) {
 rudderanalytics=window.rudderanalytics=[];
 var m=["load","page","track","identify","alias","group","ready","reset","getAnonymousId","setAnonymousId"];
 for(var i=0;i&lt;m.length;i++){var mt=m[i];rudderanalytics[mt]=function(d){return function(){rudderanalytics.push([d,...arguments])}}(mt)}
-rudderanalytics.load("${s.writeKey}", "http://localhost:8082", { configUrl: "http://localhost:3001" });
+rudderanalytics.load("${s.writeKey}", "${(window.PHSAPI && PHSAPI.RS_DATA_PLANE) || 'http://localhost:8082'}", { configUrl: "${(window.PHSAPI && PHSAPI.RS_CONFIG_URL) || 'http://localhost:3001'}" });
 rudderanalytics.page();
 &lt;/script&gt;
 &lt;script src="https://cdn.rudderlabs.com/v3/modern/rsa.min.js"&gt;&lt;/script&gt;</code></pre>
@@ -2079,7 +2079,7 @@ rudderanalytics.page();
           <pre style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:16px;font-size:12px;line-height:1.6;overflow-x:auto;margin:0;white-space:pre-wrap;"><code id="sdk-node-code">// npm install @rudderstack/analytics-js
 import { RudderAnalytics } from '@rudderstack/analytics-js';
 const analytics = new RudderAnalytics();
-analytics.load("${s.writeKey}", "http://localhost:8082", { configUrl: "http://localhost:3001" });
+analytics.load("${s.writeKey}", "${(window.PHSAPI && PHSAPI.RS_DATA_PLANE) || 'http://localhost:8082'}", { configUrl: "${(window.PHSAPI && PHSAPI.RS_CONFIG_URL) || 'http://localhost:3001'}" });
 
 // Identify user after login
 analytics.identify("USER_ID", { email: "user@example.com", name: "Nguyen Van A" });

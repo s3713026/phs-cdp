@@ -106,7 +106,6 @@ CREATE TABLE IF NOT EXISTS c360_event (
   confidence_score       SMALLINT DEFAULT 0 CHECK (confidence_score BETWEEN 0 AND 100),
   rudderstack_message_id VARCHAR(100),
   CONSTRAINT uq_c360_event_rs_message_id UNIQUE (rudderstack_message_id)
-    DEFERRABLE INITIALLY DEFERRED
 );
 
 CREATE INDEX IF NOT EXISTS idx_c360_event_customer_id      ON c360_event(customer_id);

@@ -90,7 +90,10 @@ function normalize(str) {
 }
 
 function maskCrmId(crmId) {
-  return `CRM-••••${crmId.slice(-3)}`;
+  const v = String(crmId || "");
+  if (!v) return "—";
+  // Anonymous visitor ids are shown by their first characters; account ids are masked.
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-/i.test(v) || v.length > 14 ? `${v.slice(0, 8)}…` : `CRM-••••${v.slice(-3)}`;
 }
 
 function makeInteractive(el, onActivate) {
@@ -2610,22 +2613,29 @@ async function openDetail(id, { fromResults = false } = {}) {
 
   resetToFirstTab();
 
-  renderHeader(currentCustomer);
-  renderSummary(currentCustomer);
-  renderProfileAnalytics(currentCustomer);
-  renderJourney(currentCustomer);
-  renderDnaRiskAppetite(currentCustomer);
-  renderIdentity(currentCustomer);
-  renderAttributes(currentCustomer);
-  renderBehavior(currentCustomer);
-  renderTimeline(currentCustomer);
-  renderTransactions(currentCustomer);
-  renderConsent(currentCustomer);
-  renderEngagement(currentCustomer);
-  renderAudiences(currentCustomer);
-  renderCampaignsJourneys(currentCustomer);
-  renderEkycHistory(currentCustomer);
-  renderTicketHistory(currentCustomer);
+  // safeRender: wrap each render call so a single render exception
+  // does NOT block showView("detail") — customer still navigates to detail
+  // view even if some panels have no data yet.
+  const safeRender = (fn, label) => {
+    try { fn(currentCustomer); }
+    catch (e) { console.warn(`[C360] render ${label} skipped:`, e.message); }
+  };
+  safeRender(renderHeader,            'header');
+  safeRender(renderSummary,           'summary');
+  safeRender(renderProfileAnalytics,  'profileAnalytics');
+  safeRender(renderJourney,           'journey');
+  safeRender(renderDnaRiskAppetite,   'dnaRiskAppetite');
+  safeRender(renderIdentity,          'identity');
+  safeRender(renderAttributes,        'attributes');
+  safeRender(renderBehavior,          'behavior');
+  safeRender(renderTimeline,          'timeline');
+  safeRender(renderTransactions,      'transactions');
+  safeRender(renderConsent,           'consent');
+  safeRender(renderEngagement,        'engagement');
+  safeRender(renderAudiences,         'audiences');
+  safeRender(renderCampaignsJourneys, 'campaignsJourneys');
+  safeRender(renderEkycHistory,       'ekycHistory');
+  safeRender(renderTicketHistory,     'ticketHistory');
 
   updateDetailBackRow();
   showView("detail");

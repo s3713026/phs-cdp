@@ -1,41 +1,42 @@
 {
+  "workspaceId": "phs-workspace",
   "sources": [
     {
-      "id": "src-mwd0djfl-rfq9",
-      "name": "Web test PHS",
-      "writeKey": "phs_Javascript_mwd0djfl",
-      "enabled": true,
-      "sourceDefinitionId": "Javascript",
-      "config": {},
-      "destinations": [
+      "ID": "src-mwd0djfl-rfq9",
+      "Name": "Web test PHS",
+      "WriteKey": "phs_Javascript_mwd0djfl",
+      "Enabled": true,
+      "SourceDefinition": {
+        "Name": "Javascript"
+      },
+      "Config": {},
+      "Destinations": [
         {
-          "id": "dest-mwcyss02-q50k",
-          "name": "PHS CDP Webhook",
-          "destinationDefinitionId": "WEBHOOK",
-          "enabled": true,
-          "config": {
+          "ID": "dest-mwcyss02-q50k",
+          "Name": "PHS CDP Webhook",
+          "DestinationDefinition": {
+            "Name": "WEBHOOK",
+            "DisplayName": "Webhook",
+            "Category": "webhook"
+          },
+          "Enabled": true,
+          "Config": {
             "webhookUrl": "http://phs_cdp_bff:3001/api/webhook/rudderstack",
             "webhookMethod": "POST",
             "method": "POST"
           },
-          "transformations": []
+          "Transformations": [],
+          "IsProcessorEnabled": true
         }
       ]
     }
   ],
-  "destinations": [
-    {
-      "id": "dest-mwcyss02-q50k",
-      "name": "PHS CDP Webhook",
-      "destinationDefinitionId": "WEBHOOK",
+  "connections": {
+    "src-mwd0djfl-rfq9_dest-mwcyss02-q50k": {
+      "sourceId": "src-mwd0djfl-rfq9",
+      "destinationId": "dest-mwcyss02-q50k",
       "enabled": true,
-      "config": {
-        "webhookUrl": "http://phs_cdp_bff:3001/api/webhook/rudderstack",
-        "webhookMethod": "POST",
-        "method": "POST"
-      },
-      "transformations": []
+      "processorEnabled": true
     }
-  ],
-  "destTransformations": []
+  }
 }

@@ -59,7 +59,7 @@ app.use('/api/webhook', require('./routes/webhook'));
 
 // ── API Routes ────────────────────────────────────────────────
 // v2 routes use CDP Profile Store; v1 mock-first routes kept as fallback
-app.use('/api/customers',    require('./routes/customers-v2'));
+app.use('/api/customers',    require('./routes/customers'));
 app.use('/api/catalog',      catalogRouter);
 app.use('/api/audiences',    require('./routes/audiences-v2'));
 app.use('/api/events',       require('./routes/events'));
@@ -104,20 +104,29 @@ app.get('/sourceConfig', (req, res) => {
       console.warn('[sourceConfig] Could not read workspaceConfig:', e.message);
     }
 
-    const source = writeKey ? sources.find(s => s.writeKey === writeKey) : null;
+    // Handle both capitalized (ID/WriteKey) and lowercase (id/writeKey) formats
+    const source = writeKey
+      ? sources.find(s => (s.writeKey || s.WriteKey) === writeKey)
+      : null;
     res.set('Cache-Control', 'no-store');
+    // Build destinations from embedded Destinations array (capitalized) or lowercase
+    const srcDests = source
+      ? (source.Destinations || source.destinations || []).map(d => ({
+          id:   d.ID   || d.id   || '',
+          name: d.Name || d.name || '',
+          enabled: d.Enabled !== false && d.enabled !== false,
+          config: d.Config || d.config || {},
+          destinationDefinition: d.DestinationDefinition || d.destinationDefinition || {},
+        }))
+      : [];
     res.json({
       source: source ? {
-        id: source.id,
-        name: source.name,
-        writeKey: source.writeKey,
-        config: source.config || {},
-        enabled: source.enabled !== false,
-        destinations: (source.destinations || []).map(d => ({
-          id: d.id, name: d.name, enabled: d.enabled !== false,
-          config: d.config || {},
-          destinationDefinition: d.destinationDefinition || {},
-        })),
+        id:       source.ID       || source.id       || '',
+        name:     source.Name     || source.name     || '',
+        writeKey: source.WriteKey || source.writeKey || '',
+        config:   source.Config   || source.config   || {},
+        enabled: source.Enabled !== false && source.enabled !== false,
+        destinations: srcDests,
         updatedAt: new Date().toISOString(),
       } : {
         config: {}, destinations: [], enabled: true,

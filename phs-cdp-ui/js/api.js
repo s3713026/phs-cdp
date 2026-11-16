@@ -389,8 +389,11 @@
 
     // RudderStack Data Plane URL (exposed to SDK snippets in source-wizard)
     // Points to rudder-server via Docker network; for browser SDK use public IP/hostname
-    RS_DATA_PLANE: 'http://100.117.24.87:8080',
-    RS_WRITE_KEY:  'phs_web_write_key_2024',
+    // Where a website/app SDK sends events (data plane port published by Docker: 8082).
+    // Override with window.PHS_DATA_PLANE_URL when reached through another host name.
+    RS_DATA_PLANE: global.PHS_DATA_PLANE_URL || `${location.protocol === 'https:' ? 'https:' : 'http:'}//${location.hostname || 'localhost'}:8082`,
+    // Where the SDK downloads its source configuration (served by the Unified API).
+    RS_CONFIG_URL: global.PHS_CONFIG_URL || (/^https?:/.test(BASE) ? BASE.replace(/\/api\/?$/, '') : `${location.protocol === 'https:' ? 'https:' : 'http:'}//${location.hostname || 'localhost'}:3001`),
   };
 
 })(window);

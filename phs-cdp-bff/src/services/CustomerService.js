@@ -30,7 +30,12 @@ const CustomerService = {
     `, [userId]);
     if (result.rows[0]) return result.rows[0];
     // Try identity graph
-    return this.findByIdentifier('c360_customer_id', userId);
+    return this.findByIdentifier('phs_account_id', userId);
+  },
+
+  async getProfileExists(id) {
+    const result = await db.query('SELECT 1 FROM cdp_customers WHERE id = $1', [id]);
+    return result.rows.length > 0;
   },
 
   async findByAnonymousId(anonymousId) {
@@ -42,128 +47,73 @@ const CustomerService = {
   },
 
   /**
-   * Upsert profile from RudderStack identify() event
-   * @param {string} userId   - RudderStack userId (c360_customer_id)
-   * @param {object} traits   - Profile traits from RS
-   * @param {string} anonymousId
+   * Upsert profile from an identify() call.
+   * Kept for internal callers; the single write path is IdentityResolutionService.
    */
   async upsertProfile(userId, traits = {}, anonymousId = null) {
-    const client = await db.getClient();
-    try {
-      await client.query('BEGIN');
-
-      // Build update fields
-      const updates = {};
-      if (traits.email)       updates.email = traits.email;
-      if (traits.phone)       updates.phone = traits.phone;
-      if (traits.name || traits.full_name)
-                              updates.full_name = traits.name || traits.full_name;
-      if (traits.lifecycle_stage) updates.lifecycle_stage = traits.lifecycle_stage;
-      if (traits.kyc_status)  updates.kyc_status = traits.kyc_status;
-      if (traits.product_interests)
-                              updates.product_interests = JSON.stringify(traits.product_interests);
-
-      if (anonymousId)        updates.anonymous_id = anonymousId;
-      updates.last_seen_at  = new Date().toISOString();
-
-      // Upsert into cdp_customers
-      const setClauses = Object.entries(updates)
-        .map(([k, _], i) => `${k} = $${i + 2}`)
-        .join(', ');
-      const values = [userId, ...Object.values(updates)];
-
-      let customer;
-      if (setClauses) {
-        const result = await client.query(`
-          INSERT INTO cdp_customers (c360_customer_id, ${Object.keys(updates).join(', ')}, first_seen_at)
-          VALUES ($1, ${Object.keys(updates).map((_, i) => `$${i + 2}`).join(', ')}, NOW())
-          ON CONFLICT (c360_customer_id) DO UPDATE SET ${setClauses}, updated_at = NOW()
-          RETURNING *
-        `, values);
-        customer = result.rows[0];
-      } else {
-        // No traits — just ensure customer exists
-        const result = await client.query(`
-          INSERT INTO cdp_customers (c360_customer_id, first_seen_at)
-          VALUES ($1, NOW())
-          ON CONFLICT (c360_customer_id) DO UPDATE SET updated_at = NOW()
-          RETURNING *
-        `, [userId]);
-        customer = result.rows[0];
-      }
-
-      // Upsert identities
-      const identities = [
-        { type: 'c360_customer_id', value: userId },
-      ];
-      if (traits.email) identities.push({ type: 'email', value: traits.email });
-      if (traits.phone) identities.push({ type: 'phone', value: traits.phone });
-      if (anonymousId)  identities.push({ type: 'anonymous_id', value: anonymousId });
-
-      for (const id of identities) {
-        if (!id.value) continue;
-        await client.query(`
-          INSERT INTO cdp_identities (customer_id, identifier_type, identifier_value, source)
-          VALUES ($1, $2, $3, 'rudderstack')
-          ON CONFLICT (identifier_type, identifier_value)
-          DO UPDATE SET customer_id = $1
-        `, [customer.id, id.type, id.value]);
-      }
-
-      await client.query('COMMIT');
-      return customer;
-    } catch (err) {
-      await client.query('ROLLBACK');
-      throw err;
-    } finally {
-      client.release();
-    }
+    const IdentityResolutionService = require('./IdentityResolutionService');
+    const { customer } = await IdentityResolutionService.resolveIdentity({
+      phs_account_id: userId || null,
+      anonymous_id:   anonymousId || null,
+      email:          traits.email || null,
+      phone:          traits.phone || null,
+      full_name:      traits.name || traits.full_name || null,
+    }, { source: 'server' }, traits);
+    return customer;
   },
 
   /**
-   * Merge anonymous → known (from RS alias() event)
-   * previousId = anonymous_id, userId = known c360_customer_id
+   * Merge anonymous → known (alias). previousId = anonymous id, userId = account id.
    */
   async mergeIdentities(previousId, userId) {
-    const client = await db.getClient();
-    try {
-      await client.query('BEGIN');
+    const IdentityResolutionService = require('./IdentityResolutionService');
+    const { customer } = await IdentityResolutionService.resolveIdentity(
+      { phs_account_id: userId, anonymous_id: previousId }, { source: 'server' },
+    );
+    return customer;
+  },
 
-      // Find or create the known customer
-      let knownCustomer = await this.findByUserId(userId);
-      if (!knownCustomer) {
-        const result = await client.query(`
-          INSERT INTO cdp_customers (c360_customer_id, anonymous_id, first_seen_at)
-          VALUES ($1, $2, NOW())
-          ON CONFLICT (c360_customer_id) DO UPDATE SET anonymous_id = $2, updated_at = NOW()
-          RETURNING *
-        `, [userId, previousId]);
-        knownCustomer = result.rows[0];
-      }
+  /**
+   * Events of a customer: everything linked to the profile, plus events that
+   * were stored without a link but carry one of the profile's anonymous ids.
+   */
+  async getEvents(customerId, { limit = 50, offset = 0 } = {}) {
+    const result = await db.query(`
+      SELECT e.event_id AS id, e.event_name, e.event_category, e.channel AS source,
+             e.platform, e.screen_name, e.occurred_at, e.received_at,
+             e.properties, e.confidence_score, e.anonymous_id, e.session_id
+      FROM c360_event e
+      WHERE e.cdp_customer_uuid = $1
+         OR (e.cdp_customer_uuid IS NULL AND e.anonymous_id IN (
+               SELECT identifier_value FROM cdp_identities
+               WHERE customer_id = $1 AND identifier_type = 'anonymous_id'))
+      ORDER BY e.occurred_at DESC
+      LIMIT $2 OFFSET $3
+    `, [customerId, limit, offset]);
+    return result.rows;
+  },
 
-      // Reassign all events from anonymous_id to known customer
-      await client.query(`
-        UPDATE cdp_events
-        SET customer_id = $1
-        WHERE anonymous_id = $2 AND customer_id IS NULL
-      `, [knownCustomer.id, previousId]);
-
-      // Link anonymous_id in identity graph
-      await client.query(`
-        INSERT INTO cdp_identities (customer_id, identifier_type, identifier_value, source)
-        VALUES ($1, 'anonymous_id', $2, 'rudderstack')
-        ON CONFLICT (identifier_type, identifier_value)
-        DO UPDATE SET customer_id = $1
-      `, [knownCustomer.id, previousId]);
-
-      await client.query('COMMIT');
-      return knownCustomer;
-    } catch (err) {
-      await client.query('ROLLBACK');
-      throw err;
-    } finally {
-      client.release();
-    }
+  async countEvents(customerId) {
+    const result = await db.query(`
+      SELECT COUNT(*)                                                        AS total,
+             COUNT(*) FILTER (WHERE e.occurred_at >= NOW() - INTERVAL '30 days') AS last_30d,
+             COUNT(DISTINCT e.session_id) FILTER (WHERE e.occurred_at >= NOW() - INTERVAL '30 days') AS sessions_30d,
+             MIN(e.occurred_at) AS first_event_at,
+             MAX(e.occurred_at) AS last_event_at
+      FROM c360_event e
+      WHERE e.cdp_customer_uuid = $1
+         OR (e.cdp_customer_uuid IS NULL AND e.anonymous_id IN (
+               SELECT identifier_value FROM cdp_identities
+               WHERE customer_id = $1 AND identifier_type = 'anonymous_id'))
+    `, [customerId]);
+    const r = result.rows[0] || {};
+    return {
+      total:        parseInt(r.total || 0),
+      last30d:      parseInt(r.last_30d || 0),
+      sessions30d:  parseInt(r.sessions_30d || 0),
+      firstEventAt: r.first_event_at || null,
+      lastEventAt:  r.last_event_at || null,
+    };
   },
 
   /**
@@ -171,15 +121,11 @@ const CustomerService = {
    * Combines: cdp_customers + identities + events + consents
    */
   async getProfile(customerId) {
-    const [customerRes, identitiesRes, eventsRes, consentsRes] = await Promise.all([
+    const [customerRes, identitiesRes, events, eventStats, consentsRes] = await Promise.all([
       db.query('SELECT * FROM cdp_customers WHERE id = $1', [customerId]),
-      db.query('SELECT * FROM cdp_identities WHERE customer_id = $1 ORDER BY created_at ASC', [customerId]),
-      db.query(`
-        SELECT * FROM cdp_events
-        WHERE customer_id = $1
-        ORDER BY occurred_at DESC
-        LIMIT 20
-      `, [customerId]),
+      db.query('SELECT * FROM cdp_identities WHERE customer_id = $1 ORDER BY tier ASC, priority ASC, created_at ASC', [customerId]),
+      this.getEvents(customerId, { limit: 100 }),
+      this.countEvents(customerId),
       db.query('SELECT * FROM cdp_consents WHERE customer_id = $1', [customerId]),
     ]);
 
@@ -188,33 +134,27 @@ const CustomerService = {
     return {
       customer:     customerRes.rows[0],
       identities:   identitiesRes.rows,
-      recentEvents: eventsRes.rows,
+      recentEvents: events,
+      eventStats,
       consents:     consentsRes.rows,
     };
   },
 
   /**
-   * Insert a behavioral event
+   * Insert a behavioral event (legacy helper — delegates to the single write path).
    */
-  async recordEvent(customerId, anonymousId, eventName, properties = {}, source = 'web', sessionId = null, rsMessageId = null, rsJobId = null) {
-    const result = await db.query(`
-      INSERT INTO cdp_events
-        (customer_id, anonymous_id, event_name, event_category, properties, source, session_id, rs_message_id, rs_job_id, occurred_at)
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, NOW())
-      ON CONFLICT (rs_message_id) DO NOTHING
-      RETURNING id
-    `, [
-      customerId || null,
-      anonymousId || null,
-      eventName,
-      properties.category || null,
-      JSON.stringify(properties),
-      source,
-      sessionId || null,
-      rsMessageId || null,
-      rsJobId || null,
-    ]);
-    return result.rows[0];
+  async recordEvent(customerId, anonymousId, eventName, properties = {}, source = 'web', sessionId = null, rsMessageId = null) {
+    const IdentityResolutionService = require('./IdentityResolutionService');
+    let customer = null;
+    if (customerId) {
+      const r = await db.query('SELECT * FROM cdp_customers WHERE id = $1', [customerId]);
+      customer = r.rows[0] || null;
+    }
+    return IdentityResolutionService.recordEvent(customer, customer ? 20 : 0, {
+      event_name: eventName, event_category: properties.category || null,
+      channel: source, properties, session_id: sessionId,
+      rudderstack_message_id: rsMessageId, anonymous_id: anonymousId,
+    });
   },
 
   /**
@@ -226,25 +166,41 @@ const CustomerService = {
     let idx = 1;
 
     if (lifecycle_stage) {
-      where.push(`lifecycle_stage = $${idx++}`);
+      where.push(`c.lifecycle_stage = $${idx++}`);
       params.push(lifecycle_stage);
     }
     if (search) {
-      where.push(`(full_name ILIKE $${idx} OR email ILIKE $${idx} OR c360_customer_id ILIKE $${idx})`);
+      // Also search in cdp_identities table (anonymousId, phone, email stored there)
+      where.push(`(
+        c.full_name ILIKE $${idx}
+        OR c.email ILIKE $${idx}
+        OR c.c360_customer_id ILIKE $${idx}
+        OR c.anonymous_id ILIKE $${idx}
+        OR EXISTS (
+          SELECT 1 FROM cdp_identities i
+          WHERE i.customer_id = c.id
+            AND i.identifier_value ILIKE $${idx}
+        )
+      )`);
       params.push(`%${search}%`);
       idx++;
     }
 
     const whereClause = where.length ? `WHERE ${where.join(' AND ')}` : '';
     const result = await db.query(`
-      SELECT * FROM cdp_customers
+      SELECT c.*,
+             (SELECT i.identifier_value FROM cdp_identities i
+               WHERE i.customer_id = c.id AND i.identifier_type = 'anonymous_id'
+               ORDER BY i.last_seen_at DESC NULLS LAST LIMIT 1)            AS latest_anonymous_id,
+             (SELECT COUNT(*) FROM c360_event e WHERE e.cdp_customer_uuid = c.id)::int AS event_count
+      FROM cdp_customers c
       ${whereClause}
-      ORDER BY last_seen_at DESC NULLS LAST
+      ORDER BY c.last_seen_at DESC NULLS LAST
       LIMIT $${idx} OFFSET $${idx + 1}
     `, [...params, limit, offset]);
 
     const countResult = await db.query(`
-      SELECT COUNT(*) FROM cdp_customers ${whereClause}
+      SELECT COUNT(*) FROM cdp_customers c ${whereClause}
     `, params);
 
     return {

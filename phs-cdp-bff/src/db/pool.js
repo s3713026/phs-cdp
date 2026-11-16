@@ -16,7 +16,10 @@ function getPool() {
       password: process.env.CDP_DB_PASSWORD,
       max: 10,
       idleTimeoutMillis: 30000,
-      connectionTimeoutMillis: 5000,
+      // 5s was too tight on a busy laptop: a cold connection during a burst of
+      // webhook calls timed out and the event lost its customer link.
+      connectionTimeoutMillis: parseInt(process.env.CDP_DB_CONNECT_TIMEOUT_MS || '15000'),
+      keepAlive: true,
     });
 
     pool.on('error', (err) => {
@@ -37,12 +40,24 @@ function getPool() {
  * @param {string} text  - SQL query
  * @param {Array}  params - Query parameters
  */
+// Errors that mean "could not get a healthy connection" — safe to retry once,
+// because the statement never ran.
+function isConnectionError(err) {
+  const msg = String(err && err.message || '');
+  return /connection timeout|Connection terminated|ECONNREFUSED|ECONNRESET|EAI_AGAIN|ENOTFOUND|the database system is starting up/i.test(msg);
+}
+
 async function query(text, params) {
   const p = getPool();
   try {
     const result = await p.query(text, params);
     return result;
   } catch (err) {
+    if (isConnectionError(err)) {
+      console.warn('[CDP-DB] Connection problem, retrying once:', err.message);
+      await new Promise(r => setTimeout(r, 500));
+      return p.query(text, params);
+    }
     // Mask PII in error logs
     console.error('[CDP-DB] Query error:', err.message, '| Query:', text.substring(0, 80));
     throw err;
@@ -53,7 +68,14 @@ async function query(text, params) {
  * Get a dedicated client for transactions
  */
 async function getClient() {
-  return getPool().connect();
+  try {
+    return await getPool().connect();
+  } catch (err) {
+    if (!isConnectionError(err)) throw err;
+    console.warn('[CDP-DB] Connection problem, retrying once:', err.message);
+    await new Promise(r => setTimeout(r, 500));
+    return getPool().connect();
+  }
 }
 
 /**

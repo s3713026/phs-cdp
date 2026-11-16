@@ -96,6 +96,7 @@ services:
       RSERVER_PROCESSOR_READ_SIZE_IN_MB: "10"
       RSERVER_PROCESSOR_MAX_LOOP_SLEEP: "5s"
       RSERVER_ROUTER_MAX_SLEEP_IN_S: "5"
+      LOG_LEVEL: "DEBUG"
     networks:
       - cdp_network
     mem_limit: 768m

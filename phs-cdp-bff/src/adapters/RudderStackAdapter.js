@@ -37,7 +37,7 @@ class RudderStackAdapter {
     const result = await this.pgPool.query(`
       SELECT tablename FROM pg_tables
       WHERE schemaname = 'public' AND tablename LIKE 'gw_jobs_%'
-      ORDER BY tablename DESC LIMIT 1
+      ORDER BY NULLIF(regexp_replace(tablename, '\D', '', 'g'), '')::int DESC NULLS LAST LIMIT 1
     `);
     return result.rows[0]?.tablename || 'gw_jobs_1';
   }
@@ -73,7 +73,74 @@ class RudderStackAdapter {
     return { sources: [] };
   }
 
+  /**
+   * Normalize workspaceConfig to RudderStack 1.38+ format:
+   *   - Capitalize all struct fields (ID, Name, WriteKey, Enabled, etc.)
+   *   - Generate `connections` map with processorEnabled: true for every
+   *     source↔destination pair so the processor always routes events.
+   * This prevents the "isProcessorEnabled: false" silent bug.
+   */
+  _normalizeConfig(cfg) {
+    const connections = {};
+
+    const sources = (cfg.sources || []).map(src => {
+      const srcId = src.id || src.ID;
+      const rawDests = src.Destinations || src.destinations || [];
+      const normalizedDests = rawDests.map(d => {
+        if (!d || typeof d !== 'object') return null;
+        const destId = d.id || d.ID;
+        if (!destId) return null;
+        connections[`${srcId}_${destId}`] = {
+          sourceId: srcId, destinationId: destId,
+          enabled: true, processorEnabled: true,
+        };
+        return {
+          ID: destId,
+          Name: d.name || d.Name || '',
+          DestinationDefinition: d.DestinationDefinition || {
+            Name: d.destinationDefinitionId || d.DestinationDefinitionId || 'WEBHOOK',
+            DisplayName: d.displayName || d.name || d.Name || '',
+            Category: d.category || 'webhook',
+          },
+          Enabled: d.enabled !== false && d.Enabled !== false,
+          Config: d.config || d.Config || {},
+          Transformations: d.transformations || d.Transformations || [],
+          IsProcessorEnabled: true,
+          // lowercase aliases
+          id: destId, name: d.name || d.Name || '',
+          enabled: d.enabled !== false && d.Enabled !== false,
+          config: d.config || d.Config || {},
+        };
+      }).filter(Boolean);
+
+      return {
+        ID: srcId,
+        Name: src.name || src.Name || '',
+        WriteKey: src.writeKey || src.WriteKey || '',
+        Enabled: src.enabled !== false && src.Enabled !== false,
+        SourceDefinition: src.SourceDefinition || {
+          Name: src.sourceDefinitionId || src.SourceDefinitionId || 'Javascript',
+        },
+        Config: src.config || src.Config || {},
+        Destinations: normalizedDests,
+        // lowercase aliases for BFF code
+        id: srcId, name: src.name || src.Name || '',
+        writeKey: src.writeKey || src.WriteKey || '',
+        enabled: src.enabled !== false && src.Enabled !== false,
+        sourceDefinitionId: (src.SourceDefinition || {}).Name || src.sourceDefinitionId || '',
+        destinations: normalizedDests.map(d => d.ID),
+      };
+    });
+
+    return {
+      workspaceId: cfg.workspaceId || 'phs-workspace',
+      sources,
+      connections,
+    };
+  }
+
   _writeWorkspaceConfig(config) {
+    const normalized = this._normalizeConfig(config);
     const candidates = [
       process.env.WORKSPACE_CONFIG_PATH,
       path.join(__dirname, '../../workspaceConfig.json'),
@@ -83,7 +150,7 @@ class RudderStackAdapter {
     for (const p of candidates) {
       try {
         if (fs.existsSync(p) || p === candidates[1]) {
-          fs.writeFileSync(p, JSON.stringify(config, null, 2), 'utf8');
+          fs.writeFileSync(p, JSON.stringify(normalized, null, 2), 'utf8');
           console.log('[RSAdapter] Wrote workspaceConfig to:', p);
         }
       } catch (err) {

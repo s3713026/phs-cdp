@@ -17,28 +17,12 @@ const fs      = require('fs');
 const path    = require('path');
 const { requireRole } = require('../middleware/rbac');
 
-const WS_CANDIDATES = [
-  path.join(__dirname, '../../workspaceConfig.json'),
-  path.join(__dirname, '../../../phs-cdp-ui/rudderstack-setup/workspaceConfig.json'),
-];
-function getConfigPath() {
-  for (const p of WS_CANDIDATES) if (fs.existsSync(p)) return p;
-  return WS_CANDIDATES[0];
-}
-function readCfg() {
-  try { return JSON.parse(fs.readFileSync(getConfigPath(), 'utf8')); }
-  catch { return { sources: [], destinations: [], transformations: [], destTransformations: [] }; }
-}
+const store = require('../services/WorkspaceConfigStore');
+const readCfg  = () => { const m = store.load(); return { transformations: m.transformations, destTransformations: m.destTransformations, destinations: m.destinations }; };
 function writeCfg(cfg) {
-  const p = getConfigPath();
-  fs.writeFileSync(p, JSON.stringify(cfg, null, 2));
-  WS_CANDIDATES.filter(c => c !== p).forEach(c => {
-    try { fs.writeFileSync(c, JSON.stringify(cfg, null, 2)); } catch {}
-  });
+  store.mutate(m => { m.transformations = cfg.transformations; m.destTransformations = cfg.destTransformations; });
 }
-function uid(pfx) {
-  return `${pfx}-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 7)}`;
-}
+function uid(pfx) { return store.uid(pfx); }
 
 // Transform raw workspaceConfig transformation → UI shape
 function toUI(t, destTransformations, destinations) {

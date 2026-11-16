@@ -42,7 +42,7 @@ async function getGwTable() {
   const r = await rsPg.query(`
     SELECT tablename FROM pg_tables
     WHERE schemaname = 'public' AND tablename LIKE 'gw_jobs_%'
-    ORDER BY tablename DESC LIMIT 1
+    ORDER BY NULLIF(regexp_replace(tablename, '\D', '', 'g'), '')::int DESC NULLS LAST LIMIT 1
   `);
   return r.rows[0]?.tablename || null;
 }

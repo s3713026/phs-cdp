@@ -201,7 +201,7 @@ services:
       RUDDERSTACK_WEBHOOK_SECRET: ${RUDDERSTACK_WEBHOOK_SECRET}
       # App
       USE_MOCK: ${USE_MOCK:-false}
-      CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:8811,http://100.117.24.87:8811,http://localhost:5500,http://localhost:5501}
+      CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:8811,http://100.117.24.87:8811,http://localhost:5500,http://localhost:5501,http://127.0.0.1:8811,http://127.0.0.1:5500,http://127.0.0.1:5501}
       JWT_SECRET: ${JWT_SECRET}
       RATE_LIMIT_MAX_REQUESTS: ${RATE_LIMIT_MAX_REQUESTS:-500}
       # RudderStack PostgreSQL (for events query)
@@ -214,6 +214,8 @@ services:
       # Share the same workspaceConfig.json as RudderStack so /sourceConfig
       # endpoint always reflects the live source/destination list.
       - ./rudderstack/workspaceConfig.json:/app/workspaceConfig.json
+      # Mount BFF source so code changes apply on container restart (no rebuild needed)
+      - ./phs-cdp-bff/src:/app/src
     networks:
       - cdp_network
     mem_limit: 512m

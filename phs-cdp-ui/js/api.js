@@ -389,6 +389,9 @@
 
     // RudderStack Data Plane URL (exposed to SDK snippets in source-wizard)
     // Points to rudder-server via Docker network; for browser SDK use public IP/hostname
+    /** Activity per data source / activation channel (Data → All Data Flows) */
+    flowStats: () => get('/events/flow-stats'),
+
     // Where a website/app SDK sends events (data plane port published by Docker: 8082).
     // Override with window.PHS_DATA_PLANE_URL when reached through another host name.
     RS_DATA_PLANE: global.PHS_DATA_PLANE_URL || `${location.protocol === 'https:' ? 'https:' : 'http:'}//${location.hostname || 'localhost'}:8082`,

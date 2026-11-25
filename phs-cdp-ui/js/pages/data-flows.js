@@ -39,13 +39,30 @@ let cmDestinations = [];
  * into the same shape the Connection Map expects so the rest of the page
  * can stay unchanged.
  */
+// The built-in destination that forwards events to the Unified API (customer profiles).
+const isHook = (d) => JSON.stringify(d?.config || {}).includes("/api/webhook/rudderstack");
+
 async function loadFromBFF() {
   if (typeof PHSAPI === "undefined") return;
   try {
-    const [srcRes, dstRes] = await Promise.all([
+    const [srcRes, dstRes, stats] = await Promise.all([
       PHSAPI.sources.list(),
       PHSAPI.destinations.list(),
+      (PHSAPI.flowStats ? PHSAPI.flowStats() : Promise.resolve(null)).catch(() => null),
     ]);
+    const srcStats = stats?.sources || {};
+    const dstStats = stats?.destinations || {};
+    const hook = stats?.webhook || null;
+    const ago = (iso) => {
+      if (!iso) return "—";
+      const t = new Date(iso).getTime();
+      if (!Number.isFinite(t)) return "—";
+      const m = Math.max(0, Math.round((Date.now() - t) / 60000));
+      if (m < 1) return "Just now";
+      if (m < 60) return `${m} min ago`;
+      if (m < 1440) return `${Math.round(m / 60)} h ago`;
+      return `${Math.round(m / 1440)} d ago`;
+    };
 
     const rawSources = srcRes?.data ?? srcRes ?? [];
     const rawDests   = dstRes?.data ?? dstRes ?? [];
@@ -153,8 +170,8 @@ async function loadFromBFF() {
         dataTypes:    ["Event"],
         deliveryMode: "Stream",
         status:       s.status,  // "Connected" | "Disconnected"
-        lastSync:     s.lastReceived || "—",
-        recordCount:  s.usersBase7d  || 0,
+        lastSync:     ago(srcStats[s.id]?.last),
+        recordCount:  srcStats[s.id]?.records || 0,
         recordLabel:  "events",
         ingestionType: "API Ingestion",
         activationType: undefined,
@@ -173,8 +190,8 @@ async function loadFromBFF() {
         dataTypes:    ["Event"],
         deliveryMode: "Stream",
         status:       d.status,
-        lastSync:     d.lastSync || "—",
-        recordCount:  d.usersBase7d || 0,
+        lastSync:     (isHook(d) && hook) ? ago(hook.lastReceivedAt) : ago(dstStats[d.id]?.last),
+        recordCount:  (isHook(d) && hook) ? (hook.stored || 0) : (dstStats[d.id]?.records || 0),
         recordLabel:  "records",
         ingestionType: undefined,
         activationType: "Audience Activation",

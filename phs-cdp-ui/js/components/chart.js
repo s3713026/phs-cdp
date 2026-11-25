@@ -36,9 +36,10 @@ export function renderLineChart(container, { series, labels, formatValue = Strin
   const innerW = width - padding.left - padding.right;
   const innerH = height - padding.top - padding.bottom;
 
-  const allValues = series.flatMap((s) => s.values);
+  const allValues = series.flatMap((s) => s.values).filter(v => typeof v === 'number' && isFinite(v));
+  if (allValues.length === 0) { mount.innerHTML = '<p style="text-align:center;color:var(--color-text-muted);padding:40px 0">No data available</p>'; return; }
   const maxRaw = Math.max(...allValues);
-  const max = yMax !== undefined ? yMax : maxRaw * 1.12;
+  const max = yMax !== undefined ? yMax : (maxRaw > 0 ? maxRaw * 1.12 : 10);
   const min = yMin;
   const pointCount = labels.length;
 

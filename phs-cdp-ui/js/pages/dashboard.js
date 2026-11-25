@@ -333,16 +333,16 @@ async function loadDashboardMetricsFromBFF() {
   try {
     const dash = await PHSAPI.dashboard.summary();
 
-    // Customers
-    if (dash.customers?.total) {
+    // Customers — always update if BFF responded (even if 0)
+    if (dash.customers != null) {
       document.querySelectorAll('[data-metric="total-profiles"]').forEach(el => {
-        el.textContent = dash.customers.total.toLocaleString();
+        el.textContent = (dash.customers.total ?? 0).toLocaleString();
       });
       document.querySelectorAll('[data-metric="known-profiles"]').forEach(el => {
-        el.textContent = dash.customers.known.toLocaleString();
+        el.textContent = (dash.customers.known ?? 0).toLocaleString();
       });
       document.querySelectorAll('[data-metric="anonymous-profiles"]').forEach(el => {
-        el.textContent = dash.customers.anonymous.toLocaleString();
+        el.textContent = (dash.customers.anonymous ?? 0).toLocaleString();
       });
     }
 
@@ -384,6 +384,7 @@ async function loadDashboardMetricsFromBFF() {
 
     // Live/Mock badge
     const mode = dash.mode || (dash.customers?.source === "mautic" ? "live" : "mock");
+    window.__dashMode = mode;  // consumed by renderPlatformHealth
     document.querySelectorAll('[data-metric="data-source"]').forEach(el => {
       el.textContent = mode === "live" ? "● LIVE" : "○ Demo";
       el.style.color = mode === "live" ? "var(--color-success)" : "var(--color-warning)";
@@ -456,6 +457,17 @@ function renderActivityTrendFromCount(todayTotal) {
 
 // ── Init ───────────────────────────────────────────────────────────────────
 export function initDashboard() {
+  // Clear static mock values immediately — BFF data will fill them in.
+  // This prevents hardcoded HTML values from staying visible if BFF is slow or returns live mode.
+  [
+    'total-profiles', 'known-profiles', 'anonymous-profiles',
+    'audiences', 'events-today', 'dq-score', 'active-customers',
+  ].forEach(metric => {
+    document.querySelectorAll(`[data-metric="${metric}"]`).forEach(el => {
+      el.textContent = '—';
+    });
+  });
+
   initGrowthPeriodToggle();
   initDateRangeDropdown();
   initRefresh();
@@ -463,11 +475,154 @@ export function initDashboard() {
   initDetailDrawer();
 
   // Non-blocking: load everything from BFF in parallel
+  // renderPlatformHealth runs after loadDashboardMetricsFromBFF so window.__dashMode is set
+  loadDashboardMetricsFromBFF()
+    .then(() => renderPlatformHealth())
+    .catch(() => renderPlatformHealth());   // still try even if metrics failed
+
   Promise.all([
-    loadDashboardMetricsFromBFF(),           // KPIs + events today + activity trend
     loadAndRenderGrowthChart(currentGrowthPeriod),  // growth chart
-    renderProfileSamples(),                  // profile sample grid
+    renderProfileSamples(),                          // profile sample grid
   ]).catch((err) => {
     console.warn("[Dashboard] Init error:", err.message);
   });
+}
+
+// ── Platform Health — fetch real sources from BFF ─────────────────────────
+async function renderPlatformHealth() {
+  const tbody = document.getElementById('platform-health-tbody');
+  const activityDiv = document.getElementById('platform-health-activity');
+  if (!tbody) return;
+
+  // Determine mock mode from meta tag injected by api.js or fall back to env detection
+  // We'll detect by calling /api/dashboard and reading the mode field
+  // However, we can also just check the api.js helper
+  let mockMode = null;
+  try {
+    // Try to read mock mode from a small ping (we already have dash data from BFF)
+    // Use a lightweight call: check if window.__dashMode was set by loadDashboardMetricsFromBFF
+    mockMode = window.__dashMode;
+  } catch (_) {}
+
+  // Always fetch from BFF: sources list + flow stats
+  let sources = [];
+  let flowStats = { sources: {}, destinations: {} };
+
+  if (typeof PHSAPI === 'undefined') {
+    console.warn('[Dashboard] PHSAPI not available — skipping Platform Health render');
+    return;
+  }
+
+  try {
+    const [srcRes, flowRes] = await Promise.allSettled([
+      PHSAPI.connections.listSources(),
+      PHSAPI.flowStats(),
+    ]);
+
+    if (srcRes.status === 'fulfilled') {
+      const srcData = srcRes.value;
+      sources = Array.isArray(srcData) ? srcData : (srcData.data || []);
+    }
+    if (flowRes.status === 'fulfilled') {
+      flowStats = flowRes.value || { sources: {}, destinations: {} };
+    }
+  } catch (err) {
+    console.warn('[Dashboard] Platform Health fetch failed:', err.message);
+  }
+
+  // If mock mode is explicitly "mock_only" (USE_MOCK=true) — keep HTML as is (mock data visible)
+  if (mockMode === 'mock') return;
+
+  // If live mode — render real sources or empty state
+  if (sources.length === 0 && mockMode !== 'live_with_fallback') {
+    // USE_MOCK=false and no real sources — clear the mock table rows
+    tbody.innerHTML = `
+      <tr>
+        <td colspan="6" class="cell-muted" style="text-align:center;padding:var(--space-6);">
+          No data sources configured. <a href="data-flows.html">Configure data sources →</a>
+        </td>
+      </tr>`;
+
+    // Also clear the recent activity fake timeline
+    if (activityDiv) {
+      activityDiv.innerHTML = `
+        <p class="subhead">Recent activity</p>
+        <p class="cell-muted" style="font-size:var(--text-sm);padding:var(--space-3) 0;">No recent activity</p>`;
+    }
+    return;
+  }
+
+  // Render real sources
+  if (sources.length > 0) {
+    const relativeTime = (isoStr) => {
+      if (!isoStr) return '—';
+      const diff = Date.now() - new Date(isoStr).getTime();
+      const mins = Math.floor(diff / 60000);
+      if (mins < 1) return 'just now';
+      if (mins < 60) return `${mins} min ago`;
+      const hrs = Math.floor(mins / 60);
+      if (hrs < 24) return `${hrs} hour${hrs > 1 ? 's' : ''} ago`;
+      return `${Math.floor(hrs / 24)} day${Math.floor(hrs / 24) > 1 ? 's' : ''} ago`;
+    };
+
+    const rows = sources.map(src => {
+      const stats = flowStats.sources[src.id] || {};
+      const records = stats.records != null ? stats.records.toLocaleString() : '—';
+      const lastSync = relativeTime(stats.last || src.lastSyncAt || src.updatedAt);
+      const isEnabled = src.enabled !== false;
+      const statusClass = isEnabled ? 'status-dot--success' : 'status-dot--danger';
+      const statusText = isEnabled ? 'Connected' : 'Disconnected';
+      const badgeClass = isEnabled ? 'badge--success' : 'badge--danger';
+      const badgeText = isEnabled ? 'Healthy' : 'Offline';
+
+      return `<tr>
+        <td class="cell-primary">${src.name || src.id}</td>
+        <td><span class="status-dot ${statusClass}">${statusText}</span></td>
+        <td class="cell-muted">${lastSync}</td>
+        <td class="num tabular-nums">${records}</td>
+        <td class="num tabular-nums">—</td>
+        <td><span class="badge ${badgeClass}">${badgeText}</span></td>
+      </tr>`;
+    }).join('');
+
+    tbody.innerHTML = rows;
+
+    // Build real activity from flowStats
+    if (activityDiv) {
+      const webhookStored = flowStats.webhook?.stored;
+      const webhookLast = flowStats.webhook?.lastReceivedAt;
+      const items = [];
+
+      if (webhookStored && webhookLast) {
+        items.push({ cls: 'timeline__dot--success', text: `${webhookStored.toLocaleString()} events received`, time: relativeTime(webhookLast) });
+      }
+      sources.slice(0, 3).forEach(src => {
+        if (src.updatedAt || src.lastSyncAt) {
+          const t = src.updatedAt || src.lastSyncAt;
+          items.push({ cls: 'timeline__dot--info', text: `${src.name || src.id} source active`, time: relativeTime(t) });
+        }
+      });
+
+      if (items.length === 0) {
+        activityDiv.innerHTML = `
+          <p class="subhead">Recent activity</p>
+          <p class="cell-muted" style="font-size:var(--text-sm);padding:var(--space-3) 0;">No recent activity</p>`;
+      } else {
+        const timelineItems = items.map((it, i) => {
+          const isLast = i === items.length - 1;
+          return `<div class="timeline__item">
+            <div class="timeline__rail">
+              <span class="timeline__dot ${it.cls}"></span>
+              ${!isLast ? '<span class="timeline__line"></span>' : ''}
+            </div>
+            <div class="timeline__content">
+              <p class="timeline__text">${it.text}</p>
+              <p class="timeline__time">${it.time}</p>
+            </div>
+          </div>`;
+        }).join('');
+        activityDiv.innerHTML = `<p class="subhead">Recent activity</p><div class="timeline">${timelineItems}</div>`;
+      }
+    }
+  }
 }

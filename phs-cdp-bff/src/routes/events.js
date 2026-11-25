@@ -35,7 +35,7 @@ async function getLatestGwTable() {
   const result = await pgPool.query(`
     SELECT tablename FROM pg_tables
     WHERE schemaname = 'public' AND tablename LIKE 'gw_jobs_%'
-    ORDER BY NULLIF(regexp_replace(tablename, '\D', '', 'g'), '')::int DESC NULLS LAST LIMIT 1
+    ORDER BY NULLIF(regexp_replace(tablename, '[^0-9]', '', 'g'), '')::int DESC NULLS LAST LIMIT 1
   `);
   return result.rows[0]?.tablename || 'gw_jobs_1';
 }
@@ -94,6 +94,86 @@ router.get('/stats', requireRole('viewer'), async (_req, res) => {
     console.error('[events/stats] error:', err.message);
     res.status(500).json({ error: { message: 'Failed to load event stats', detail: err.message } });
   }
+});
+
+
+// GET /events/flow-stats — per source / destination activity for Data → All Data Flows
+//   inbound  : events accepted by the gateway, per source (all gw_jobs tables, last 7 days)
+//   outbound : deliveries per destination (router tables); the system webhook also reports its own counters
+router.get('/flow-stats', requireRole('viewer'), async (_req, res) => {
+  const out = { sources: {}, destinations: {}, generatedAt: new Date().toISOString() };
+
+  // Helper: query with a per-call timeout so RS Postgres slow tables don't block the response
+  const withTimeout = (promise, ms) => Promise.race([
+    promise,
+    new Promise((_, reject) => setTimeout(() => reject(new Error('query timeout')), ms)),
+  ]);
+
+  const tables = async (prefix) => {
+    try {
+      const r = await withTimeout(
+        pgPool.query(`SELECT tablename FROM pg_tables WHERE schemaname='public' AND tablename LIKE $1`, [prefix + '_%']),
+        3000
+      );
+      return r.rows.map(r => r.tablename).filter(t => /^[a-z_0-9]+$/.test(t));
+    } catch { return []; }
+  };
+
+  try {
+    for (const t of await tables('gw_jobs')) {
+      try {
+        const r = await withTimeout(pgPool.query(
+          `SELECT parameters->>'source_id' AS id, COUNT(*)::int AS n, MAX(created_at) AS last
+             FROM ${t} WHERE created_at > NOW() - INTERVAL '7 days' GROUP BY 1`), 4000);
+        for (const row of r.rows) {
+          if (!row.id) continue;
+          const o = out.sources[row.id] || (out.sources[row.id] = { records: 0, last: null });
+          o.records += row.n;
+          if (!o.last || row.last > o.last) o.last = row.last;
+        }
+      } catch { /* skip slow/broken table */ }
+    }
+  } catch (err) { out.sourceError = err.message; }
+
+  try {
+    for (const t of await tables('rt_jobs')) {
+      try {
+        const r = await withTimeout(pgPool.query(
+          `SELECT parameters->>'destination_id' AS id, COUNT(*)::int AS n, MAX(created_at) AS last
+             FROM ${t} WHERE created_at > NOW() - INTERVAL '7 days' GROUP BY 1`), 4000);
+        for (const row of r.rows) {
+          if (!row.id) continue;
+          const o = out.destinations[row.id] || (out.destinations[row.id] = { records: 0, last: null });
+          o.records += row.n;
+          if (!o.last || row.last > o.last) o.last = row.last;
+        }
+      } catch { /* skip slow/broken table */ }
+    }
+  } catch (err) { out.destinationError = err.message; }
+
+  // Webhook / CDP Postgres event counters (persistent — survives BFF restarts)
+  try {
+    const w = require("./webhook")._status();
+    try {
+      const cdpDb = require("../db");
+      const cdpRes = await withTimeout(
+        cdpDb.query("SELECT COUNT(*) AS total_events, MAX(occurred_at) AS last_event FROM c360_event"),
+        3000
+      );
+      const cdpRow = cdpRes.rows[0];
+      const cdpTotal = parseInt(cdpRow?.total_events || 0);
+      out.webhook = {
+        stored:         cdpTotal > 0 ? cdpTotal : w.stored,
+        failed:         w.failed,
+        lastReceivedAt: cdpRow?.last_event || w.lastReceivedAt,
+        source:         cdpTotal > 0 ? "cdp_postgres" : "in_memory",
+      };
+    } catch (cdpErr) {
+      out.webhook = { stored: w.stored, failed: w.failed, lastReceivedAt: w.lastReceivedAt, source: "in_memory" };
+    }
+  } catch { out.webhook = { stored: 0, failed: 0, lastReceivedAt: null }; }
+
+  res.json(out);
 });
 
 // GET /events/health — RudderStack data plane health

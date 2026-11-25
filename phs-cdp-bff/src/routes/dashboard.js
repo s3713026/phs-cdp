@@ -112,8 +112,8 @@ async function fetchLiveData() {
     db.query(`
       SELECT
         COUNT(*)                                                         AS total,
-        COUNT(*) FILTER (WHERE phs_account_id IS NOT NULL)              AS known,
-        COUNT(*) FILTER (WHERE phs_account_id IS NULL
+        COUNT(*) FILTER (WHERE c360_customer_id IS NOT NULL)              AS known,
+        COUNT(*) FILTER (WHERE c360_customer_id IS NULL
                            AND anonymous_id IS NOT NULL)                AS anonymous,
         COUNT(*) FILTER (WHERE created_at >= NOW() - INTERVAL '1 day') AS new_today
       FROM cdp_customers

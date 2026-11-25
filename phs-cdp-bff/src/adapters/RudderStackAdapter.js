@@ -37,7 +37,7 @@ class RudderStackAdapter {
     const result = await this.pgPool.query(`
       SELECT tablename FROM pg_tables
       WHERE schemaname = 'public' AND tablename LIKE 'gw_jobs_%'
-      ORDER BY NULLIF(regexp_replace(tablename, '\D', '', 'g'), '')::int DESC NULLS LAST LIMIT 1
+      ORDER BY NULLIF(regexp_replace(tablename, '[^0-9]', '', 'g'), '')::int DESC NULLS LAST LIMIT 1
     `);
     return result.rows[0]?.tablename || 'gw_jobs_1';
   }

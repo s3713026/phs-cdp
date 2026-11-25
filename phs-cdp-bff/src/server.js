@@ -10,8 +10,17 @@ const PORT = process.env.PORT || 3001;
 
 app.use(helmet({ crossOriginResourcePolicy: { policy: 'cross-origin' } }));
 
-const allowedOrigins = (process.env.CORS_ORIGINS || 'http://localhost:8080,http://localhost:8811,http://localhost:3000,http://localhost:5500,http://127.0.0.1:5500,http://127.0.0.1:8811,http://127.0.0.1:3000')
-  .split(',').map(s => s.trim());
+// Always include localhost/127.0.0.1 dev origins; merge with any CORS_ORIGINS env var
+const _builtinOrigins = [
+  'http://localhost:8080','http://localhost:8811','http://localhost:3000',
+  'http://localhost:5500','http://localhost:5501',
+  'http://127.0.0.1:5500','http://127.0.0.1:5501',
+  'http://127.0.0.1:8811','http://127.0.0.1:3000',
+];
+const allowedOrigins = [
+  ..._builtinOrigins,
+  ...(process.env.CORS_ORIGINS || '').split(',').map(s => s.trim()).filter(Boolean),
+].filter((v, i, a) => a.indexOf(v) === i);  // deduplicate
 
 app.use(cors({
   origin: (origin, cb) => {

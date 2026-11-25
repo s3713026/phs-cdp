@@ -13,6 +13,8 @@ let _catalog = null;
 let _selectedItem = null;
 let _allSources = [];
 let _createdDest = null;
+let _draftName = '';
+let _draftConfig = {};
 
 function refreshIcons() { if (window.lucide) window.lucide.createIcons(); }
 function n(str) { return (str||'').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,''); }
@@ -253,6 +255,9 @@ function renderStep2() {
   document.getElementById('dw-next')?.addEventListener('click', () => {
     const nameEl = document.getElementById('dw-name');
     if (!nameEl?.value?.trim()) { nameEl?.focus(); nameEl?.classList.add('input--error'); return; }
+    // Save form values BEFORE rendering Step 3 (which replaces the DOM)
+    _draftName = nameEl.value.trim();
+    _draftConfig = collectConfigFromForm(item);
     _step=3; renderStep3();
   });
 }
@@ -299,8 +304,9 @@ async function renderStep3() {
     const btn = document.getElementById('dw-create') || document.getElementById('dw-skip');
     if (btn) { btn.disabled=true; btn.innerHTML='<i data-lucide="loader-2" style="animation:spin 1s linear infinite;"></i> Creating…'; refreshIcons(); }
     try {
-      const name = document.getElementById('dw-name')?.value?.trim() || `PHS ${item.name}`;
-      const config = collectConfigFromForm(item);
+      // Use values saved when user clicked Continue in Step 2 (DOM no longer available)
+      const name = _draftName || `PHS ${item.name}`;
+      const config = _draftConfig || {};
       const payload = {
         name,
         destinationDefinitionId: item.id,
@@ -355,13 +361,13 @@ function renderStep3Success() {
     </div>`;
   refreshIcons();
   document.getElementById('dw-done')?.addEventListener('click', () => { closeDestWizard(); if (_onCreated) _onCreated(_createdDest); });
-  document.getElementById('dw-add-another')?.addEventListener('click', () => { _step=1; _selectedItem=null; _createdDest=null; renderStep1(); });
+  document.getElementById('dw-add-another')?.addEventListener('click', () => { _step=1; _selectedItem=null; _createdDest=null; _draftName=''; _draftConfig={}; renderStep1(); });
 }
 
 // ── Public API ────────────────────────────────────────────────────────────────
 export function openDestWizard({ onClose, onCreated, presetProvider } = {}) {
   _onClose = onClose||null; _onCreated = onCreated||null;
-  _step=1; _selectedItem=_createdDest=null;
+  _step=1; _selectedItem=_createdDest=null; _draftName=''; _draftConfig={};
   document.querySelector('[data-setup-title]').textContent = 'Add Destination';
   document.querySelector('[data-setup-back-label]').textContent = 'Back to Destinations';
   document.querySelector('[data-view-setup]').hidden = false;

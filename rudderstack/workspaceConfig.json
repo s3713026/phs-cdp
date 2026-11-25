@@ -27,6 +27,40 @@
           },
           "Transformations": [],
           "IsProcessorEnabled": true
+        },
+        {
+          "ID": "dest-mwvxv48i-czy0",
+          "Name": "Webhook site",
+          "DestinationDefinition": {
+            "Name": "WEBHOOK",
+            "DisplayName": "PHS Webhook",
+            "Category": "webhook"
+          },
+          "Enabled": true,
+          "Config": {
+            "method": "POST",
+            "webhookUrl": "https://webhook.site/5366b6c5-a72a-46d5-9626-a7e5383bb6f1",
+            "headers": []
+          },
+          "Transformations": [],
+          "IsProcessorEnabled": true
+        },
+        {
+          "ID": "dest-mwvyv7cf-rbc3",
+          "Name": "PHS Webhook site test",
+          "DestinationDefinition": {
+            "Name": "WEBHOOK",
+            "DisplayName": "PHS Webhook site test",
+            "Category": "webhook"
+          },
+          "Enabled": true,
+          "Config": {
+            "webhookUrl": "https://webhook.site/5366b6c5-a72a-46d5-9626-a7e5383bb6f1",
+            "method": "POST",
+            "authType": "None"
+          },
+          "Transformations": [],
+          "IsProcessorEnabled": true
         }
       ]
     }
@@ -37,6 +71,65 @@
       "destinationId": "dest-mwcyss02-q50k",
       "enabled": true,
       "processorEnabled": true
+    },
+    "src-mwd0djfl-rfq9_dest-mwvxv48i-czy0": {
+      "sourceId": "src-mwd0djfl-rfq9",
+      "destinationId": "dest-mwvxv48i-czy0",
+      "enabled": true,
+      "processorEnabled": true
+    },
+    "src-mwd0djfl-rfq9_dest-mwvyv7cf-rbc3": {
+      "sourceId": "src-mwd0djfl-rfq9",
+      "destinationId": "dest-mwvyv7cf-rbc3",
+      "enabled": true,
+      "processorEnabled": true
     }
+  },
+  "phs": {
+    "version": 2,
+    "updatedAt": "2026-11-25T10:14:19.119Z",
+    "destinations": [
+      {
+        "id": "dest-mwcyss02-q50k",
+        "name": "PHS CDP Webhook",
+        "destinationDefinitionId": "WEBHOOK",
+        "displayName": "Webhook",
+        "enabled": true,
+        "config": {
+          "webhookUrl": "http://phs_cdp_bff:3001/api/webhook/rudderstack",
+          "webhookMethod": "POST",
+          "method": "POST"
+        }
+      },
+      {
+        "id": "dest-mwvxv48i-czy0",
+        "name": "Webhook site",
+        "destinationDefinitionId": "WEBHOOK",
+        "displayName": "PHS Webhook",
+        "enabled": true,
+        "config": {
+          "method": "POST",
+          "webhookUrl": "https://webhook.site/5366b6c5-a72a-46d5-9626-a7e5383bb6f1",
+          "headers": []
+        },
+        "createdAt": "2026-11-25T09:46:15.474Z",
+        "updatedAt": "2026-11-25T09:58:35.556Z"
+      },
+      {
+        "id": "dest-mwvyv7cf-rbc3",
+        "name": "PHS Webhook site test",
+        "destinationDefinitionId": "WEBHOOK",
+        "enabled": true,
+        "config": {
+          "webhookUrl": "https://webhook.site/5366b6c5-a72a-46d5-9626-a7e5383bb6f1",
+          "method": "POST",
+          "authType": "None"
+        },
+        "createdAt": "2026-11-25T10:14:19.119Z",
+        "updatedAt": "2026-11-25T10:14:19.119Z"
+      }
+    ],
+    "transformations": [],
+    "destTransformations": []
   }
 }

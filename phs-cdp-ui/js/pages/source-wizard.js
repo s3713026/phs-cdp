@@ -178,7 +178,7 @@ function renderStep2() {
     btn.innerHTML = '<i data-lucide="loader-2" style="animation:spin 1s linear infinite;"></i> Creating…';
     refreshIcons();
     try {
-      const payload = { name, sourceDefinitionId: item.id };
+      const payload = { name, sourceDefinitionId: item.id, category: item.category || item._cat };
       const apikey = document.getElementById('sw-cfg-apikey')?.value?.trim();
       const dburl  = document.getElementById('sw-cfg-dburl')?.value?.trim();
       if (apikey) payload.config = { apiKey: apikey };
@@ -220,7 +220,12 @@ function renderStep3() {
   const wk   = src?.writeKey || '(writeKey assigned by server)';
   const dpUrl = window.PHSAPI?.RS_DATA_PLANE || 'https://your-dataplane.example.com';
   const cat = (item?.category || item?._cat || '').toLowerCase();
-  const isEvent = !cat.includes('cloud') && !cat.includes('extract') && !cat.includes('reverse') && !cat.includes('etl');
+  const srcName = (item?.name || item?.id || '').toLowerCase();
+  const isWebhook = cat.includes('webhook') || srcName.includes('webhook') ||
+    (src?.type || '').toLowerCase().includes('webhook');
+  const isCloud = cat.includes('cloud') || cat.includes('extract');
+  const isEtl   = cat.includes('reverse') || cat.includes('etl');
+  const isEvent  = !isWebhook && !isCloud && !isEtl;
 
   const jsSnippet = `// npm install @rudderstack/analytics-js
 import { RudderAnalytics } from '@rudderstack/analytics-js';
@@ -266,9 +271,22 @@ client.track({ userId: 'USER_ID', event: 'First Trade', properties: { product: '
         </span>
         <div>
           <div style="font-weight:600;font-size:var(--text-md);">Source created — ${src?.name || item?.name || ''}</div>
-          <div style="font-size:var(--text-sm);color:var(--text-secondary);">Copy your Write Key and install the SDK to start sending data.</div>
+          <div style="font-size:var(--text-sm);color:var(--text-secondary);">${isWebhook ? 'Configure your system to send HTTP POST requests to the webhook endpoint below.' : isEvent ? 'Copy your Write Key and install the SDK to start sending data.' : 'Source created. Configure the sync schedule in source settings.'}</div>
         </div>
       </div>
+      ${isWebhook ? `
+      <div class="section" style="margin-top:var(--space-6);"><div class="section__body" style="padding:var(--space-4);">
+        <div style="font-size:var(--text-sm);font-weight:600;margin-bottom:var(--space-2);">Webhook Endpoint URL</div>
+        <div style="display:flex;align-items:center;gap:var(--space-2);">
+          <code class="font-mono" style="flex:1;background:var(--surface-2);padding:10px 12px;border-radius:6px;font-size:13px;word-break:break-all;">${dpUrl}/v1/webhook?writeKey=${wk}</code>
+          <button type="button" class="btn btn--outline btn--sm" id="sw-copy-wk" title="Copy URL"><i data-lucide="copy"></i></button>
+        </div>
+        <p style="font-size:var(--text-xs);color:var(--text-secondary);margin-top:var(--space-2);">Configure your external system to send HTTP POST requests (JSON) to this URL.</p>
+      </div></div>
+      <div class="dataflow-note" style="margin-top:var(--space-4);">
+        <i data-lucide="info"></i>
+        <span>Send events as JSON: <code style="font-size:11px;">POST ${dpUrl}/v1/webhook?writeKey=${wk}</code> with <code style="font-size:11px;">Content-Type: application/json</code> in the request header.</span>
+      </div>` : isEvent ? `
       <div class="section" style="margin-top:var(--space-6);"><div class="section__body" style="padding:var(--space-4);">
         <div style="font-size:var(--text-sm);font-weight:600;margin-bottom:var(--space-2);">Write Key</div>
         <div style="display:flex;align-items:center;gap:var(--space-2);">
@@ -277,7 +295,11 @@ client.track({ userId: 'USER_ID', event: 'First Trade', properties: { product: '
         </div>
         <p style="font-size:var(--text-xs);color:var(--text-secondary);margin-top:var(--space-2);">Keep this key private. Never expose it in client-side code for server-side sources.</p>
       </div></div>
-      ${sdkHtml}
+      ${sdkHtml}` : `
+      <div class="dataflow-note" style="margin-top:var(--space-6);">
+        <i data-lucide="check-circle-2"></i>
+        <span>Source created. Go to source settings to configure the sync schedule and start pulling data.</span>
+      </div>`}
       <div class="cluster gap-3" style="justify-content:flex-end;margin-top:var(--space-8);border-top:1px solid var(--border-subtle);padding-top:var(--space-5);">
         <button type="button" class="btn btn--ghost" id="sw-add-another">Add another source</button>
         <button type="button" class="btn btn--primary" id="sw-done">View source</button>
@@ -285,7 +307,8 @@ client.track({ userId: 'USER_ID', event: 'First Trade', properties: { product: '
     </div>`;
   refreshIcons();
 
-  document.getElementById('sw-copy-wk')?.addEventListener('click', () => copyText(wk, 'sw-copy-wk'));
+  const copyWkVal = isWebhook ? `${dpUrl}/v1/webhook?writeKey=${wk}` : wk;
+  document.getElementById('sw-copy-wk')?.addEventListener('click', () => copyText(copyWkVal, 'sw-copy-wk'));
   document.querySelectorAll('[data-sdk-tab]').forEach(tab => tab.addEventListener('click', () => {
     document.querySelectorAll('[data-sdk-tab]').forEach(t => t.setAttribute('aria-selected','false'));
     tab.setAttribute('aria-selected','true');

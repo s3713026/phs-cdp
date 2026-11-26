@@ -55,6 +55,7 @@ router.post('/rudderstack', verifyWebhookSecret, async (req, res) => {
       counters.received++;
       counters.lastReceivedAt = new Date().toISOString();
       try {
+        console.log("[webhook] RAW_EVENT:", JSON.stringify({type:event.type, userId:event.userId, anonymousId:event.anonymousId, props_userId:(event.properties||{}).userId, props_c360:(event.properties||{}).c360_customer_id}));
         const result = await processEvent(event || {});
         if (result && result.skipped) counters.skipped++;
         else if (result && result.duplicate) counters.duplicate++;
@@ -102,7 +103,19 @@ function describe(event) {
 }
 
 // ─── Event router ─────────────────────────────────────────────────────────────
-async function processEvent(event) {
+async function processEvent(rawEvent) {
+  // RudderStack strips userId when forwarding webhook source events to destinations.
+  // Recover userId from properties.userId or properties.phs_account_id as fallback.
+  const props = rawEvent.properties || {};
+  const recoveredUserId = rawEvent.userId
+    || props.userId
+    || props.phs_account_id
+    || props.c360_customer_id
+    || null;
+  const event = recoveredUserId !== rawEvent.userId
+    ? { ...rawEvent, userId: recoveredUserId || rawEvent.userId }
+    : rawEvent;
+
   const type = (event.type || '').toLowerCase();
 
   switch (type) {
@@ -143,7 +156,7 @@ async function processEvent(event) {
       const { userId, previousId } = event;
       if (!userId || !previousId) return { skipped: 'alias requires userId and previousId' };
       const { customer, merged } = await IdentityResolutionService.resolveIdentity(
-        { phs_account_id: userId, anonymous_id: previousId },
+        { c360_customer_id: userId, anonymous_id: previousId },
         { source: deriveSource(event) },
       );
       return { merged, customerId: customer.id };
@@ -151,7 +164,13 @@ async function processEvent(event) {
 
     // ── track: behavioral event ───────────────────────────────────────────────
     case 'track': {
-      return recordBehaviorEvent(event, event.event || 'Unknown Event', event.properties?.category || 'track');
+      // RudderStack renames the event to "webhook_source_event" when forwarding from
+      // a webhook source. Recover the original event name from properties.
+      const rawEventName = event.event || '';
+      const eventName = (rawEventName === 'webhook_source_event' || !rawEventName)
+        ? (event.properties?.event || event.properties?.eventName || event.properties?.event_name || rawEventName || 'Unknown Event')
+        : rawEventName;
+      return recordBehaviorEvent(event, eventName, event.properties?.category || 'track');
     }
 
     // ── page: page view ───────────────────────────────────────────────────────
@@ -233,7 +252,7 @@ function buildIdentifiers({ userId, anonymousId, traits = {} }) {
     || [traits.firstName || traits.first_name, traits.lastName || traits.last_name].filter(Boolean).join(' ')
     || null;
   return {
-    phs_account_id:      str(userId),
+    c360_customer_id:    str(userId),
     email:               str(traits.email),
     phone:               str(traits.phone),
     national_id_raw:     str(traits.national_id),
@@ -263,8 +282,12 @@ function safeTraits(traits) {
 function deriveSource(event) {
   const lib = (event.context?.library?.name || '').toLowerCase();
   const channel = (event.channel || '').toLowerCase();
+  const sourceType = (event.context?.sourceType || event.sourceType || '').toLowerCase();
   if (channel === 'mobile' || /android|ios|swift|kotlin|flutter|react-native|react native/.test(lib)) return 'mobile';
   if (channel === 'server' || /node|python|java(?!script)|\bgo\b|php|ruby|\.net|http/.test(lib)) return 'server';
+  // Webhook source: no library, no channel → comes from external system via HTTP POST
+  if (!lib && !channel && !event.context?.page && !event.context?.userAgent) return 'server';
+  if (sourceType === 'webhook' || channel === 'webhook') return 'server';
   return 'web';
 }
 

@@ -207,7 +207,7 @@ function getBuiltinFallback() {
       { id:'php',          folder:'php',          name:'PHP',             category:'EventStream', logo:'https://cdn.simpleicons.org/php',        tags:[] },
       { id:'amp',          folder:'amp',          name:'AMP',             category:'EventStream', logo:'https://cdn.simpleicons.org/amp',        tags:['Popular'] },
       { id:'http',         folder:'http',         name:'HTTP API',        category:'EventStream', logo:null,                                     tags:['Popular'] },
-      { id:'webhook',      folder:'webhook',      name:'Webhook',         category:'EventStream', logo:null,                                     tags:['Popular'] },
+      { id:'webhook',      folder:'webhook',      name:'Webhook',         category:'Webhook',     logo:null,                                     tags:['Popular'] },
       { id:'auth0',        folder:'auth0',        name:'Auth0',           category:'EventStream', logo:'https://cdn.simpleicons.org/auth0',      tags:[] },
       { id:'shopify',      folder:'shopify',      name:'Shopify',         category:'EventStream', logo:'https://cdn.simpleicons.org/shopify',    tags:[] },
       { id:'postgres',     folder:'postgres',     name:'PostgreSQL',      category:'Reverse ETL', logo:'https://cdn.simpleicons.org/postgresql', tags:[] },

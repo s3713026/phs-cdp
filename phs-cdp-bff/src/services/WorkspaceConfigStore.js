@@ -30,6 +30,12 @@ const CONFIG_PATH =
   process.env.RUDDERSTACK_WORKSPACE_CONFIG ||
   path.join(__dirname, '../../workspaceConfig.json');
 
+// Path to RudderStack's own workspaceConfig — kept in sync so RS picks up new sources.
+const RS_CONFIG_PATH =
+  process.env.RUDDERSTACK_CONFIG_PATH ||
+  path.join(__dirname, '../../../rudderstack/workspaceConfig.json');
+
+
 const DEFAULT_WORKSPACE_ID = 'phs-workspace';
 
 // ─── helpers ──────────────────────────────────────────────────────────────────
@@ -210,7 +216,7 @@ function serialise(model) {
       Name: s.name,
       WriteKey: s.writeKey,
       Enabled: s.enabled !== false,
-      SourceDefinition: { Name: s.type, ...(s.category ? { Category: s.category } : {}) },
+      SourceDefinition: { Name: s.type, ...(s.category ? { Category: s.category, Type: s.category } : {}) },
       Config: s.config || {},
       Destinations: linked.map(embed),
       ...(s.createdAt ? { createdAt: s.createdAt } : {}),
@@ -261,6 +267,26 @@ function save(model) {
   // Written in place on purpose: the file is bind-mounted into the data platform
   // container, and replacing it (rename) would detach that mount.
   fs.writeFileSync(CONFIG_PATH, out, 'utf8');
+
+  // Sync sources to RudderStack's own workspaceConfig so RS picks up new write keys.
+  try {
+    const rsRaw = (() => { try { return JSON.parse(fs.readFileSync(RS_CONFIG_PATH, 'utf8')); } catch (_) { return {}; } })();
+    const serialised = JSON.parse(out);
+    // Merge: add/update BFF sources into RS config by WriteKey
+    const rsSourceMap = new Map((rsRaw.sources || []).map(s => [s.WriteKey || s.writeKey, s]));
+    for (const s of (serialised.sources || [])) {
+      const wk = s.WriteKey || s.writeKey;
+      if (wk) rsSourceMap.set(wk, s);
+    }
+    rsRaw.sources = [...rsSourceMap.values()];
+    // Preserve connections/workspaceId from RS config
+    if (serialised.workspaceId && !rsRaw.workspaceId) rsRaw.workspaceId = serialised.workspaceId;
+    fs.writeFileSync(RS_CONFIG_PATH, JSON.stringify(rsRaw, null, 2), 'utf8');
+  } catch (syncErr) {
+    // Non-fatal: BFF config saved; RS will keep existing sources until next restart.
+    console.warn('[WorkspaceConfigStore] RS config sync failed:', syncErr.message);
+  }
+
   return model;
 }
 
@@ -290,10 +316,13 @@ function createSource({ name, type, config = {}, enabled = true, category }) {
   if (!name || !type) throw badRequest('name and sourceDefinitionId are required');
   return mutate(model => {
     const slug = String(type).replace(/[^A-Za-z0-9]/g, '').slice(0, 24) || 'source';
+    // Auto-detect category for known source types
+    const isWebhook = /webhook/i.test(type) || /webhook/i.test(category || '');
+    const resolvedCategory = isWebhook ? 'webhook' : (category || undefined);
     const src = {
       id: uid('src'), name: String(name).trim(),
       writeKey: `phs_${slug}_${Date.now().toString(36)}${Math.random().toString(36).slice(2, 8)}`,
-      enabled: enabled !== false, type: String(type), category,
+      enabled: enabled !== false, type: String(type), category: resolvedCategory,
       config: isObj(config) ? config : {},
       createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(),
     };

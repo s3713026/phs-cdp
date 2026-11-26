@@ -113,11 +113,17 @@
         source: ({ web: 'Website', mobile: 'Mobile App', crm: 'CRM', rudderstack: 'Data Platform', server: 'API' })[r.source] || 'Data Platform',
         status: r.is_verified ? 'Verified' : 'Active',
         lastSeen: ago(r.last_seen_at || r.created_at),
+        // Keep raw timestamp for sorting — most recent value shown first (primary)
+        _ts: new Date(r.last_seen_at || r.created_at || 0).getTime(),
       });
     });
     return [...byType.entries()]
       .sort((a, b) => (IDENTITY_ORDER.indexOf(a[0]) + 1 || 99) - (IDENTITY_ORDER.indexOf(b[0]) + 1 || 99))
-      .map(([type, values]) => ({ type: IDENTITY_LABEL[type] || type, values }));
+      .map(([type, values]) => ({
+        type: IDENTITY_LABEL[type] || type,
+        // Sort values: most recently seen first so the primary (shown by default) is the latest
+        values: [...values].sort((a, b) => b._ts - a._ts),
+      }));
   }
 
   function mapConsents(rows) {

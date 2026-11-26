@@ -123,7 +123,7 @@ const CustomerService = {
   async getProfile(customerId) {
     const [customerRes, identitiesRes, events, eventStats, consentsRes] = await Promise.all([
       db.query('SELECT * FROM cdp_customers WHERE id = $1', [customerId]),
-      db.query('SELECT * FROM cdp_identities WHERE customer_id = $1 ORDER BY tier ASC, priority ASC, created_at ASC', [customerId]),
+      db.query('SELECT * FROM cdp_identities WHERE customer_id = $1 ORDER BY tier ASC, priority ASC, last_seen_at DESC NULLS LAST', [customerId]),
       this.getEvents(customerId, { limit: 100 }),
       this.countEvents(customerId),
       db.query('SELECT * FROM cdp_consents WHERE customer_id = $1', [customerId]),

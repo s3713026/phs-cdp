@@ -7,6 +7,7 @@ const { requireRole } = require('../middleware/rbac');
 const SOURCE_TYPE_LABEL = {
   javascript: 'Web (JavaScript)', android: 'Mobile (Android)', ios: 'Mobile (iOS)',
   node: 'Server (Node.js)', python: 'Server (Python)',
+  webhook: 'Webhook',
 };
 
 function toUI(s, links) {
@@ -46,8 +47,8 @@ router.get('/:id', requireRole('viewer'), (req, res) => {
 
 router.post('/', requireRole('operator'), (req, res) => {
   try {
-    const { name, sourceDefinitionId, config, enabled } = req.body || {};
-    const s = store.createSource({ name, type: sourceDefinitionId, config, enabled });
+    const { name, sourceDefinitionId, config, enabled, category } = req.body || {};
+    const s = store.createSource({ name, type: sourceDefinitionId, config, enabled, category });
     res.status(201).json(toUI(s, store.load().links));
   } catch (e) { fail(res, e); }
 });

@@ -148,6 +148,12 @@ async function resolveIdentity(identifiers, context = {}, traits = null) {
   identifiers = { ...identifiers };
   context = { ...context, source: safeSource(context.source) };
 
+  // Normalize: c360_customer_id is the canonical name from the UI/webhook layer.
+  // IdentityResolutionService uses phs_account_id internally. Alias here so both work.
+  if (!identifiers.phs_account_id && identifiers.c360_customer_id) {
+    identifiers.phs_account_id = identifiers.c360_customer_id;
+  }
+
   // Hash national_id if provided in raw form
   if (identifiers.national_id_raw) {
     identifiers.national_id_hash = hashNationalId(identifiers.national_id_raw);

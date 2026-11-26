@@ -21,7 +21,7 @@
           },
           "Enabled": true,
           "Config": {
-            "webhookUrl": "http://phs_cdp_bff:3001/api/webhook/rudderstack",
+            "webhookUrl": "http://phs-cdp-bff:3001/api/webhook/rudderstack",
             "webhookMethod": "POST",
             "method": "POST"
           },
@@ -29,6 +29,39 @@
           "IsProcessorEnabled": true
         }
       ]
+    },
+    {
+      "ID": "src-mww8uii8-youq",
+      "Name": "Data from anywhere",
+      "WriteKey": "phs_webhook_mww8uii8uk26fq",
+      "Enabled": true,
+      "SourceDefinition": {
+        "Name": "webhook",
+        "Category": "webhook",
+        "Type": "webhook"
+      },
+      "Config": {},
+      "Destinations": [
+        {
+          "ID": "dest-mwcyss02-q50k",
+          "Name": "PHS CDP Webhook",
+          "DestinationDefinition": {
+            "Name": "WEBHOOK",
+            "DisplayName": "Webhook",
+            "Category": "webhook"
+          },
+          "Enabled": true,
+          "Config": {
+            "webhookUrl": "http://phs-cdp-bff:3001/api/webhook/rudderstack",
+            "webhookMethod": "POST",
+            "method": "POST"
+          },
+          "Transformations": [],
+          "IsProcessorEnabled": true
+        }
+      ],
+      "createdAt": "2026-11-25T14:53:43.088Z",
+      "updatedAt": "2026-11-25T14:53:43.088Z"
     }
   ],
   "connections": {

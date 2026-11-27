@@ -386,7 +386,15 @@ function updateDestination(id, updates = {}) {
     const dest = model.destinations.find(d => d.id === id);
     if (!dest) throw notFound('Destination');
     if (updates.name !== undefined) dest.name = String(updates.name).trim();
-    if (updates.enabled !== undefined) dest.enabled = updates.enabled !== false;
+    if (updates.enabled !== undefined) {
+      dest.enabled = updates.enabled !== false;
+      // If explicitly re-enabling, clear paused flag
+      if (dest.enabled) dest.paused = false;
+    }
+    if (updates.paused !== undefined) {
+      dest.paused = updates.paused === true;
+      // Paused destinations stay enabled=true in RS (just stop delivery in our layer)
+    }
     if (isObj(updates.config)) dest.config = updates.config;
     DEST_UI_FIELDS.forEach(k => { if (updates[k] !== undefined) dest[k] = updates[k]; });
     if (isObj(updates.advancedConfig)) {

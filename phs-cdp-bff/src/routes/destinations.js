@@ -15,7 +15,8 @@ function toUI(d, links) {
     id: d.id, name: d.name,
     type: DEST_TYPE_LABEL[d.type] || d.displayType || d.type,
     typeId: d.type, destinationDefinitionId: d.type,
-    status: d.enabled ? 'connected' : 'disconnected', enabled: d.enabled,
+    status: d.paused ? 'paused' : (d.enabled ? 'connected' : 'disconnected'),
+    enabled: d.enabled, paused: d.paused || false,
     system: store.isSystemDestination(d),
     usedBySources: sourceIds.length > 0, sourceIds,
     config: d.config || {}, connection: d.config || {},
@@ -23,6 +24,8 @@ function toUI(d, links) {
     deliveryConfig: d.deliveryConfig || { mode: 'Stream', retries: 3, timeout: 30 },
     consentConfig:  d.consentConfig  || { required: false, purposes: [] },
     dataSelection:  d.dataSelection  || {},
+    updatedAt:      d.updatedAt || d.createdAt || null,
+    createdAt:      d.createdAt || null,
   };
 }
 const fail = (res, e) => res.status(e.status || 500).json({ error: { message: e.message } });

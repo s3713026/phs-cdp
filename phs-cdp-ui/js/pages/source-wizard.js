@@ -226,27 +226,124 @@ function renderStep3() {
   const isCloud = cat.includes('cloud') || cat.includes('extract');
   const isEtl   = cat.includes('reverse') || cat.includes('etl');
   const isEvent  = !isWebhook && !isCloud && !isEtl;
+  // Detect mobile SDK type
+  const isFlutter     = srcName.includes('flutter')     || cat.includes('flutter');
+  const isAndroid     = srcName.includes('android')     || cat.includes('android');
+  const isIOS         = srcName.includes('ios')         || cat.includes('ios') || srcName.includes('swift');
+  const isReactNative = srcName.includes('react-native')|| srcName.includes('reactnative');
+  const isNodeSide    = srcName.includes('node')        || cat.includes('server') || cat.includes('backend');
+  const isMobile      = isFlutter || isAndroid || isIOS || isReactNative;
 
-  const jsSnippet = `// npm install @rudderstack/analytics-js
+  const cfgUrl = window.PHSAPI?.RS_CONFIG_URL || 'http://localhost:3001';
+
+  // Build SDK snippet based on source type
+  function buildSdkHtml() {
+    if (!isEvent) return `<div class="dataflow-note" style="margin-top:var(--space-5);"><i data-lucide="check-circle-2"></i><span>Source created. Configure the sync schedule in Source settings to start pulling data.</span></div>`;
+    
+    let snippet = '';
+    let label = '';
+
+    if (isFlutter) {
+      label = 'Flutter (Dart)';
+      snippet = `# pubspec.yaml
+dependencies:
+  rudder_sdk_flutter: ^2.4.0
+
+# main.dart
+import 'package:rudder_sdk_flutter/RudderClient.dart';
+import 'package:rudder_sdk_flutter/RudderConfig.dart';
+
+final RudderController rudderClient = RudderClient.getInstance(
+  WRITE_KEY: '${wk}',
+  config: RudderConfigBuilder()
+    .withDataPlaneUrl('${dpUrl}')
+    .withControlPlaneUrl('${cfgUrl}')
+    .build()
+);
+
+// Identify user after login
+rudderClient.identify(userId: 'PHS-USER-001', traits: {
+  'name': 'Nguyen Van A', 'email': 'user@phs.vn'
+});
+
+// Track an event
+rudderClient.track(
+  RudderProperty()
+    ..setEventName('Product Viewed')
+    ..setProperty('product_name', 'Margin')
+);`;
+    } else if (isAndroid) {
+      label = 'Android (Kotlin)';
+      snippet = `// build.gradle (app)
+dependencies {
+    implementation 'com.rudderstack.android.sdk:core:1.+'
+    implementation 'com.google.code.gson:gson:2.8.9'
+}
+
+// Application.kt
+val rudderClient = RudderClient.getInstance(
+    this, "${wk}",
+    RudderConfig.Builder()
+        .withDataPlaneUrl("${dpUrl}")
+        .withControlPlaneUrl("${cfgUrl}")
+        .build()
+)
+
+// Identify user
+rudderClient.identify("PHS-USER-001",
+    RudderTraits().putName("Nguyen Van A").putEmail("user@phs.vn"), null)
+
+// Track event
+rudderClient.track("Product Viewed",
+    RudderProperty().putValue("product_name", "Margin"))`;
+    } else if (isIOS) {
+      label = 'iOS (Swift)';
+      snippet = `// Podfile
+pod 'Rudder', '~> 1.0'
+
+// AppDelegate.swift
+import Rudder
+
+let config = RSConfig(writeKey: "${wk}")
+    .dataPlaneURL("${dpUrl}")
+    .controlPlaneURL("${cfgUrl}")
+RSClient.sharedInstance().configure(with: config)
+
+// Identify user
+RSClient.sharedInstance().identify("PHS-USER-001",
+    traits: ["name": "Nguyen Van A", "email": "user@phs.vn"])
+
+// Track event
+RSClient.sharedInstance().track("Product Viewed",
+    properties: ["product_name": "Margin"])`;
+    } else if (isNodeSide) {
+      label = 'Node.js';
+      snippet = `// npm install @rudderstack/rudder-sdk-node
+const Analytics = require('@rudderstack/rudder-sdk-node');
+const client = new Analytics('${wk}', '${dpUrl}/v1/batch');
+
+client.identify({ userId: 'PHS-USER-001', traits: { name: 'Nguyen Van A' } });
+client.track({ userId: 'PHS-USER-001', event: 'Product Viewed', properties: { product_name: 'Margin' } });`;
+    } else {
+      // Default: JavaScript (web) with both tabs
+      const jsSnip = `// npm install @rudderstack/analytics-js
 import { RudderAnalytics } from '@rudderstack/analytics-js';
 
 const analytics = new RudderAnalytics();
 analytics.load('${wk}', '${dpUrl}');
 
 // Identify a user
-analytics.identify('USER_ID', { name: 'Jane', email: 'jane@example.com' });
+analytics.identify('USER_ID', { name: 'Nguyen Van A', email: 'user@phs.vn' });
 
 // Track an event
 analytics.track('Product Viewed', { product_name: 'Margin' });`;
-
-  const nodeSnippet = `// npm install @rudderstack/rudder-sdk-node
+      const nodeSnip = `// npm install @rudderstack/rudder-sdk-node
 const Analytics = require('@rudderstack/rudder-sdk-node');
 const client = new Analytics('${wk}', '${dpUrl}/v1/batch');
 
-client.identify({ userId: 'USER_ID', traits: { name: 'Jane' } });
-client.track({ userId: 'USER_ID', event: 'First Trade', properties: { product: 'Stocks' } });`;
-
-  const sdkHtml = isEvent ? `
+client.identify({ userId: 'USER_ID', traits: { name: 'Nguyen Van A' } });
+client.track({ userId: 'USER_ID', event: 'Product Viewed', properties: { product_name: 'Margin' } });`;
+      return `
     <div style="margin-top:var(--space-5);">
       <div style="font-size:var(--text-sm);font-weight:600;margin-bottom:var(--space-3);">SDK Installation</div>
       <div class="tabs" role="tablist" id="sw-sdk-tabs">
@@ -254,14 +351,27 @@ client.track({ userId: 'USER_ID', event: 'First Trade', properties: { product: '
         <button class="tabs__tab" role="tab" aria-selected="false" data-sdk-tab="node">Node.js</button>
       </div>
       <div id="sw-sdk-panel-js" style="position:relative;">
-        <pre class="font-mono" style="background:var(--surface-2);border-radius:0 0 8px 8px;padding:var(--space-4);font-size:12px;overflow-x:auto;line-height:1.6;margin:0;">${escHtml(jsSnippet)}</pre>
+        <pre class="font-mono" style="background:var(--surface-2);border-radius:0 0 8px 8px;padding:var(--space-4);font-size:12px;overflow-x:auto;line-height:1.6;margin:0;">${escHtml(jsSnip)}</pre>
         <button type="button" class="btn btn--outline btn--sm" id="sw-copy-js" style="position:absolute;top:8px;right:8px;"><i data-lucide="copy"></i></button>
       </div>
       <div id="sw-sdk-panel-node" hidden style="position:relative;">
-        <pre class="font-mono" style="background:var(--surface-2);border-radius:0 0 8px 8px;padding:var(--space-4);font-size:12px;overflow-x:auto;line-height:1.6;margin:0;">${escHtml(nodeSnippet)}</pre>
+        <pre class="font-mono" style="background:var(--surface-2);border-radius:0 0 8px 8px;padding:var(--space-4);font-size:12px;overflow-x:auto;line-height:1.6;margin:0;">${escHtml(nodeSnip)}</pre>
         <button type="button" class="btn btn--outline btn--sm" id="sw-copy-node" style="position:absolute;top:8px;right:8px;"><i data-lucide="copy"></i></button>
       </div>
-    </div>` : `<div class="dataflow-note" style="margin-top:var(--space-5);"><i data-lucide="check-circle-2"></i><span>Source created. Configure the sync schedule in Source settings to start pulling data.</span></div>`;
+    </div>`;
+    }
+
+    return `
+    <div style="margin-top:var(--space-5);">
+      <div style="font-size:var(--text-sm);font-weight:600;margin-bottom:var(--space-3);">SDK Installation — ${label}</div>
+      <div id="sw-sdk-panel-primary" style="position:relative;">
+        <pre class="font-mono" style="background:var(--surface-2);border-radius:8px;padding:var(--space-4);font-size:12px;overflow-x:auto;line-height:1.6;margin:0;">${escHtml(snippet)}</pre>
+        <button type="button" class="btn btn--outline btn--sm" id="sw-copy-primary" style="position:absolute;top:8px;right:8px;"><i data-lucide="copy"></i></button>
+      </div>
+    </div>`;
+  }
+
+  const sdkHtml = buildSdkHtml();
 
   body.innerHTML = `${stepsHTML()}
     <div style="max-width:620px;margin:0 auto;">

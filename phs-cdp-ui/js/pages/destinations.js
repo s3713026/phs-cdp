@@ -145,7 +145,7 @@ async function loadDestinationsFromBFF() {
         purpose:          meta.purpose,
         type:             meta.provider,
         typeId:           bff.destinationDefinitionId || bff.typeId || mock.typeId,
-        status:           bff.enabled         ? 'Connected'           : 'Disconnected',
+        status:           bff.paused ? 'Paused' : (bff.enabled ? 'Connected' : 'Disconnected'),
         enabled:          bff.enabled         ?? mock.enabled         ?? true,
         dataStream:       DATA_STREAMS.includes(mock.dataStream) ? mock.dataStream : defaultDataStreamForProvider(meta.provider),
         dataSelection:    mock.dataSelection  || { mode: 'all', eventIds: [], eventProperties: {}, audienceIds: [], attributeIds: [], types: [], template: '' },
@@ -192,7 +192,7 @@ async function loadDestinationsFromBFF() {
         audiences:        mock.audiences      || [],
         journeys:         mock.journeys       || [],
         dataFlowId:       mock.dataFlowId     || null,
-        lastSync:         mock.lastSync       || '—',
+        lastSync:         mock.lastSync       || (bff.updatedAt ? bff.updatedAt.slice(0,16).replace('T',' ') : '—'),
         lastEdit:         mock.lastEdit       || now,
         createdAt:        mock.createdAt      || now,
         owner:            mock.owner          || 'System',
@@ -202,6 +202,7 @@ async function loadDestinationsFromBFF() {
         configuration:    mock.configuration   || [],
         dataSelection:    mock.dataSelection   || { mode: 'all', eventIds: [], eventProperties: {}, audienceIds: [], attributeIds: [], types: [], template: '' },
         lastReceived:     mock.lastReceived    || '—',
+        sourceIds:        bff.sourceIds        || [],
       };
     });
 
@@ -222,6 +223,8 @@ function resolveSourceMeta(defId) {
   if (id === 'javascript' || id === 'js') return { provider: 'JavaScript', category: 'Client-side', sourceType: 'Web' };
   if (id === 'android')   return { provider: 'Android',    category: 'Mobile',       sourceType: 'Mobile App' };
   if (id === 'ios')       return { provider: 'iOS',         category: 'Mobile',       sourceType: 'Mobile App' };
+  if (id === 'flutter')   return { provider: 'Flutter',     category: 'Mobile',       sourceType: 'Mobile App' };
+  if (id === 'reactnative' || id === 'react-native' || id === 'react_native') return { provider: 'React Native', category: 'Mobile', sourceType: 'Mobile App' };
   if (id === 'node' || id === 'nodejs') return { provider: 'Node.js', category: 'Server-side', sourceType: 'Backend' };
   if (id === 'python')    return { provider: 'Python',      category: 'Server-side',  sourceType: 'Backend' };
   if (id === 'http' || id === 'http api') return { provider: 'HTTP API', category: 'Server-side', sourceType: 'API' };
@@ -249,7 +252,7 @@ async function loadSourcesFromBFF() {
         category:         meta.category,
         sourceType:       meta.sourceType,
         type:             meta.provider,
-        status:           s.enabled           ? 'Connected'            : 'Disconnected',
+        status:           s.paused ? 'Paused' : (s.enabled ? 'Connected' : 'Disconnected'),
         enabled:          s.enabled           ?? mock.enabled          ?? true,
         writeKey:         s.writeKey          || mock.writeKey         || '',
         destinationCount: Array.isArray(s.destinations) ? s.destinations.length : (mock.destinationCount || 0),
@@ -364,7 +367,12 @@ function destinationsForSource(s) {
   return DESTINATIONS.filter((d) => d.dataStream === s.dataStream && d.status !== "Draft");
 }
 function sourcesForDestination(d) {
-  return SOURCES.filter((s) => s.dataStream === d.dataStream && s.status !== "Draft");
+  // Use BFF-loaded sources if available, with link-based matching first
+  const pool = sources.length ? sources : SOURCES;
+  if (d.sourceIds && d.sourceIds.length) {
+    return pool.filter(s => d.sourceIds.includes(s.id));
+  }
+  return pool.filter((s) => s.dataStream === d.dataStream && s.status !== "Draft");
 }
 function relatedCountHTML(list, singular, pluralOverride) {
   if (!list.length) return `<span class="cell-muted">—</span>`;
@@ -435,6 +443,8 @@ function destRowActionsHTML(d) {
       items.push(`<button class="dropdown__item" data-row-action="pause"><i data-lucide="pause"></i> Pause</button>`);
     } else if (d.status === "Paused") {
       items.push(`<button class="dropdown__item" data-row-action="resume"><i data-lucide="play"></i> Resume</button>`);
+    } else if (d.status === "Disconnected") {
+      items.push(`<button class="dropdown__item" data-row-action="reconnect"><i data-lucide="plug"></i> Connect</button>`);
     }
     items.push(`<button class="dropdown__item" data-row-action="test"><i data-lucide="plug-2"></i> Test Connection</button>`);
   }
@@ -585,25 +595,29 @@ function handleDestRowAction(id, action) {
   } else if (action === "pause") {
     openDestDetail(id);
     setTimeout(() => openPause(d), 150);
-  } else if (action === "resume") {
-    d.status = "Connected";
-    d.lastSync = MOCK_TODAY + " · 10:00";
-    renderDestSummary();
-    renderDestTable();
+  } else if (action === "resume" || action === "reconnect") {
+    PHSAPI.destinations.update(d.id, { paused: false, enabled: true })
+      .then(() => { d.status = "Connected"; d.enabled = true; d.paused = false; renderDestSummary(); renderDestTable(); })
+      .catch(() => { d.status = "Connected"; d.enabled = true; d.paused = false; renderDestSummary(); renderDestTable(); });
   } else if (action === "reconnect") {
-    d.status = "Connected";
-    delete d.error;
-    d.lastSync = MOCK_TODAY + " · 10:00";
-    renderDestSummary();
-    renderDestTable();
+    PHSAPI.destinations.update(d.id, { paused: false, enabled: true })
+      .then(() => { d.status = "Connected"; d.enabled = true; d.paused = false; delete d.error; renderDestSummary(); renderDestTable(); })
+      .catch(() => { d.status = "Connected"; d.enabled = true; d.paused = false; delete d.error; renderDestSummary(); renderDestTable(); });
   } else if (action === "test") {
     openTestConnectionModal();
   } else if (action === "delete") {
     if (confirm(`Delete "${d.name}"? This cannot be undone.`)) {
-      const idx = destinations.findIndex(x => x.id === id);
-      if (idx !== -1) destinations.splice(idx, 1);
-      renderDestSummary();
-      renderDestTable();
+      PHSAPI.destinations.delete(id)
+        .then(() => {
+          const idx = destinations.findIndex(x => x.id === id);
+          if (idx !== -1) destinations.splice(idx, 1);
+          renderDestSummary();
+          renderDestTable();
+        })
+        .catch(err => {
+          const msg = err?.data?.error?.message || err?.message || "Could not delete destination.";
+          alert(`Error: ${msg}`);
+        });
     }
   }
 }
@@ -726,15 +740,14 @@ function renderDestDetailHeader(d) {
   actions.querySelector("[data-sync-now]")?.addEventListener("click", () => openSyncNow(d));
   actions.querySelector("[data-pause]")?.addEventListener("click", () => openPause(d));
   actions.querySelector("[data-resume]")?.addEventListener("click", () => {
-    d.status = "Connected";
-    d.lastSync = MOCK_TODAY + " · 10:00";
-    refreshDestAfterStatusChange(d);
+    PHSAPI.destinations.update(d.id, { paused: false, enabled: true })
+      .then(() => { d.status = "Connected"; d.enabled = true; d.paused = false; refreshDestAfterStatusChange(d); })
+      .catch(() => { d.status = "Connected"; d.enabled = true; d.paused = false; refreshDestAfterStatusChange(d); });
   });
   actions.querySelector("[data-reconnect]")?.addEventListener("click", () => {
-    d.status = "Connected";
-    delete d.error;
-    d.lastSync = MOCK_TODAY + " · 10:00";
-    refreshDestAfterStatusChange(d);
+    PHSAPI.destinations.update(d.id, { paused: false, enabled: true })
+      .then(() => { d.status = "Connected"; d.enabled = true; d.paused = false; delete d.error; refreshDestAfterStatusChange(d); })
+      .catch(() => { d.status = "Connected"; d.enabled = true; d.paused = false; delete d.error; refreshDestAfterStatusChange(d); });
   });
   actions.querySelector("[data-edit-config-open]")?.addEventListener("click", () => openDestEdit(d));
 }
@@ -1698,11 +1711,29 @@ function openPause(entity) {
   modal.classList.add("is-open");
   document.body.style.overflow = "hidden";
   modal.querySelector("[data-pause-confirm]").onclick = () => {
-    entity.status = "Paused";
     modal.classList.remove("is-open");
     document.body.style.overflow = "";
-    if (destinations.includes(entity)) refreshDestAfterStatusChange(entity);
-    else refreshSourceAfterStatusChange(entity);
+    const isDestination = destinations.includes(entity);
+    const apiCall = isDestination
+      ? PHSAPI.destinations.update(entity.id, { paused: true, enabled: false })
+      : PHSAPI.sources.toggle(entity.id, false);
+    apiCall
+      .then(() => {
+        entity.status = "Paused";
+        entity.enabled = false;
+        entity.paused = true;
+        if (isDestination) refreshDestAfterStatusChange(entity);
+        else refreshSourceAfterStatusChange(entity);
+      })
+      .catch(err => {
+        console.warn("[Pause] API failed:", err.message);
+        // Still update UI optimistically
+        entity.status = "Paused";
+        entity.enabled = false;
+        entity.paused = true;
+        if (isDestination) refreshDestAfterStatusChange(entity);
+        else refreshSourceAfterStatusChange(entity);
+      });
   };
 }
 
@@ -2060,34 +2091,136 @@ function renderSourceOverviewTab(s) {
           <code style="margin-left:8px;font-family:monospace;background:#e0f2fe;padding:2px 8px;border-radius:4px;">${s.writeKey}</code>
           <button onclick="navigator.clipboard.writeText('${s.writeKey}').then(()=>{this.textContent='Copied!';setTimeout(()=>this.textContent='Copy',2000)})" class="btn btn--sm btn--outline" style="margin-left:10px;font-size:12px;">Copy</button>
         </div>
-        <div class="cluster gap-2" style="margin-bottom:var(--space-3);">
-          <button id="sdk-btn-js" class="btn btn--sm btn--primary" onclick="document.getElementById('sdk-tab-js').style.display='block';document.getElementById('sdk-tab-node').style.display='none';document.getElementById('sdk-btn-js').className='btn btn--sm btn--primary';document.getElementById('sdk-btn-node').className='btn btn--sm btn--outline';">JavaScript</button>
-          <button id="sdk-btn-node" class="btn btn--sm btn--outline" onclick="document.getElementById('sdk-tab-js').style.display='none';document.getElementById('sdk-tab-node').style.display='block';document.getElementById('sdk-btn-js').className='btn btn--sm btn--outline';document.getElementById('sdk-btn-node').className='btn btn--sm btn--primary';">Node.js</button>
-        </div>
-        <div id="sdk-tab-js" style="position:relative;">
-          <pre style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:16px;font-size:12px;line-height:1.6;overflow-x:auto;margin:0;white-space:pre-wrap;"><code id="sdk-js-code">&lt;script&gt;
+        ${(() => {
+          const st = (s.sourceDefinitionId || s.typeId || s.provider || '').toLowerCase();
+          const isFlutter    = st.includes('flutter');
+          const isAndroid    = st.includes('android');
+          const isIOS        = st === 'ios';
+          const isMobile     = isFlutter || isAndroid || isIOS || st.includes('react-native') || st.includes('reactnative');
+          const isNodeJS     = st === 'node' || st === 'nodejs' || st.includes('node');
+          const isServerSide = isNodeJS || st === 'python' || st === 'http' || s.category === 'Server-side';
+          const dataPlane = (window.PHSAPI && PHSAPI.RS_DATA_PLANE) || 'http://localhost:8082';
+          const cfgUrl    = (window.PHSAPI && PHSAPI.RS_CONFIG_URL) || 'http://localhost:3001';
+          const wk = s.writeKey;
+
+          if (isFlutter) return `
+            <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:16px;font-size:12px;line-height:1.8;position:relative;overflow-x:auto;white-space:pre-wrap;font-family:monospace;">
+<code id="sdk-primary-code"># pubspec.yaml
+dependencies:
+  rudder_sdk_flutter: ^2.4.0
+
+# main.dart
+import 'package:rudder_sdk_flutter/RudderClient.dart';
+import 'package:rudder_sdk_flutter/RudderConfig.dart';
+
+final RudderController rudderClient = RudderClient.getInstance(
+  WRITE_KEY: '\${wk}',
+  config: RudderConfigBuilder()
+    .withDataPlaneUrl('\${dataPlane}')
+    .withControlPlaneUrl('\${cfgUrl}')
+    .build()
+);
+
+// Identify user after login
+rudderClient.identify(userId: 'PHS-USER-001', traits: {
+  'name': 'Nguyen Van A',
+  'email': 'user@example.com',
+});
+
+// Track an event
+rudderClient.track(
+  RudderProperty()
+    ..setEventName('Product Viewed')
+    ..setProperty('product_name', 'Margin')
+);</code>
+            </div>
+            <button onclick="navigator.clipboard.writeText(document.getElementById('sdk-primary-code').innerText).then(()=>{this.textContent='Copied!';setTimeout(()=>this.textContent='Copy',2000)})" class="btn btn--sm btn--outline" style="margin-top:8px;">Copy</button>`;
+
+          if (isAndroid) return `
+            <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:16px;font-size:12px;line-height:1.8;position:relative;overflow-x:auto;white-space:pre-wrap;font-family:monospace;">
+<code id="sdk-primary-code">// build.gradle (app)
+dependencies {
+    implementation 'com.rudderstack.android.sdk:core:1.+'
+    implementation 'com.google.code.gson:gson:2.8.9'
+    implementation 'com.squareup.okhttp3:okhttp:4.9.3'
+}
+
+// Application.kt
+val rudderClient = RudderClient.getInstance(
+    this, "\${wk}",
+    RudderConfig.Builder()
+        .withDataPlaneUrl("\${dataPlane}")
+        .withControlPlaneUrl("\${cfgUrl}")
+        .build()
+)
+
+// Identify user
+rudderClient.identify("PHS-USER-001", RudderTraits().putName("Nguyen Van A").putEmail("user@example.com"), null)
+
+// Track event
+rudderClient.track("Product Viewed", RudderProperty().putValue("product_name", "Margin"))</code>
+            </div>
+            <button onclick="navigator.clipboard.writeText(document.getElementById('sdk-primary-code').innerText).then(()=>{this.textContent='Copied!';setTimeout(()=>this.textContent='Copy',2000)})" class="btn btn--sm btn--outline" style="margin-top:8px;">Copy</button>`;
+
+          if (isIOS) return `
+            <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:16px;font-size:12px;line-height:1.8;position:relative;overflow-x:auto;white-space:pre-wrap;font-family:monospace;">
+<code id="sdk-primary-code">// Podfile
+pod 'Rudder', '~> 1.0'
+
+// AppDelegate.swift
+import Rudder
+let config = RSConfig(writeKey: "\${wk}")
+    .dataPlaneURL("\${dataPlane}")
+    .controlPlaneURL("\${cfgUrl}")
+RSClient.sharedInstance().configure(with: config)
+
+// Identify user
+RSClient.sharedInstance().identify("PHS-USER-001", traits: ["name": "Nguyen Van A", "email": "user@example.com"])
+
+// Track event
+RSClient.sharedInstance().track("Product Viewed", properties: ["product_name": "Margin"])</code>
+            </div>
+            <button onclick="navigator.clipboard.writeText(document.getElementById('sdk-primary-code').innerText).then(()=>{this.textContent='Copied!';setTimeout(()=>this.textContent='Copy',2000)})" class="btn btn--sm btn--outline" style="margin-top:8px;">Copy</button>`;
+
+          if (isNodeJS) return `
+            <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:16px;font-size:12px;line-height:1.8;position:relative;overflow-x:auto;white-space:pre-wrap;font-family:monospace;">
+<code id="sdk-primary-code">// npm install @rudderstack/analytics-js-service-worker
+const Analytics = require('@rudderstack/analytics-js-service-worker');
+const analytics = new Analytics.RudderAnalytics();
+analytics.load("\${wk}", "\${dataPlane}", { configUrl: "\${cfgUrl}" });
+
+analytics.identify("PHS-USER-001", { name: "Nguyen Van A", email: "user@example.com" });
+analytics.track("Product Viewed", { product_name: "Margin" });</code>
+            </div>
+            <button onclick="navigator.clipboard.writeText(document.getElementById('sdk-primary-code').innerText).then(()=>{this.textContent='Copied!';setTimeout(()=>this.textContent='Copy',2000)})" class="btn btn--sm btn--outline" style="margin-top:8px;">Copy</button>`;
+
+          // Default: JavaScript (web)
+          return `
+            <div class="cluster gap-2" style="margin-bottom:var(--space-3);">
+              <button id="sdk-btn-js" class="btn btn--sm btn--primary" onclick="document.getElementById('sdk-tab-js').style.display='block';document.getElementById('sdk-tab-node').style.display='none';document.getElementById('sdk-btn-js').className='btn btn--sm btn--primary';document.getElementById('sdk-btn-node').className='btn btn--sm btn--outline';">JavaScript</button>
+              <button id="sdk-btn-node" class="btn btn--sm btn--outline" onclick="document.getElementById('sdk-tab-js').style.display='none';document.getElementById('sdk-tab-node').style.display='block';document.getElementById('sdk-btn-js').className='btn btn--sm btn--outline';document.getElementById('sdk-btn-node').className='btn btn--sm btn--primary';">Node.js</button>
+            </div>
+            <div id="sdk-tab-js" style="position:relative;">
+              <pre style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:16px;font-size:12px;line-height:1.6;overflow-x:auto;margin:0;white-space:pre-wrap;"><code id="sdk-js-code">&lt;script&gt;
 rudderanalytics=window.rudderanalytics=[];
 var m=["load","page","track","identify","alias","group","ready","reset","getAnonymousId","setAnonymousId"];
 for(var i=0;i&lt;m.length;i++){var mt=m[i];rudderanalytics[mt]=function(d){return function(){rudderanalytics.push([d,...arguments])}}(mt)}
-rudderanalytics.load("${s.writeKey}", "${(window.PHSAPI && PHSAPI.RS_DATA_PLANE) || 'http://localhost:8082'}", { configUrl: "${(window.PHSAPI && PHSAPI.RS_CONFIG_URL) || 'http://localhost:3001'}" });
+rudderanalytics.load("\${wk}", "\${dataPlane}", { configUrl: "\${cfgUrl}" });
 rudderanalytics.page();
 &lt;/script&gt;
 &lt;script src="https://cdn.rudderlabs.com/v3/modern/rsa.min.js"&gt;&lt;/script&gt;</code></pre>
-          <button onclick="navigator.clipboard.writeText(document.getElementById('sdk-js-code').innerText).then(()=>{this.textContent='Copied!';setTimeout(()=>this.textContent='Copy',2000)})" class="btn btn--sm btn--outline" style="position:absolute;top:10px;right:10px;">Copy</button>
-        </div>
-        <div id="sdk-tab-node" style="display:none;position:relative;">
-          <pre style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:16px;font-size:12px;line-height:1.6;overflow-x:auto;margin:0;white-space:pre-wrap;"><code id="sdk-node-code">// npm install @rudderstack/analytics-js
+              <button onclick="navigator.clipboard.writeText(document.getElementById('sdk-js-code').innerText).then(()=>{this.textContent='Copied!';setTimeout(()=>this.textContent='Copy',2000)})" class="btn btn--sm btn--outline" style="position:absolute;top:10px;right:10px;">Copy</button>
+            </div>
+            <div id="sdk-tab-node" style="display:none;position:relative;">
+              <pre style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:16px;font-size:12px;line-height:1.6;overflow-x:auto;margin:0;white-space:pre-wrap;"><code id="sdk-node-code">// npm install @rudderstack/analytics-js
 import { RudderAnalytics } from '@rudderstack/analytics-js';
 const analytics = new RudderAnalytics();
-analytics.load("${s.writeKey}", "${(window.PHSAPI && PHSAPI.RS_DATA_PLANE) || 'http://localhost:8082'}", { configUrl: "${(window.PHSAPI && PHSAPI.RS_CONFIG_URL) || 'http://localhost:3001'}" });
-
-// Identify user after login
+analytics.load("\${wk}", "\${dataPlane}", { configUrl: "\${cfgUrl}" });
 analytics.identify("USER_ID", { email: "user@example.com", name: "Nguyen Van A" });
-
-// Track an event
 analytics.track("Product Viewed", { product_name: "Margin" });</code></pre>
-          <button onclick="navigator.clipboard.writeText(document.getElementById('sdk-node-code').innerText).then(()=>{this.textContent='Copied!';setTimeout(()=>this.textContent='Copy',2000)})" class="btn btn--sm btn--outline" style="position:absolute;top:10px;right:10px;">Copy</button>
-        </div>
+              <button onclick="navigator.clipboard.writeText(document.getElementById('sdk-node-code').innerText).then(()=>{this.textContent='Copied!';setTimeout(()=>this.textContent='Copy',2000)})" class="btn btn--sm btn--outline" style="position:absolute;top:10px;right:10px;">Copy</button>
+            </div>`;
+        })()}
       </div>
     </section>
     ` : ''}` ;
